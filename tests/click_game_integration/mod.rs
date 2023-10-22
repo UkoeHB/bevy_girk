@@ -1,0 +1,15 @@
+//module tree
+mod basic_game_and_client;
+mod basic_server_integration;
+mod click_game;
+mod game_instance_factory;
+mod game_instance_launcher;
+mod game_state;
+mod game_ticks;
+mod player_clicks;
+mod raw_localhost_network;
+mod test_utils;
+
+//API exports
+pub(crate) use crate::click_game_integration::click_game::*;
+pub(crate) use crate::click_game_integration::test_utils::*;

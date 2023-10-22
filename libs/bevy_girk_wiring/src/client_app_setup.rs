@@ -1,0 +1,125 @@
+//local shortcuts
+use crate::*;
+use bevy_girk_client_fw::*;
+use bevy_girk_game_fw::*;
+use bevy_girk_utils::*;
+
+//third-party shortcuts
+use bevy::prelude::*;
+use bevy_replicon::prelude::*;
+use iyes_progress::*;
+
+//standard shortcuts
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Dummy system, does nothing.
+fn dummy() {}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn track_connection_state(transport: Res<bevy_renet::renet::transport::NetcodeClientTransport>) -> Progress
+{
+    if transport.is_disconnected() { return Progress{ done: 0, total: 2 }; }
+    if transport.is_connecting()   { return Progress{ done: 1, total: 2 }; }
+    if transport.is_connected()    { return Progress{ done: 2, total: 2 }; }
+
+    Progress{ done: 0, total: 2 }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn reinitialize_client(client_fw_command_sender: Res<MessageSender<ClientFWCommand>>)
+{
+    if let Err(_) = client_fw_command_sender.send(ClientFWCommand::ReInitialize)
+    { tracing::error!("failed commanding client framework to reinitialize"); }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFWConfig) -> MessageSender<ClientFWCommand>
+{
+    // prepare message channels
+    let (game_packet_sender, game_packet_receiver)             = new_message_channel::<GamePacket>();
+    let (client_packet_sender, client_packet_receiver)         = new_message_channel::<ClientPacket>();
+    let (client_fw_command_sender, client_fw_command_receiver) = new_message_channel::<ClientFWCommand>();
+
+    // prepare client app framework
+    client_app
+        //bevy plugins
+        .add_plugins(bevy::time::TimePlugin)
+        //setup components
+        .add_plugins(ClientFWPlugin)
+        //client framework
+        .insert_resource(client_fw_config)
+        .insert_resource(game_packet_sender)
+        .insert_resource(game_packet_receiver)
+        .insert_resource(client_packet_sender)
+        .insert_resource(client_packet_receiver)
+        .insert_resource(client_fw_command_receiver);
+
+    client_fw_command_sender
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: MessageSender<ClientFWCommand>)
+{
+    // depends on client framework
+
+    // setup client with bevy_replicon (includes bevy_renet)
+    client_app
+        // add bevy_replicon client
+        .add_plugins(ReplicationPlugins
+            .build()
+            .disable::<ServerPlugin>())
+        //bracket the client logic with message receiving/sending (client logic is in `Update`)
+        .add_systems(PreUpdate,
+            receive_server_messages
+                .run_if(bevy_renet::transport::client_connected())
+                .after(bevy_replicon::prelude::ClientSet::Receive)
+                .before(ClientFWTickSetPrivate::FWStart),
+        )
+        .configure_set(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
+        .add_systems(PostUpdate,
+            send_client_messages
+                .run_if(bevy_renet::transport::client_connected())
+                .after(ClientFWTickSetPrivate::FWEnd)
+                .before(bevy_replicon::prelude::ClientSet::Send)
+        )
+        //prepare message channels
+        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy)
+        //add framework command endpoint for use by connection controls
+        .insert_resource(client_fw_command_sender)
+        //track connection status
+        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
+        .add_systems(Update,
+            reinitialize_client
+                .before(ClientFWSet)
+                .run_if(bevy_renet::transport::client_just_disconnected())
+        );
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
+{
+    client_app.insert_resource(connect_pack)
+        .add_systems(Startup, setup_renet_client)
+        .add_systems(Update,
+            setup_renet_client
+                .before(ClientFWSet)
+                .run_if(bevy_renet::transport::client_just_disconnected())
+        );
+}
+
+//-------------------------------------------------------------------------------------------------------------------

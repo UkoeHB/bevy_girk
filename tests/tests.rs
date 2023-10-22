@@ -1,0 +1,9 @@
+//test modules
+mod click_game_integration;
+mod framework;
+mod game_hub_server;
+mod game_instance;
+mod host_server;
+mod server_integration;
+mod test_helpers;
+mod utils;

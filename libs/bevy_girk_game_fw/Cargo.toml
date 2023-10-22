@@ -1,0 +1,19 @@
+[package]
+name = "bevy_girk_game_fw"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+test    = false
+doctest = false
+
+[dependencies]
+bevy           = { version = "0.11", default-features = false }
+bevy_fn_plugin = { workspace = true }
+bevy_kot       = { workspace = true }
+bevy_replicon  = { workspace = true }
+serde          = { workspace = true }
+serde_with     = { workspace = true }
+tracing        = { workspace = true }
+
+bevy_girk_utils = { path = "../bevy_girk_utils" }

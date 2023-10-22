@@ -1,0 +1,188 @@
+//local shortcuts
+use crate::*;
+use bevy_girk_utils::*;
+
+//third-party shortcuts
+use bevy::prelude::*;
+use bevy_fn_plugin::*;
+
+//standard shortcuts
+
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Validate resources that should exist before game startup.
+fn prestartup_check(world: &World)
+{
+    if !world.contains_resource::<GameFWConfig>()
+        { panic!("GameFWConfig is missing on startup!"); }
+    if !world.contains_resource::<GameFWInitializer>()
+        { panic!("GameFWInitializer is missing on startup!"); }
+    if !world.contains_resource::<MessageReceiver<ClientPacket>>()
+        { panic!("MessageReceiver<ClientPacket> is missing on startup!"); }
+    if !world.contains_resource::<MessageSender<GamePacket>>()
+        { panic!("MessageSender<GamePacket> is missing on startup!"); }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Validate resources that should exist before game begins.
+fn poststartup_check(world: &World)
+{
+    if !world.contains_resource::<ClientMessageHandler>()
+        { panic!("ClientMessageHandler is missing on startup!"); }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Game framework startup plugin.
+#[bevy_plugin]
+pub fn GameFWStartupPlugin(app: &mut App)
+{
+    app.add_state::<GameFWMode>()
+        .add_systems(PreStartup,
+            (
+                prestartup_check,
+                //todo: set up basic replication rooms (client rooms, global room, ...?)
+            ).chain()
+        )
+        .add_systems(Startup,
+            (
+                setup_game_fw_state,
+            ).chain()
+        )
+        .add_systems(PostStartup,
+            (
+                poststartup_check,
+            ).chain()
+        );
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Umbrella set for game fw sets.
+/// This set is ordinal.
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub struct GameFWSet;
+
+/// Private game fw sets, these sandwich the public sets.
+/// These sets are ordinal.
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum GameFWTickSetPrivate
+{
+    /// PreUpdate
+    FWStart,
+    /// Update
+    FWHandleRequests,
+    /// PostUpdate
+    FWEnd
+}
+
+/// Public game fw sets (exclusively ordered). Game implementations should put game-related logic in these sets.
+/// These sets are ordinal.
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum GameFWTickSet
+{
+    Admin,
+    Start,
+    PreLogic,
+    Logic,
+    PostLogic,
+    End
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Game framework tick plugin. Depends on [GameFWStartupPlugin].
+///
+/// We treat a tick as a span of time in which events occur: |__stuff_happening__|. Our logic for handling the stuff that
+/// happened in a span runs after the *end* of that span (after the span's tick counter increments). This means we think
+/// in terms of a span (a tick) having 'elapsed'. The very first time our logic runs, no tick has elapsed yet. To handle
+/// that, we imagine a 'virtual tick' that ends just before our first logic run.
+///
+/// Each tick is assigned one game mode, represented by [GameFWMode]. Game mode transitions occur **between** two ticks,
+/// which means they occur after one tick's logic run and before the span of the tick with the new game mode begins.
+/// In practice, the order of events in a tick is: time span -> 'elapsed tick' counter increments -> determine mode -> logic.
+/// Transition logic can use the OnEnter<GameFWMode::*> and OnExit<GameFWMode::*> schedules.
+///
+/// Note that 'before the virtual tick' is assumed to be [GameFWMode::Init], which means the OnEnter<GameFWMode::Init>
+/// schedule will always be invoked in the app's first update, even if the virtual tick is [GameFWMode::Game] (in which
+/// case OnExit<GameFWMode::Init> and OnEnter<GameFWMode::Game> will also be invoked in the first update).
+///
+#[bevy_plugin]
+pub fn GameFWTickPlugin(app: &mut App)
+{
+    app.configure_sets(Update,
+            (
+                GameFWTickSet::Admin,
+                GameFWTickSet::Start,
+                GameFWTickSetPrivate::FWHandleRequests,
+                GameFWTickSet::PreLogic,
+                GameFWTickSet::Logic,
+                GameFWTickSet::PostLogic,
+                GameFWTickSet::End,
+            ).chain().in_set(GameFWSet)
+        );
+
+    // TICK FWSTART
+    app.add_systems(PreUpdate,
+            (
+                // elapse the previous tick
+                advance_game_fw_tick,
+                // determine which game framework mode the previous tick was in and set it
+                update_game_fw_mode,
+                apply_state_transition::<GameFWMode>,
+            ).chain().in_set(GameFWTickSetPrivate::FWStart)
+        );
+
+    // TICK ADMIN
+
+    // TICK START
+
+    // TICK FWHANDLEREQUESTS
+    // note: we handle inputs after the game fw and game core have updated their ticks and modes (in the start sets)
+    app.add_systems(Update,
+            (
+                handle_requests,
+                refresh_game_init_progress,
+            ).chain().in_set(GameFWTickSetPrivate::FWHandleRequests)
+        );
+
+    // TICK PRELOGIC
+
+    // TICK LOGIC
+
+    // TICK POSTLOGIC
+
+    // TICK END
+
+    // TICK FWEND
+    app.add_systems(PostUpdate,
+            (
+                dispatch_messages_to_client,
+            ).chain().in_set(GameFWTickSetPrivate::FWEnd)
+        );
+
+
+    // MISC
+
+    // Respond to state transitions
+    app.add_systems(OnEnter(GameFWMode::Init), notify_game_fw_mode_all)
+        .add_systems(OnEnter(GameFWMode::Game), notify_game_fw_mode_all)
+        .add_systems(OnEnter(GameFWMode::End), notify_game_fw_mode_all);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Main game framework plugin
+#[bevy_plugin]
+pub fn GameFWPlugin(app: &mut App)
+{
+    app.add_plugins(GameFWStartupPlugin)
+        .add_plugins(GameFWTickPlugin);
+}
+
+//-------------------------------------------------------------------------------------------------------------------

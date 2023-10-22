@@ -1,0 +1,61 @@
+[workspace.package]
+name = "bevy_girk"
+description = "Framework for instanced multiplayer games in Bevy"
+authors = ["koe <ukoe@protonmail.com>"]
+version = "0.0.1"
+edition = "2021"
+keywords = ["gamedev", "multiplayer"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/UkoeHB/bevy_girk"
+
+[workspace]
+resolver = "2"
+members  = [
+    "libs/*",
+    "tests"
+]
+
+[workspace.dependencies]
+bevy           = { version = "0.11", default-features = false }
+bevy_kot       = { version = "0.0.5" }
+bevy_fn_plugin = { version = "0.1" }
+#bevy_renet     = { version = "0.0.9" }
+bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
+#bevy_replicon  = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "a728047" }
+bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "bbed8dd" }
+bevy_simplenet = { git = "https://github.com/UkoeHB/bevy_simplenet.git", rev = "dccb7a8", default-features = false }
+iyes_progress  = { version = "0.9" , features = [ "assets" ] }
+
+enfync             = { version = "0.1" }
+ezsockets          = { git = "https://github.com/gbaranski/ezsockets.git", rev = "390ec91" }
+serde              = { version = "1.0" }
+serde_json         = { version = "1.0" }
+serde_with         = { version = "3.0" }
+tracing            = { version = "0.1" }
+tracing-subscriber = { version = "0.3" }
+url                = { version = "2.4" }
+
+[profile.test]
+opt-level = 0  #no optimizations for local tests
+
+[profile.dev]
+opt-level = 1  #minimal optimizations for local debug builds
+debug     = true
+
+[profile.dev.package."*"]
+opt-level = 3  #maximum optimizations for dependencies used in debug builds
+
+[profile.release]
+lto           = "thin"  #link time optimizations (fast)
+strip         = true    #minimize binary size with symbol stripping
+codegen-units = 1       #maximize performance
+
+[profile.release-small]
+inherits = "release"
+opt-level = "s"
+lto = "fat"
+
+[profile.release-small.package."*"]
+opt-level = "s"
+strip = true

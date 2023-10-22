@@ -1,0 +1,21 @@
+[package]
+name = "bevy_girk_wiring"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+test    = false
+doctest = false
+
+[dependencies]
+bevy          = { version = "0.11", default-features = false }
+bevy_renet    = { workspace = true }
+bevy_replicon = { workspace = true }
+iyes_progress = { workspace = true }
+serde         = { workspace = true }
+tracing       = { workspace = true }
+
+bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }
+bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
+bevy_girk_game_fw       = { path = "../bevy_girk_game_fw" }
+bevy_girk_utils         = { path = "../bevy_girk_utils" }
