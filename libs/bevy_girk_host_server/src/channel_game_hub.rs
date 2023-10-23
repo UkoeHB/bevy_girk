@@ -51,10 +51,10 @@ impl bevy_simplenet::ChannelPack for HostHubChannel
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// SERVER: [Host] -> { Hubs }
+/// SERVER
 pub type HostHubServer       = bevy_simplenet::Server<HostHubChannel>;
 pub type HostHubServerReport = bevy_simplenet::ServerReport::<()>;
-pub type HostHubServerVal    = bevy_simplenet::ServerValFrom<HostHubChannel>;
+pub type HostHubClientVal    = bevy_simplenet::ClientValFrom<HostHubChannel>;
 
 /// server factory
 pub fn host_hub_server_factory() ->  bevy_simplenet::ServerFactory<HostHubChannel>
@@ -64,10 +64,10 @@ pub fn host_hub_server_factory() ->  bevy_simplenet::ServerFactory<HostHubChanne
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// CLIENT: [Host] <- [Hub]
+/// CLIENT
 pub type HostHubClient       = bevy_simplenet::Client<HostHubChannel>;
 pub type HostHubClientReport = bevy_simplenet::ClientReport;
-pub type HostHubClientVal    = bevy_simplenet::ClientValFrom<HostHubChannel>;
+pub type HostHubServerVal    = bevy_simplenet::ServerValFrom<HostHubChannel>;
 
 /// client factory
 pub fn host_hub_client_factory() -> bevy_simplenet::ClientFactory<HostHubChannel>

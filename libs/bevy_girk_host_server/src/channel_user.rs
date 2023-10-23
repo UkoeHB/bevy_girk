@@ -14,10 +14,10 @@ const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// SERVER: [Host] -> { Users }
+/// SERVER
 pub type HostUserServer       = bevy_simplenet::Server<HostUserChannel>;
 pub type HostUserServerReport = bevy_simplenet::ServerReport::<()>;
-pub type HostUserServerVal    = bevy_simplenet::ServerValFrom<HostUserChannel>;
+pub type HostUserClientVal    = bevy_simplenet::ClientValFrom<HostUserChannel>;
 
 /// server factory
 pub fn host_user_server_factory() ->  bevy_simplenet::ServerFactory<HostUserChannel>
