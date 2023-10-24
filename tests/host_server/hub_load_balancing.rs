@@ -111,14 +111,18 @@ fn host_load_balancing()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users recieve lobbies
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id1, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id2, lobby: _ }, _)) = user2.next_val()
+    let made_lobby_id1 = lobby.id;
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
     else { panic!("client did not receive server msg"); };
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id3, lobby: _ }, _)) = user3.next_val()
+    let made_lobby_id2 = lobby.id;
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user3.next_val()
     else { panic!("client did not receive server msg"); };
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id4, lobby: _ }, _)) = user4.next_val()
+    let made_lobby_id3 = lobby.id;
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user4.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id4 = lobby.id;
 
     // users launch lobbies
     user1.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");

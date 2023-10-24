@@ -93,12 +93,13 @@ fn pending_lobby_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id = lobby.id;
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::GetLobby(LobbySearchType::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -123,9 +124,9 @@ fn pending_lobby_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id, lobby: _}, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(id, made_lobby_id);
+    assert_eq!(lobby.id, made_lobby_id);
 
     // - users 1, 2 receive lobby update
     let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next_val()
@@ -138,7 +139,7 @@ fn pending_lobby_expires()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -280,12 +281,13 @@ fn pending_lobby_expires_then_reacks()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id = lobby.id;
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::GetLobby(LobbySearchType::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -310,9 +312,9 @@ fn pending_lobby_expires_then_reacks()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id, lobby: _}, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(id, made_lobby_id);
+    assert_eq!(lobby.id, made_lobby_id);
 
     // - users 1, 2 receive lobby update
     let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next_val()
@@ -325,7 +327,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -403,9 +405,9 @@ fn pending_lobby_expires_then_reacks()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 3 receives lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id, lobby: _}, _)) = user3.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user3.next_val()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(id, made_lobby_id);
+    assert_eq!(lobby.id, made_lobby_id);
 
     // - users 1, 3 receive lobby update
     let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next_val()

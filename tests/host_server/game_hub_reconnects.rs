@@ -91,8 +91,9 @@ fn game_hub_reconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id1, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id1 = lobby.id;
 
 
     // user 1 launches lobby
@@ -157,8 +158,9 @@ fn game_hub_reconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id2, lobby: _ }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id2 = lobby.id;
 
 
     // user 2 launches lobby

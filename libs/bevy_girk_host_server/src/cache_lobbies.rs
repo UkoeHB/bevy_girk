@@ -167,18 +167,18 @@ impl LobbiesCache
 
 /// Get requested lobbies.
 /// - The returned lobbies are sorted from newest to oldest.
-pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchType) -> Vec<LobbyData>
+pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchRequest) -> Vec<LobbyData>
 {
     tracing::trace!(?criteria, "get searched lobbies from LobbiesCache");
     match criteria
     {
-        LobbySearchType::LobbyId(id) =>
+        LobbySearchRequest::LobbyId(id) =>
         {
             // get the lobby if it exists
             let Some(lobby_ref) = lobbies_cache.lobby_ref(id) else { return Vec::default(); };
             vec![lobby_ref.data.clone()]
         }
-        LobbySearchType::Page{youngest_lobby_id, mut num_lobbies} =>
+        LobbySearchRequest::Page{youngest_lobby_id, mut num_lobbies} =>
         {
             // clamp the number of lobbies requested
             num_lobbies = std::cmp::min(num_lobbies, lobbies_cache.max_request_size());

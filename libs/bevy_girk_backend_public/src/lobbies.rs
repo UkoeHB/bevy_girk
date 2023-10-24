@@ -10,7 +10,7 @@ use std::collections::HashMap;
 //-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum LobbySearchType
+pub enum LobbySearchRequest
 {
     LobbyId(u64),
     Page{ youngest_lobby_id: u64, num_lobbies: u16 }

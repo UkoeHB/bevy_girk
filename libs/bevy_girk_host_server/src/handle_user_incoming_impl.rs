@@ -69,7 +69,7 @@ pub(crate) fn user_reset_lobby(In(token): In<bevy_simplenet::RequestToken>, worl
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn user_get_lobby(
-    In((token, request)) : In<(bevy_simplenet::RequestToken, LobbySearchType)>,
+    In((token, request)) : In<(bevy_simplenet::RequestToken, LobbySearchRequest)>,
     lobbies_cache        : Res<LobbiesCache>,
     user_server          : Res<HostUserServer>,
 ){

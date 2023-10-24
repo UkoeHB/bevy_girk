@@ -41,7 +41,7 @@ pub(crate) fn send_lobby_join_message_and_update_state(
     // send lobby join message
     let user_id = token.client_id();
     let lobby_id = lobby.id;
-    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbyJoin{ id: lobby_id, lobby: lobby.clone() })
+    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbyJoin{ lobby: lobby.clone() })
     { tracing::error!(lobby_id, user_id, "failed sending lobby join notification"); }
 
     // update user state

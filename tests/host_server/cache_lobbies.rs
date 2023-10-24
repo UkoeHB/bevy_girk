@@ -209,10 +209,10 @@ fn cache_lobbies_search()
         );
 
     // search the cache
-    let lobbies = get_searched_lobbies(&cache, LobbySearchType::LobbyId(0u64));
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::LobbyId(0u64));
     assert_eq!(lobbies.len(), 0);
 
-    let lobbies = get_searched_lobbies(&cache, LobbySearchType::Page{ youngest_lobby_id: 0u64, num_lobbies: 10u16 });
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::Page{ youngest_lobby_id: 0u64, num_lobbies: 10u16 });
     assert_eq!(lobbies.len(), 0);
 
     // add one lobby
@@ -225,11 +225,11 @@ fn cache_lobbies_search()
         ).unwrap();
 
     // search the cache
-    let lobbies = get_searched_lobbies(&cache, LobbySearchType::LobbyId(first_lobby_id));
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::LobbyId(first_lobby_id));
     assert_eq!(lobbies.len(), 1);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
 
-    let lobbies = get_searched_lobbies(&cache, LobbySearchType::Page{ youngest_lobby_id: first_lobby_id, num_lobbies: 10u16 });
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::Page{ youngest_lobby_id: first_lobby_id, num_lobbies: 10u16 });
     assert_eq!(lobbies.len(), 1);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
 
@@ -250,7 +250,7 @@ fn cache_lobbies_search()
 
     // search page (request more than max request size)
     let lobbies = get_searched_lobbies(&cache,
-            LobbySearchType::Page{
+            LobbySearchRequest::Page{
                     youngest_lobby_id : third_lobby_id,
                     num_lobbies       : max_request_size + 1
                 }
@@ -261,7 +261,7 @@ fn cache_lobbies_search()
 
     // search page (request 1)
     let lobbies = get_searched_lobbies(&cache,
-            LobbySearchType::Page{
+            LobbySearchRequest::Page{
                     youngest_lobby_id : second_lobby_id,
                     num_lobbies       : 1u16
                 }

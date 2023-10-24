@@ -10,9 +10,9 @@ The framework includes:
     - **Game hub server**: Creates and manages game instances and sends game-over reports to the host server, which are forwarded to game participants.
 - **Wiring**: Convenience tools for setting up game and client apps.
 
-The framework uses [`bevy_replicon`] for networking (on top of [`bevy_renet`]). Clients can be set up to work on both native and WASM targets (pending a `bevy_renet` WASM transport).
+The framework uses [bevy_replicon] for networking (on top of [bevy_renet]). Clients can be set up to work on both native and WASM targets (pending a `bevy_renet` WASM transport).
 
-For a complete working example, see [`bevy_girk_demo`] (WIP).
+For a complete working example, see [bevy_girk_demo](https://github.com/UkoeHB/bevy_girk_demo).
 
 
 ### TODO

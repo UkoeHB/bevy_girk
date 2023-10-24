@@ -190,8 +190,9 @@ fn lobby_member_invalid_type()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id = lobby.id;
 
 
     // user 2 joins lobby
@@ -256,8 +257,9 @@ fn lobby_member_invalid_password()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ id: made_lobby_id, lobby: _ }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
     else { panic!("client did not receive server msg"); };
+    let made_lobby_id = lobby.id;
 
 
     // user 2 joins lobby

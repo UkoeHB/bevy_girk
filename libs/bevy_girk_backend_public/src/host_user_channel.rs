@@ -25,7 +25,7 @@ pub enum HostToUserMsg
     LobbyLeave{ id: u64 },
     PendingLobbyAckRequest{ id: u64 },
     PendingLobbyAckFail{ id: u64 },
-    GameStart{ id: u64, connect: GameConnectInfo},
+    GameStart{ id: u64, connect: GameConnectInfo },
     GameAborted{ id: u64 },
     GameOver{ id: u64, report: GameOverReport },
 }
@@ -36,9 +36,9 @@ pub enum HostToUserMsg
 pub enum HostToUserResponse
 {
     /// Response to [`UserToHostRequest::GetLobby`].
-    LobbySearchResult{ request: LobbySearchType, lobbies: Vec<LobbyData> },
+    LobbySearchResult{ request: LobbySearchRequest, lobbies: Vec<LobbyData> },
     /// Response to [`UserToHostRequest::MakeLobby`] and [`UserToHostRequest::JoinLobby`].
-    LobbyJoin{ id: u64, lobby: LobbyData },
+    LobbyJoin{ lobby: LobbyData },
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -64,9 +64,9 @@ pub enum UserToHostRequest
     /// This can be used after a client reconnects to synchronize with the host server. Doing so avoids edge conditions
     /// where the client and server get desynced.
     ///
-    /// If the server send an Ack then the user state is idle. If it sends a Reject then the user state is in-game.
+    /// If the server sends an Ack then the user state is idle. If it sends a Reject then the user state is in-game.
     ResetLobby,
-    GetLobby(LobbySearchType),
+    GetLobby(LobbySearchRequest),
     MakeLobby{
         mcolor: LobbyMemberColor,
         pwd: String,

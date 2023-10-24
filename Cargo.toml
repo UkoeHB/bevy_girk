@@ -1,5 +1,4 @@
 [workspace.package]
-name = "bevy_girk"
 description = "Framework for instanced multiplayer games in Bevy"
 authors = ["koe <ukoe@protonmail.com>"]
 version = "0.0.1"
