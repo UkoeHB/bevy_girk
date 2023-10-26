@@ -35,7 +35,7 @@ pub enum HostToUserMsg
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum HostToUserResponse
 {
-    /// Response to [`UserToHostRequest::GetLobby`].
+    /// Response to [`UserToHostRequest::LobbySearch`].
     LobbySearchResult{ request: LobbySearchRequest, lobbies: Vec<LobbyData> },
     /// Response to [`UserToHostRequest::MakeLobby`] and [`UserToHostRequest::JoinLobby`].
     LobbyJoin{ lobby: LobbyData },
@@ -66,7 +66,7 @@ pub enum UserToHostRequest
     ///
     /// If the server sends an Ack then the user state is idle. If it sends a Reject then the user state is in-game.
     ResetLobby,
-    GetLobby(LobbySearchRequest),
+    LobbySearch(LobbySearchRequest),
     MakeLobby{
         mcolor: LobbyMemberColor,
         pwd: String,

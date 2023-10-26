@@ -96,7 +96,7 @@ fn client_leaves_lobby()
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -195,7 +195,7 @@ fn client_leaves_lobby()
 
 
     // user 1 requests lobby list
-    user1.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user1.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -268,7 +268,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -474,7 +474,7 @@ fn client_resets_pending_lobby()
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::GetLobby(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
