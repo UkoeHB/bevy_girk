@@ -104,7 +104,9 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");
@@ -272,7 +274,9 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");

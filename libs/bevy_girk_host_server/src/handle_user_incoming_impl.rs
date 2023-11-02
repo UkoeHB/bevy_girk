@@ -74,11 +74,11 @@ pub(crate) fn user_get_lobby(
     user_server          : Res<HostUserServer>,
 ){
     // query the lobbies cache
-    let lobbies = get_searched_lobbies(&*lobbies_cache, request.clone());
+    let result = get_searched_lobbies(&*lobbies_cache, request);
 
     // send result to user
     let user_id = token.client_id();
-    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbySearchResult{ request, lobbies })
+    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbySearchResult(result))
     { tracing::error!(user_id, "failed sending lobby request response"); }
 }
 

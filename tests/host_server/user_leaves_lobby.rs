@@ -103,7 +103,9 @@ fn client_leaves_lobby()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");
@@ -202,7 +204,9 @@ fn client_leaves_lobby()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user1.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user1.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobbies.len(), 0);
 
@@ -275,7 +279,9 @@ fn client_leaves_pending_lobby()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");
@@ -481,7 +487,9 @@ fn client_resets_pending_lobby()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbySearchResult{ request: _, lobbies }, _)) = user2.next_val()
+    let Some(HostUserServerVal::Response(
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+        )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");

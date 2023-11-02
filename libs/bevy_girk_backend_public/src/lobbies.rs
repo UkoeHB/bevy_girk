@@ -22,6 +22,25 @@ pub enum LobbySearchRequest
 
 //-------------------------------------------------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LobbySearchResult
+{
+    /// The original request.
+    pub req: LobbySearchRequest,
+
+    /// The lobbies for this response.
+    pub lobbies: Vec<LobbyData>,
+
+    /// The index in the server's lobby cache of the youngest lobby in this response.
+    ///
+    /// Lobbies are sorted youngest to oldest.
+    pub start_idx: usize,
+    /// The total number of lobbies cached in the server.
+    pub total: usize,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Opaque type signifying what a lobby member is (e.g. player/watcher, team membership, etc.).
 ///
 /// Note: For simplicity, all member types must ack a lobby before it can start.

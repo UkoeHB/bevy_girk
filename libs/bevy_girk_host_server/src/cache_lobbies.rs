@@ -167,15 +167,15 @@ impl LobbiesCache
 
 /// Get requested lobbies.
 /// - The returned lobbies are sorted from newest to oldest.
-pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchRequest) -> Vec<LobbyData>
+pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, req: LobbySearchRequest) -> LobbySearchResult
 {
-    tracing::trace!(?criteria, "get searched lobbies from LobbiesCache");
-    match criteria
+    tracing::trace!(?req, "get searched lobbies from LobbiesCache");
+    let lobbies = match req
     {
         LobbySearchRequest::LobbyId(id) =>
-        {
+        'r: {
             // get the lobby if it exists
-            let Some(lobby_ref) = lobbies_cache.lobby_ref(id) else { return Vec::default(); };
+            let Some(lobby_ref) = lobbies_cache.lobby_ref(id) else { break 'r Vec::default(); };
             vec![lobby_ref.data.clone()]
         }
         LobbySearchRequest::PageNewer{ oldest_id, mut num } =>
@@ -219,7 +219,21 @@ pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchR
 
             result
         }
-    }
+    };
+
+    // index of youngest lobby in the cache (assuming lobbies are sorted from youngest to oldest)
+    let start_idx = match lobbies.get(0)
+    {
+        None => 0,
+        Some(lobby_data) => lobbies_cache.lobbies_ref().range((Excluded(&lobby_data.id), Unbounded)).count(),
+    };
+
+    LobbySearchResult{
+            req,
+            lobbies,
+            start_idx,
+            total: lobbies_cache.lobbies_ref().len(),
+        }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

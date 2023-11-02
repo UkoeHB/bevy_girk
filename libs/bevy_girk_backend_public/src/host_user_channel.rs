@@ -36,7 +36,7 @@ pub enum HostToUserMsg
 pub enum HostToUserResponse
 {
     /// Response to [`UserToHostRequest::LobbySearch`].
-    LobbySearchResult{ request: LobbySearchRequest, lobbies: Vec<LobbyData> },
+    LobbySearchResult(LobbySearchResult),
     /// Response to [`UserToHostRequest::MakeLobby`] and [`UserToHostRequest::JoinLobby`].
     LobbyJoin{ lobby: LobbyData },
 }
