@@ -195,6 +195,9 @@ pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchR
                 result.push(lobby.data.clone());
             }
 
+            // reverse results so they are sorted youngest to oldest
+            result.reverse();
+
             result
         }
         LobbySearchRequest::PageOlder{ youngest_id, mut num } =>

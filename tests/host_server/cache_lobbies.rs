@@ -273,8 +273,8 @@ fn cache_lobbies_search()
                 }
         );
     assert_eq!(lobbies.len(), 2);
-    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
-    assert_eq!(lobbies.get(1).unwrap().owner_id, owner_id + 1);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id + 1);
+    assert_eq!(lobbies.get(1).unwrap().owner_id, owner_id);
 
     // search page (request 1)
     let lobbies = get_searched_lobbies(&cache,
