@@ -104,7 +104,7 @@ fn client_leaves_lobby()
 
     // - user 2 receives lobby response
     let Some(HostUserServerVal::Response(
-            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
         )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
@@ -205,7 +205,7 @@ fn client_leaves_lobby()
 
     // - user 1 receives lobby response
     let Some(HostUserServerVal::Response(
-            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
         )) = user1.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobbies.len(), 0);
@@ -280,7 +280,7 @@ fn client_leaves_pending_lobby()
 
     // - user 2 receives lobby response
     let Some(HostUserServerVal::Response(
-            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
         )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
@@ -488,7 +488,7 @@ fn client_resets_pending_lobby()
 
     // - user 2 receives lobby response
     let Some(HostUserServerVal::Response(
-            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
         )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 

@@ -31,10 +31,11 @@ pub struct LobbySearchResult
     /// The lobbies for this response.
     pub lobbies: Vec<LobbyData>,
 
-    /// The index in the server's lobby cache of the youngest lobby in this response.
+    /// The number of lobbies younger than the lobbies in this response in the server.
     ///
-    /// Lobbies are sorted youngest to oldest.
-    pub start_idx: usize,
+    /// If there are no lobbies in this response, then this value represents the number of lobbies in the server
+    /// younger than the request's search position.
+    pub num_younger: usize,
     /// The total number of lobbies cached in the server.
     pub total: usize,
 }

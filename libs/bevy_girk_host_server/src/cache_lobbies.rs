@@ -170,13 +170,21 @@ impl LobbiesCache
 pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, req: LobbySearchRequest) -> LobbySearchResult
 {
     tracing::trace!(?req, "get searched lobbies from LobbiesCache");
-    let lobbies = match req
+    let (lobbies, num_younger) = match req
     {
         LobbySearchRequest::LobbyId(id) =>
         'r: {
+            // count the number of lobbies younger than the requested lobby
+            let num_younger = lobbies_cache.lobbies_ref().range((Excluded(&id), Unbounded)).count();
+
             // get the lobby if it exists
-            let Some(lobby_ref) = lobbies_cache.lobby_ref(id) else { break 'r Vec::default(); };
-            vec![lobby_ref.data.clone()]
+            let Some(lobby_ref) = lobbies_cache.lobby_ref(id)
+            else { break 'r (Vec::default(), num_younger); };
+
+            (
+                vec![lobby_ref.data.clone()],
+                num_younger
+            )
         }
         LobbySearchRequest::PageNewer{ oldest_id, mut num } =>
         {
@@ -198,7 +206,17 @@ pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, req: LobbySearchReques
             // reverse results so they are sorted youngest to oldest
             result.reverse();
 
-            result
+            // get id to count from
+            let counter_id = match result.get(0)
+            {
+                None             => oldest_id,
+                Some(lobby_data) => lobby_data.id,
+            };
+
+            (
+                result,
+                lobbies_cache.lobbies_ref().range((Excluded(&counter_id), Unbounded)).count()
+            )
         }
         LobbySearchRequest::PageOlder{ youngest_id, mut num } =>
         {
@@ -217,21 +235,24 @@ pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, req: LobbySearchReques
                 result.push(lobby.data.clone());
             }
 
-            result
-        }
-    };
+            // get id to count from
+            let counter_id = match result.get(0)
+            {
+                None             => youngest_id,
+                Some(lobby_data) => lobby_data.id,
+            };
 
-    // index of youngest lobby in the cache (assuming lobbies are sorted from youngest to oldest)
-    let start_idx = match lobbies.get(0)
-    {
-        None => 0,
-        Some(lobby_data) => lobbies_cache.lobbies_ref().range((Excluded(&lobby_data.id), Unbounded)).count(),
+            (
+                result,
+                lobbies_cache.lobbies_ref().range((Excluded(&counter_id), Unbounded)).count()
+            )
+        }
     };
 
     LobbySearchResult{
             req,
             lobbies,
-            start_idx,
+            num_younger,
             total: lobbies_cache.lobbies_ref().len(),
         }
 }

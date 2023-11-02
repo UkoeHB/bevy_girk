@@ -104,7 +104,7 @@ fn host_rejects_game()
 
     // - user 2 receives lobby response
     let Some(HostUserServerVal::Response(
-            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, start_idx: _, total: _ }), _
+            HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
         )) = user2.next_val()
     else { panic!("client did not receive server msg"); };
 
