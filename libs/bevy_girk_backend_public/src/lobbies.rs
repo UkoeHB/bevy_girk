@@ -12,8 +12,12 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LobbySearchRequest
 {
+    /// Request a specific lobby.
     LobbyId(u64),
-    Page{ youngest_lobby_id: u64, num_lobbies: u16 }
+    /// Request the first `num` lobbies in the range [`oldest_id`, max] (ending at the youngest lobby).
+    PageNewer{ oldest_id: u64, num: u16 },
+    /// Request the first `num` lobbies in the range [`youngest_id`, min] (ending at the oldest lobby).
+    PageOlder{ youngest_id: u64, num: u16 },
 }
 
 //-------------------------------------------------------------------------------------------------------------------

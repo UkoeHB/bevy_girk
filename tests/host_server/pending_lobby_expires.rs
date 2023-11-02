@@ -99,7 +99,7 @@ fn pending_lobby_expires()
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
@@ -287,7 +287,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // user 2 accesses lobby info
-    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::Page{ youngest_lobby_id: u64::MAX, num_lobbies: 1 }))
+    user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
         .expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();

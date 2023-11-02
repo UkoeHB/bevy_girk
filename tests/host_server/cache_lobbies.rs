@@ -212,7 +212,10 @@ fn cache_lobbies_search()
     let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::LobbyId(0u64));
     assert_eq!(lobbies.len(), 0);
 
-    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::Page{ youngest_lobby_id: 0u64, num_lobbies: 10u16 });
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::PageOlder{ youngest_id: 0u64, num: 10u16 });
+    assert_eq!(lobbies.len(), 0);
+
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::PageNewer{ oldest_id: 0u64, num: 10u16 });
     assert_eq!(lobbies.len(), 0);
 
     // add one lobby
@@ -229,7 +232,11 @@ fn cache_lobbies_search()
     assert_eq!(lobbies.len(), 1);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
 
-    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::Page{ youngest_lobby_id: first_lobby_id, num_lobbies: 10u16 });
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::PageOlder{ youngest_id: first_lobby_id, num: 10u16 });
+    assert_eq!(lobbies.len(), 1);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
+
+    let lobbies = get_searched_lobbies(&cache, LobbySearchRequest::PageNewer{ oldest_id: first_lobby_id, num: 10u16 });
     assert_eq!(lobbies.len(), 1);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
 
@@ -250,24 +257,63 @@ fn cache_lobbies_search()
 
     // search page (request more than max request size)
     let lobbies = get_searched_lobbies(&cache,
-            LobbySearchRequest::Page{
-                    youngest_lobby_id : third_lobby_id,
-                    num_lobbies       : max_request_size + 1
+            LobbySearchRequest::PageOlder{
+                    youngest_id : third_lobby_id,
+                    num         : max_request_size + 1
                 }
         );
     assert_eq!(lobbies.len(), 2);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id + 2);
     assert_eq!(lobbies.get(1).unwrap().owner_id, owner_id + 1);
 
+    let lobbies = get_searched_lobbies(&cache,
+            LobbySearchRequest::PageNewer{
+                    oldest_id : first_lobby_id,
+                    num       : max_request_size + 1
+                }
+        );
+    assert_eq!(lobbies.len(), 2);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
+    assert_eq!(lobbies.get(1).unwrap().owner_id, owner_id + 1);
+
     // search page (request 1)
     let lobbies = get_searched_lobbies(&cache,
-            LobbySearchRequest::Page{
-                    youngest_lobby_id : second_lobby_id,
-                    num_lobbies       : 1u16
+            LobbySearchRequest::PageOlder{
+                    youngest_id : second_lobby_id,
+                    num         : 1u16
                 }
         );
     assert_eq!(lobbies.len(), 1);
     assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id + 1);
+
+    let lobbies = get_searched_lobbies(&cache,
+            LobbySearchRequest::PageNewer{
+                    oldest_id : second_lobby_id,
+                    num       : 1u16
+                }
+        );
+    assert_eq!(lobbies.len(), 1);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id + 1);
+
+    // search 'now' (most recent)
+    let lobbies = get_searched_lobbies(&cache,
+            LobbySearchRequest::PageOlder{
+                    youngest_id : u64::MAX,
+                    num         : 1u16
+                }
+        );
+    assert_eq!(lobbies.len(), 1);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id + 2);
+
+    // search 'oldest'
+    let lobbies = get_searched_lobbies(&cache,
+            LobbySearchRequest::PageNewer{
+                    oldest_id : 0u64,
+                    num       : 1u16
+                }
+        );
+    assert_eq!(lobbies.len(), 1);
+    assert_eq!(lobbies.get(0).unwrap().owner_id, owner_id);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

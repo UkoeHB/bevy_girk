@@ -178,19 +178,37 @@ pub fn get_searched_lobbies(lobbies_cache: &LobbiesCache, criteria: LobbySearchR
             let Some(lobby_ref) = lobbies_cache.lobby_ref(id) else { return Vec::default(); };
             vec![lobby_ref.data.clone()]
         }
-        LobbySearchRequest::Page{youngest_lobby_id, mut num_lobbies} =>
+        LobbySearchRequest::PageNewer{ oldest_id, mut num } =>
         {
             // clamp the number of lobbies requested
-            num_lobbies = std::cmp::min(num_lobbies, lobbies_cache.max_request_size());
+            num = std::cmp::min(num, lobbies_cache.max_request_size());
 
-            // iterate down from our start lobby (i.e. toward older lobbies)
-            let mut page_reverse_it = lobbies_cache.lobbies_ref().range((Unbounded, Included(&youngest_lobby_id))).rev();
+            // iterate up from our start lobby (i.e. toward newer lobbies)
+            let mut page_it = lobbies_cache.lobbies_ref().range((Included(&oldest_id), Unbounded));
 
             // collect the lobbies for this page
-            let mut result = Vec::<LobbyData>::new();
-            result.reserve(num_lobbies as usize);
+            let mut result = Vec::with_capacity(num as usize);
 
-            for _ in 0..num_lobbies
+            for _ in 0..num
+            {
+                let Some((_, lobby)) = page_it.next() else { break; };
+                result.push(lobby.data.clone());
+            }
+
+            result
+        }
+        LobbySearchRequest::PageOlder{ youngest_id, mut num } =>
+        {
+            // clamp the number of lobbies requested
+            num = std::cmp::min(num, lobbies_cache.max_request_size());
+
+            // iterate down from our start lobby (i.e. toward older lobbies)
+            let mut page_reverse_it = lobbies_cache.lobbies_ref().range((Unbounded, Included(&youngest_id))).rev();
+
+            // collect the lobbies for this page
+            let mut result = Vec::with_capacity(num as usize);
+
+            for _ in 0..num
             {
                 let Some((_, lobby)) = page_reverse_it.next() else { break; };
                 result.push(lobby.data.clone());
