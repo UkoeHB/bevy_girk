@@ -8,7 +8,7 @@ use crate::test_helpers::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot::ecs::*;
+use bevy_kot_ecs::*;
 use bevy_renet::renet::transport::NetcodeClientTransport;
 
 //standard shortcuts

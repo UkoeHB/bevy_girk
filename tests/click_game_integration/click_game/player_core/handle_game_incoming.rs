@@ -5,7 +5,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot::ecs::*;
+use bevy_kot_ecs::*;
 
 //standard shortcuts
 

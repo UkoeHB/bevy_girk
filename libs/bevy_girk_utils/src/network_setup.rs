@@ -1,5 +1,5 @@
 //local shortcuts
-use bevy_kot::ecs::syscall;
+use bevy_kot_ecs::syscall;
 
 //third-party shortcuts
 use bevy::prelude::*;

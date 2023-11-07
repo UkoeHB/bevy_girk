@@ -4,7 +4,7 @@ use bevy_girk_backend_public::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot::ecs::*;
+use bevy_kot_ecs::*;
 
 //standard shortcuts
 

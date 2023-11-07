@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot::ecs::*;
+use bevy_kot_ecs::*;
 
 //standard shortcuts
 

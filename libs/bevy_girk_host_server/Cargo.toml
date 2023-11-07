@@ -9,7 +9,7 @@ doctest = false
 
 [dependencies]
 bevy           = { version = "0.11", default-features = false }
-bevy_kot       = { workspace = true }
+bevy_kot_ecs   = { workspace = true }
 bevy_simplenet = { workspace = true, features = ["client", "server", "bevy"] }
 serde          = { workspace = true }
 tracing        = { workspace = true }

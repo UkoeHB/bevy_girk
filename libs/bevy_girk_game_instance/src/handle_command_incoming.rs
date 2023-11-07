@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy_kot::ecs::*;
+use bevy_kot_ecs::*;
 
 //standard shortcuts
 

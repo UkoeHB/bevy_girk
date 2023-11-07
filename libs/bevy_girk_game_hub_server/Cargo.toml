@@ -8,10 +8,10 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy     = { version = "0.11", default-features = false }
-bevy_kot = { workspace = true }
-serde    = { workspace = true }
-tracing  = { workspace = true }
+bevy         = { version = "0.11", default-features = false }
+bevy_kot_ecs = { workspace = true }
+serde        = { workspace = true }
+tracing      = { workspace = true }
 
 bevy_girk_backend_public = { path = "../bevy_girk_backend_public" }
 bevy_girk_game_fw        = { path = "../bevy_girk_game_fw" }
