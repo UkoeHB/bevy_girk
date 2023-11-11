@@ -21,6 +21,7 @@ pub struct RunningGamesCacheConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Games sit in this cache while running.
 #[derive(Resource)]
 pub struct RunningGamesCache
 {

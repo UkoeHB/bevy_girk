@@ -51,6 +51,7 @@ struct GameHubState
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Tracks connected game hubs.
 #[derive(Resource, Default, Debug)]
 pub struct GameHubsCache
 {

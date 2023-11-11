@@ -34,6 +34,7 @@ pub struct OngoingGamesCacheConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Tracks ongoing games that are waiting for game over reports.
 #[derive(Resource)]
 pub struct OngoingGamesCache
 {

@@ -35,6 +35,7 @@ pub enum UserState
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Tracks the state of connected users.
 #[derive(Resource, Default, Debug)]
 pub struct UsersCache
 {

@@ -51,6 +51,7 @@ impl PendingLobby
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Tracks lobbies that are waiting to be fully acked by their members.
 #[derive(Resource)]
 pub struct PendingLobbiesCache
 {

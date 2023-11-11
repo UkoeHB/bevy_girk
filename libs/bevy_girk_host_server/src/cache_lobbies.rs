@@ -27,6 +27,7 @@ pub struct LobbiesCacheConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Tracks open lobbies.
 #[derive(Resource)]
 pub struct LobbiesCache
 {

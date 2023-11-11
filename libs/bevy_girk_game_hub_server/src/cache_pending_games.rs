@@ -19,6 +19,7 @@ pub struct PendingGamesCacheConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Games sit in this cache while waiting for their launch packs.
 #[derive(Resource, Debug)]
 pub struct PendingGamesCache
 {
