@@ -141,7 +141,7 @@ fn pending_lobby_expires()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -154,6 +154,10 @@ fn pending_lobby_expires()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // wait for ack expiry
@@ -175,7 +179,7 @@ fn pending_lobby_expires()
 
 
     // user 1 launches lobby again
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -188,6 +192,10 @@ fn pending_lobby_expires()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // users 1, 2 ack the lobby
@@ -331,7 +339,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -344,6 +352,10 @@ fn pending_lobby_expires_then_reacks()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // users 1, 2 ack the lobby
@@ -381,7 +393,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // user 2 leaves lobby
-    user2.send(UserToHostMsg::LeaveLobby{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -396,6 +408,10 @@ fn pending_lobby_expires_then_reacks()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
     assert_eq!(lobby.members.len(), 1);
+
+    // - user 2 receives ack for leaving the lobby
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 3 joins lobby
@@ -424,7 +440,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -437,6 +453,10 @@ fn pending_lobby_expires_then_reacks()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user3.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // users 1, 3 ack the lobby

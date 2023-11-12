@@ -159,8 +159,12 @@ pub(crate) fn user_join_lobby(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn user_leave_lobby(In((user_id, lobby_id)): In<(u128, u64)>, world: &mut World)
+pub(crate) fn user_leave_lobby(In((token, lobby_id)): In<(bevy_simplenet::RequestToken, u64)>, world: &mut World)
 {
+    // get initial user state
+    let user_id = token.client_id();
+    let Some(initial_user_state) = world.resource::<UsersCache>().get_user_state(user_id) else { return; };
+
     // nack pending lobby the user is in
     // - if the pending lobby is fully acked then nothing will happen
     if syscall(world, (user_id, lobby_id), try_nack_pending_lobby)
@@ -169,18 +173,24 @@ pub(crate) fn user_leave_lobby(In((user_id, lobby_id)): In<(u128, u64)>, world: 
     // remove user from lobby
     if syscall(world, (user_id, Some(lobby_id)), try_remove_user_from_lobby)
     { tracing::trace!(user_id, lobby_id, "removed user from lobby because user left lobby"); }
+
+    // send request ack if we actually left a lobby
+    let Some(final_user_state) = world.resource::<UsersCache>().get_user_state(user_id) else { return; };
+    if initial_user_state == final_user_state { return; };
+    let _ = world.resource::<HostUserServer>().acknowledge(token);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn user_launch_lobby_game(
-    In((user_id, lobby_id))   : In<(u128, u64)>,
+    In((token, lobby_id))     : In<(bevy_simplenet::RequestToken, u64)>,
     mut pending_lobbies_cache : ResMut<PendingLobbiesCache>,
     mut lobbies_cache         : ResMut<LobbiesCache>,
     mut users_cache           : ResMut<UsersCache>,
     user_server               : Res<HostUserServer>,
 ){
     // get id of lobby the user is in
+    let user_id = token.client_id();
     let Some(UserState::InLobby(users_lobby_id)) = users_cache.get_user_state(user_id)
     else { tracing::trace!(user_id, "failed launching game, user is not in the lobby"); return; };
 
@@ -210,6 +220,9 @@ pub(crate) fn user_launch_lobby_game(
     // move lobby to pending
     // - warning: failure here is a critical error
     if let Err(_) = pending_lobbies_cache.add_lobby(lobby) { tracing::error!("insert pending lobby error"); }
+
+    // send request ack
+    let _ = user_server.acknowledge(token);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

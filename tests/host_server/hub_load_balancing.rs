@@ -125,10 +125,10 @@ fn host_load_balancing()
     let made_lobby_id4 = lobby.id;
 
     // users launch lobbies
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
-    user2.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
-    user3.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id3 }).expect("send failed");
-    user4.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id4 }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
+    user3.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id3 }).expect("send failed");
+    user4.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id4 }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -146,6 +146,16 @@ fn host_load_balancing()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user4.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id4);
+
+    // - users receive acks for launching games
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
+    let Some(HostUserServerVal::Ack(_request_id)) = user3.next_val()
+    else { panic!("client did not receive server msg"); };
+    let Some(HostUserServerVal::Ack(_request_id)) = user4.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 sends ack

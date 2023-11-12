@@ -121,7 +121,7 @@ fn basic_host_hub_integration()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -129,6 +129,10 @@ fn basic_host_hub_integration()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 sends ack

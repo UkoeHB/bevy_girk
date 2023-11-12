@@ -138,7 +138,7 @@ fn client_leaves_lobby()
 
 
     // user 2 leaves lobby
-    user2.send(UserToHostMsg::LeaveLobby{ id: lobby.id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -153,6 +153,10 @@ fn client_leaves_lobby()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
     assert_eq!(lobby.members.len(), 1);
+
+    // - user 2 receives ack for leaving the lobby
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 2 joins lobby
@@ -181,7 +185,7 @@ fn client_leaves_lobby()
 
 
     // user 1 leaves lobby (user 1 is the owner so the lobby should be removed)
-    user1.send(UserToHostMsg::LeaveLobby{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -194,6 +198,10 @@ fn client_leaves_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyLeave{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for leaving the lobby
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 requests lobby list
@@ -314,7 +322,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -328,9 +336,13 @@ fn client_leaves_pending_lobby()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
+    // - user 1receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
+
 
     // user 2 leaves lobby
-    user2.send(UserToHostMsg::LeaveLobby{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -354,6 +366,10 @@ fn client_leaves_pending_lobby()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
     assert_eq!(lobby.members.len(), 1);
+
+    // - user 2 receives ack for leaving the lobby
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 2 joins lobby again
@@ -382,7 +398,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 1 launches the lobby again
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -395,6 +411,10 @@ fn client_leaves_pending_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // users 1, 2 ack the lobby
@@ -411,10 +431,14 @@ fn client_leaves_pending_lobby()
 
 
     // user 2 leaves the lobby
-    user2.send(UserToHostMsg::LeaveLobby{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
+
+    // - user 2 receives rejection for leave lobby request
+    let Some(HostUserServerVal::Reject(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
     // - users 1, 2 receive nothing (leave lobby failed because pending lobby is fully acked)
     let None = user1.next_val() else { panic!("client received server msg unexpectedly"); };
@@ -522,7 +546,7 @@ fn client_resets_pending_lobby()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -535,6 +559,10 @@ fn client_resets_pending_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 resets his state

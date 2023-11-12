@@ -31,8 +31,6 @@ fn handle_user_message(world: &mut World, user_id: u128, user_msg: UserToHostMsg
 {
     match user_msg
     {
-        UserToHostMsg::LeaveLobby{ id }       => syscall(world, (user_id, id), user_leave_lobby),
-        UserToHostMsg::LaunchLobbyGame{ id }  => syscall(world, (user_id, id), user_launch_lobby_game),
         UserToHostMsg::NackPendingLobby{ id } => syscall(world, (user_id, id), user_nack_pending_lobby),
         UserToHostMsg::AckPendingLobby{ id }  => syscall(world, (user_id, id), user_ack_pending_lobby),
     }
@@ -46,9 +44,11 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
     match user_req
     {
         UserToHostRequest::ResetLobby                     => syscall(world, token, user_reset_lobby),
-        UserToHostRequest::LobbySearch(query)                => syscall(world, (token, query), user_get_lobby),
+        UserToHostRequest::LobbySearch(query)             => syscall(world, (token, query), user_get_lobby),
         UserToHostRequest::MakeLobby{ mcolor, pwd, data } => syscall(world, (token, mcolor, pwd, data), user_make_lobby),
         UserToHostRequest::JoinLobby{ id, mcolor, pwd }   => syscall(world, (token, id, mcolor, pwd), user_join_lobby),
+        UserToHostRequest::LeaveLobby{ id }               => syscall(world, (token, id), user_leave_lobby),
+        UserToHostRequest::LaunchLobbyGame{ id }          => syscall(world, (token, id), user_launch_lobby_game),
     }
 }
 

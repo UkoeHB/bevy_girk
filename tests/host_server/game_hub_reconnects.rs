@@ -97,7 +97,7 @@ fn game_hub_reconnects()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -106,6 +106,10 @@ fn game_hub_reconnects()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id1);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 sends ack
@@ -164,7 +168,7 @@ fn game_hub_reconnects()
 
 
     // user 2 launches lobby
-    user2.send(UserToHostMsg::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -173,6 +177,10 @@ fn game_hub_reconnects()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id2);
+
+    // - user 2 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 2 sends ack
@@ -199,7 +207,7 @@ fn game_hub_reconnects()
 
 
     // user 2 launches lobby (try again now that hub is reconnected with non-zero capacity)
-    user2.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -208,6 +216,10 @@ fn game_hub_reconnects()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id2);
+
+    // - user 2 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user2.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 2 sends ack

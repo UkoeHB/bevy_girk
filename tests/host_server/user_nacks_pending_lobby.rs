@@ -138,7 +138,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -151,6 +151,10 @@ fn client_nacks_pending_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 acks the lobby
@@ -178,7 +182,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby again
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -191,6 +195,10 @@ fn client_nacks_pending_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // user 1 nacks the lobby (the owner nacks it)
@@ -211,7 +219,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby again (third time)
-    user1.send(UserToHostMsg::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -224,6 +232,10 @@ fn client_nacks_pending_lobby()
     let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
+
+    // - user 1 receives ack for launching the game
+    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    else { panic!("client did not receive server msg"); };
 
 
     // users 1, 2 ack the lobby

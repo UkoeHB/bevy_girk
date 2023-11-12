@@ -47,8 +47,6 @@ pub enum HostToUserResponse
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum UserToHostMsg
 {
-    LeaveLobby{ id: u64 },
-    LaunchLobbyGame{ id: u64 },
     NackPendingLobby{ id: u64 },
     AckPendingLobby{ id: u64 },
 }
@@ -74,6 +72,10 @@ pub enum UserToHostRequest
         data: Vec<u8>
     },
     JoinLobby{ id: u64, mcolor: LobbyMemberColor, pwd: String },
+    /// Will be acked on success.
+    LeaveLobby{ id: u64 },
+    /// Will be acked on success.
+    LaunchLobbyGame{ id: u64 },
 }
 
 //-------------------------------------------------------------------------------------------------------------------
