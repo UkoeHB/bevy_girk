@@ -45,29 +45,6 @@ pub(crate) fn unregister_user(In(user_id): In<u128>, world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn user_reset_lobby(In(token): In<bevy_simplenet::RequestToken>, world: &mut World)
-{
-    // check if the user is in-game
-    // - returning here auto-rejects the request
-    let user_id = token.client_id();
-    if let Some(UserState::InGame(_)) = world.resource::<UsersCache>().get_user_state(user_id)
-    { tracing::trace!(user_id, "unable to reset user's lobby state, user is in-game"); return; }
-
-    // nack pending lobby the user is in
-    if syscall(world, (user_id, None), force_nack_pending_lobby)
-    { tracing::trace!(user_id, "force nacked pending lobby while reseting user's lobby state"); }
-
-    // remove user from lobby
-    if syscall(world, (user_id, None), try_remove_user_from_lobby)
-    { tracing::trace!(user_id, "removed user from lobby while reseting user's lobby state"); }
-
-    // acknowledge the request on success
-    if let Err(_) = world.resource_mut::<HostUserServer>().ack(token)
-    { tracing::error!(user_id, "failed acking reset lobby request"); }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 pub(crate) fn user_get_lobby(
     In((token, request)) : In<(bevy_simplenet::RequestToken, LobbySearchRequest)>,
     lobbies_cache        : Res<LobbiesCache>,

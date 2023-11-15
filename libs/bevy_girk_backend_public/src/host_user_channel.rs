@@ -57,13 +57,6 @@ pub enum UserToHostMsg
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum UserToHostRequest
 {
-    /// Request that the host reset the user's lobby state (set the user state to idle unless the user is in a game).
-    ///
-    /// This can be used after a client reconnects to synchronize with the host server. Doing so avoids edge conditions
-    /// where the client and server get desynced.
-    ///
-    /// If the server sends an Ack then the user state is idle. If it sends a Reject then the user state is in-game.
-    ResetLobby,
     LobbySearch(LobbySearchRequest),
     MakeLobby{
         mcolor: LobbyMemberColor,

@@ -40,7 +40,6 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
 {
     match user_req
     {
-        UserToHostRequest::ResetLobby                     => syscall(world, token, user_reset_lobby),
         UserToHostRequest::LobbySearch(query)             => syscall(world, (token, query), user_get_lobby),
         UserToHostRequest::MakeLobby{ mcolor, pwd, data } => syscall(world, (token, mcolor, pwd, data), user_make_lobby),
         UserToHostRequest::JoinLobby{ id, mcolor, pwd }   => syscall(world, (token, id, mcolor, pwd), user_join_lobby),
