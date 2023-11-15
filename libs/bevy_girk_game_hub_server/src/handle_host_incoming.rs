@@ -7,6 +7,7 @@ use bevy_girk_host_server::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_simplenet::ClientReport;
 
 //standard shortcuts
 
@@ -92,34 +93,30 @@ fn host_abort_game(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-pub (crate) fn handle_host_connection_reports(world: &mut World)
-{
-    while let Some(connection_report) = world.resource::<HostHubClient>().next_report()
-    {
-        match connection_report
-        {
-            HostHubClientReport::Connected         => syscall(world, (), host_connected),
-            HostHubClientReport::Disconnected      => (),
-            HostHubClientReport::ClosedByServer(_) => (),
-            HostHubClientReport::ClosedBySelf      => (),
-            HostHubClientReport::IsDead            => world.send_event(bevy::app::AppExit),
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 pub(crate) fn handle_host_incoming(world: &mut World)
 {
-    while let Some(host_val) = world.resource::<HostHubClient>().next_val()
+    while let Some(client_event) = world.resource::<HostHubClient>().next()
     {
-        let HostHubServerVal::Msg(host_message) = host_val
-        else { tracing::warn!("received non-message server val"); continue; };
-
-        match host_message
+        match client_event
         {
-            HostToHubMsg::StartGame(req) => syscall(world, req, host_start_game),
-            HostToHubMsg::AbortGame{id}  => syscall(world, id, host_abort_game),
+            HostHubClientEvent::Report(report) => match report
+            {
+                ClientReport::Connected         => syscall(world, (), host_connected),
+                ClientReport::Disconnected      => (),
+                ClientReport::ClosedByServer(_) => (),
+                ClientReport::ClosedBySelf      => (),
+                ClientReport::IsDead(_)         =>
+                {
+                    tracing::info!("host-hub client is dead, closing game hub app");
+                    world.send_event(bevy::app::AppExit);
+                }
+            }
+            HostHubClientEvent::Msg(host_message) => match host_message
+            {
+                HostToHubMsg::StartGame(req) => syscall(world, req, host_start_game),
+                HostToHubMsg::AbortGame{id}  => syscall(world, id, host_abort_game),
+            }
+            _ => tracing::warn!("received unexpected host-hub client event")
         }
     }
 }

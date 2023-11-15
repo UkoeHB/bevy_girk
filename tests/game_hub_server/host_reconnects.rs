@@ -64,7 +64,7 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub connects to server
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
 
@@ -73,7 +73,7 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert!(initial_capacity > GameHubCapacity(0));
@@ -89,7 +89,7 @@ fn game_lifecycle()
 
     // - updated capacity
     // note: updating capacity races with the game start message
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(initial_capacity.0 - 1));
 
@@ -99,7 +99,7 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game start report
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ }))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id);
@@ -116,7 +116,7 @@ fn game_lifecycle()
     std::thread::sleep(std::time::Duration::from_millis(25));  //wait for async machinery
 
     // - game hub client disconnects
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
     assert_eq!(disconnected_hub_id, connected_hub_id);
 
@@ -127,11 +127,11 @@ fn game_lifecycle()
     std::thread::sleep(std::time::Duration::from_millis(25));  //wait for async machinery
 
     // - game hub client connects
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
     // - resent capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert!(initial_capacity > GameHubCapacity(0));
@@ -144,7 +144,7 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0u16));
 
@@ -155,20 +155,20 @@ fn game_lifecycle()
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
 
-    // - hub disconnects from server
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
-    else { panic!("host hub server did not receive game hub server connection report"); };
-    assert_eq!(disconnected_hub_id, connected_hub_id);
-
     // - game aborted (shutting down)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id);
 
+    // - hub disconnects from server
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
+    else { panic!("host hub server did not receive game hub server connection report"); };
+    assert_eq!(disconnected_hub_id, connected_hub_id);
+
 
     // - host hub server receives nothing else
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
-    let None = host_hub_server.next_report() else { panic!("received connection report unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received connection report unexpectedly"); };
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -98,9 +98,8 @@ impl bevy_simplenet::ChannelPack for HostUserChannel
 //-------------------------------------------------------------------------------------------------------------------
 
 /// CLIENT
-pub type HostUserClient       = bevy_simplenet::Client<HostUserChannel>;
-pub type HostUserClientReport = bevy_simplenet::ClientReport;
-pub type HostUserServerVal    = bevy_simplenet::ServerValFrom<HostUserChannel>;
+pub type HostUserClient      = bevy_simplenet::Client<HostUserChannel>;
+pub type HostUserClientEvent = bevy_simplenet::ClientEventFrom<HostUserChannel>;
 
 /// client factory
 pub fn host_user_client_factory() -> bevy_simplenet::ClientFactory<HostUserChannel>

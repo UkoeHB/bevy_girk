@@ -104,6 +104,7 @@ fn basic_host_hub_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
+    let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
 
     // user 1 makes lobby
     user1.request(UserToHostRequest::MakeLobby{
@@ -115,7 +116,7 @@ fn basic_host_hub_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
+    let Some(HostUserClientEvent::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next()
     else { panic!("client did not receive server msg"); };
     let made_lobby_id = lobby.id;
 
@@ -126,12 +127,12 @@ fn basic_host_hub_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 receives ack request
-    let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
     // - user 1 receives ack for launching the game
-    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    let Some(HostUserClientEvent::Ack(_request_id)) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -148,7 +149,7 @@ fn basic_host_hub_integration()
 
 
     // get game start report
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -158,13 +159,13 @@ fn basic_host_hub_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
     // - get game over from host server
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameOver{ id, report: _ })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameOver{ id, report: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
 
     // - user receives nothing else
-    let None = user1.next_val() else { panic!("client received server msg unexpectedly"); };
+    let None = user1.next() else { panic!("client received server msg unexpectedly"); };
 
 
     // cleanup

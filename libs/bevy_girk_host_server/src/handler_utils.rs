@@ -13,7 +13,7 @@ use bevy_kot_ecs::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn user_is_registered(In(user_id): In<u128>, users_cache: Res<UsersCache>) -> bool
+pub(crate) fn _user_is_registered(In(user_id): In<u128>, users_cache: Res<UsersCache>) -> bool
 {
     users_cache.has_user(user_id)
 }
@@ -21,7 +21,7 @@ pub(crate) fn user_is_registered(In(user_id): In<u128>, users_cache: Res<UsersCa
 //-------------------------------------------------------------------------------------------------------------------
 
 // - note: we consider a game hub as 'registered' even if it's in the game hub dc buffer
-pub(crate) fn game_hub_is_registered(
+pub(crate) fn _game_hub_is_registered(
     In(game_hub_id)    : In<u128>,
     game_hubs_cache    : Res<GameHubsCache>,
     game_hub_dc_buffer : Res<GameHubDisconnectBuffer>,

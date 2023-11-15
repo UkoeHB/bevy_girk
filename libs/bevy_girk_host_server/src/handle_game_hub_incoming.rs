@@ -11,15 +11,12 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_game_hub_connection_reports(world: &mut World)
+fn handle_game_hub_connection_report(world: &mut World, game_hub_id: u128, report: HostHubServerReport)
 {
-    while let Some(connection_report) = world.resource::<HostHubServer>().next_report()
+    match report
     {
-        match connection_report
-        {
-            HostHubServerReport::Connected(game_hub_id, _, _) => syscall(world, game_hub_id, connected_game_hub),
-            HostHubServerReport::Disconnected(game_hub_id) => syscall(world, game_hub_id, disconnected_game_hub),
-        }
+        HostHubServerReport::Connected(_, ()) => syscall(world, game_hub_id, connected_game_hub),
+        HostHubServerReport::Disconnected     => syscall(world, game_hub_id, disconnected_game_hub),
     }
 }
 
@@ -42,27 +39,15 @@ fn handle_game_hub_message(world: &mut World, game_hub_id: u128, game_hub_msg: H
 
 pub(crate) fn handle_game_hub_incoming(world: &mut World)
 {
-    // handle connection reports
-    handle_game_hub_connection_reports(world);
-
-    // handle game hub messages
-    while let Some((game_hub_id, game_hub_val)) = world.resource::<HostHubServer>().next_val()
+    // handle game hub events
+    while let Some((game_hub_id, server_event)) = world.resource::<HostHubServer>().next()
     {
-        // handle connection reports
-        // - we do this after extracting a message because otherwise there is a race condition where
-        //   a game hub can connect then send a message but the normal message gets handled before the connect message
-        handle_game_hub_connection_reports(world);
-
-        // check that the game hub is registered
-        // - reason: the game hub may have been disconnected after sending the message
-        if !syscall(world, game_hub_id, game_hub_is_registered)
-        { tracing::warn!(game_hub_id, "ignoring message from unknown game hub"); continue; }
-
-        // handle the message
-        match game_hub_val
+        // handle the event
+        match server_event
         {
-            HostHubClientVal::Msg(msg) => handle_game_hub_message(world, game_hub_id, msg),
-            _ => tracing::error!("received non-message hub val"),
+            HostHubServerEvent::Report(report) => handle_game_hub_connection_report(world, game_hub_id, report),
+            HostHubServerEvent::Msg(msg)       => handle_game_hub_message(world, game_hub_id, msg),
+            HostHubServerEvent::Request(_, _)  => tracing::error!("received non-message hub val"),
         }
     }
 }

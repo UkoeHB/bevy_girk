@@ -62,7 +62,7 @@ pub(crate) fn user_reset_lobby(In(token): In<bevy_simplenet::RequestToken>, worl
     { tracing::trace!(user_id, "removed user from lobby while reseting user's lobby state"); }
 
     // acknowledge the request on success
-    if let Err(_) = world.resource_mut::<HostUserServer>().acknowledge(token)
+    if let Err(_) = world.resource_mut::<HostUserServer>().ack(token)
     { tracing::error!(user_id, "failed acking reset lobby request"); }
 }
 
@@ -177,7 +177,7 @@ pub(crate) fn user_leave_lobby(In((token, lobby_id)): In<(bevy_simplenet::Reques
     // send request ack if we actually left a lobby
     let Some(final_user_state) = world.resource::<UsersCache>().get_user_state(user_id) else { return; };
     if initial_user_state == final_user_state { return; };
-    let _ = world.resource::<HostUserServer>().acknowledge(token);
+    let _ = world.resource::<HostUserServer>().ack(token);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ pub(crate) fn user_launch_lobby_game(
     if let Err(_) = pending_lobbies_cache.add_lobby(lobby) { tracing::error!("insert pending lobby error"); }
 
     // send request ack
-    let _ = user_server.acknowledge(token);
+    let _ = user_server.ack(token);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

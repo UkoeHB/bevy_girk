@@ -5,6 +5,7 @@ use bevy_girk_backend_public::*;
 use bevy_girk_host_server::*;
 
 //third-party shortcuts
+use bevy_simplenet::ClientReport;
 
 //standard shortcuts
 use std::time::Duration;
@@ -72,6 +73,12 @@ fn ongoing_game_expires()
     let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
     let (user2_id, user2) = make_test_host_user_client(host_user_url);
 
+    // clients connected
+    std::thread::sleep(Duration::from_millis(15));
+
+    let HostHubClientEvent::Report(_) = hub.next().unwrap() else { unimplemented!(); };
+    let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
+    let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
     hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
@@ -91,7 +98,7 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
+    let Some(HostUserClientEvent::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next()
     else { panic!("client did not receive server msg"); };
     let made_lobby_id = lobby.id;
 
@@ -104,9 +111,9 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(
+    let Some(HostUserClientEvent::Response(
             HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
-        )) = user2.next_val()
+        )) = user2.next()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");
@@ -124,16 +131,16 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby data
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
+    let Some(HostUserClientEvent::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
     // - users 1, 2 receive lobby state
-    let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::LobbyState{ lobby })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
@@ -145,16 +152,16 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive ack requests
-    let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
     // - user 1 receives ack for launching the game
-    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    let Some(HostUserClientEvent::Ack(_request_id)) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -166,7 +173,7 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game hub receives game request
-    let Some(HostHubServerVal::Msg(HostToHubMsg::StartGame(request))) = hub.next_val()
+    let Some(HostHubClientEvent::Msg(HostToHubMsg::StartGame(request))) = hub.next()
     else { panic!("hub did not receive server msg"); };
     assert_eq!(request.game_id(), made_lobby_id);
 
@@ -179,10 +186,10 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive game start
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user2.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -195,24 +202,24 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game hub receives abort game
-    let Some(HostHubServerVal::Msg(HostToHubMsg::AbortGame{ id: made_lobby_id })) = hub.next_val()
+    let Some(HostHubClientEvent::Msg(HostToHubMsg::AbortGame{ id: made_lobby_id })) = hub.next()
     else { panic!("hub did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
     // - users 1, 2 get game aborted
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameAborted{ id })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameAborted{ id })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameAborted{ id })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameAborted{ id })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
 
     // - hub, and users 1, 2 receive nothing
-    let None = user1.next_val() else { panic!("client received server msg unexpectedly"); };
-    let None = user2.next_val() else { panic!("client received server msg unexpectedly"); };
-    let None = hub.next_val() else { panic!("hub received server msg unexpectedly"); };
+    let None = user1.next() else { panic!("client received server msg unexpectedly"); };
+    let None = user2.next() else { panic!("client received server msg unexpectedly"); };
+    let None = hub.next() else { panic!("hub received server msg unexpectedly"); };
 
 
     // cleanup
@@ -246,6 +253,12 @@ fn game_hub_disconnects()
     let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
     let (user2_id, user2) = make_test_host_user_client(host_user_url);
 
+    // clients connected
+    std::thread::sleep(Duration::from_millis(15));
+
+    let HostHubClientEvent::Report(_) = hub.next().unwrap() else { unimplemented!(); };
+    let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
+    let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
     hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
@@ -265,7 +278,7 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 recieves lobby
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next_val()
+    let Some(HostUserClientEvent::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user1.next()
     else { panic!("client did not receive server msg"); };
     let made_lobby_id = lobby.id;
 
@@ -278,9 +291,9 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby response
-    let Some(HostUserServerVal::Response(
+    let Some(HostUserClientEvent::Response(
             HostToUserResponse::LobbySearchResult(LobbySearchResult{ req: _, lobbies, num_younger: _, total: _ }), _
-        )) = user2.next_val()
+        )) = user2.next()
     else { panic!("client did not receive server msg"); };
 
     let lobby = lobbies.get(0).expect("there should be one lobby");
@@ -298,16 +311,16 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives lobby data
-    let Some(HostUserServerVal::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next_val()
+    let Some(HostUserClientEvent::Response(HostToUserResponse::LobbyJoin{ lobby }, _)) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
     // - users 1, 2 receive lobby state
-    let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::LobbyState{ lobby })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::LobbyState{ lobby })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::LobbyState{ lobby })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(lobby.id, made_lobby_id);
 
@@ -319,16 +332,16 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive ack requests
-    let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::PendingLobbyAckRequest{ id })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
     // - user 1 receives ack for launching the game
-    let Some(HostUserServerVal::Ack(_request_id)) = user1.next_val()
+    let Some(HostUserClientEvent::Ack(_request_id)) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -340,7 +353,7 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game hub receives game request
-    let Some(HostHubServerVal::Msg(HostToHubMsg::StartGame(request))) = hub.next_val()
+    let Some(HostHubClientEvent::Msg(HostToHubMsg::StartGame(request))) = hub.next()
     else { panic!("hub did not receive server msg"); };
     assert_eq!(request.game_id(), made_lobby_id);
 
@@ -353,10 +366,10 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive game start
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user2.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -364,6 +377,8 @@ fn game_hub_disconnects()
     hub.close();
     std::thread::sleep(Duration::from_millis(15));
 
+    let HostHubClientEvent::Report(ClientReport::ClosedBySelf) = hub.next().unwrap() else { unimplemented!() };
+    let HostHubClientEvent::Report(ClientReport::IsDead(_)) = hub.next().unwrap() else { unimplemented!() };
 
     // update host server
     std::thread::sleep(Duration::from_millis(15));
@@ -371,19 +386,19 @@ fn game_hub_disconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 get game aborted
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameAborted{ id })) = user1.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameAborted{ id })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
-    let Some(HostUserServerVal::Msg(HostToUserMsg::GameAborted{ id })) = user2.next_val()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameAborted{ id })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
 
     // - users 1, 2 receive nothing
-    let None = user1.next_val() else { panic!("client received server msg unexpectedly"); };
-    let None = user2.next_val() else { panic!("client received server msg unexpectedly"); };
-    let None = hub.next_val() else { panic!("hub received server msg unexpectedly"); };
+    let None = user1.next() else { panic!("client received server msg unexpectedly"); };
+    let None = user2.next() else { panic!("client received server msg unexpectedly"); };
+    let None = hub.next() else { panic!("hub received server msg unexpectedly"); };
 
 
     // cleanup

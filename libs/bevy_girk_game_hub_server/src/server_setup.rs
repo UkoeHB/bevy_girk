@@ -116,7 +116,6 @@ pub fn make_game_hub_server(
             (
                 increment_tick_counter,
                 handle_commands,
-                handle_host_connection_reports,
                 handle_host_incoming,
                 handle_launch_pack_reports,
                 handle_instance_reports,  //after 'handle launch pack reports' to maybe catch failed instance launches

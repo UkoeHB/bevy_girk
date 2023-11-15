@@ -64,7 +64,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub connects to server
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
 
@@ -73,7 +73,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(initial_capacity, GameHubCapacity(10));
@@ -88,7 +88,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(initial_capacity.0 - 1));
 
@@ -100,8 +100,8 @@ fn reject_duplicate_game()
     // - game start report
     let Some((
             hub_id,
-            HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
-        )) = host_hub_server.next_val()
+            HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
+        )) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id_1);
@@ -115,7 +115,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game ignored (duplicate)
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
 
 
     // request game start for game 2
@@ -127,7 +127,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(initial_capacity.0 - 2));
 
@@ -139,8 +139,8 @@ fn reject_duplicate_game()
     // - game start report
     let Some((
             hub_id,
-            HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
-        )) = host_hub_server.next_val()
+            HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
+        )) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id_2);
@@ -153,7 +153,7 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0u16));
 
@@ -165,24 +165,24 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 or 2 aborted (shutting down)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert!((id == game_id_1) || (id == game_id_2));
 
     // - game 1 or 2 aborted (shutting down)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert!((id == game_id_1) || (id == game_id_2));
 
     // - hub disconnects from server
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
     assert_eq!(disconnected_hub_id, connected_hub_id);
 
 
     // - host hub server receives nothing else
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
-    let None = host_hub_server.next_report() else { panic!("received connection report unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received connection report unexpectedly"); };
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -214,7 +214,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub connects to server
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
 
@@ -223,7 +223,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(initial_capacity, GameHubCapacity(1));
@@ -238,7 +238,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0));
 
@@ -250,8 +250,8 @@ fn reject_no_capacity()
     // - game start report
     let Some((
             hub_id,
-            HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
-        )) = host_hub_server.next_val()
+            HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
+        )) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id_1);
@@ -266,7 +266,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game aborted (no capacity)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_2);
 
@@ -277,12 +277,12 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game over report
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::GameOver{ id, report: _ }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::GameOver{ id, report: _ }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, initial_capacity);
 
@@ -296,7 +296,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0));
 
@@ -308,8 +308,8 @@ fn reject_no_capacity()
     // - game start report
     let Some((
             hub_id,
-            HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
-        )) = host_hub_server.next_val()
+            HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
+        )) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id_2);
@@ -322,7 +322,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - don't receive updated capacity (capacity is already zero, so changing max capacity doesn't affect it)
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
 
 
     // shut down hub
@@ -332,18 +332,18 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 2 either finishes or gets aborted (shutting down)
-    let Some(_) = host_hub_server.next_val()
+    let Some(_) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
 
     // - hub disconnects from server
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
     assert_eq!(disconnected_hub_id, connected_hub_id);
 
 
     // - host hub server receives nothing else
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
-    let None = host_hub_server.next_report() else { panic!("received connection report unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received connection report unexpectedly"); };
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -375,7 +375,7 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub connects to server
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
 
@@ -384,7 +384,7 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(initial_capacity, GameHubCapacity(10));
@@ -399,7 +399,7 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 aborted (launch pack failed)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 
@@ -411,7 +411,7 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0u16));
 
@@ -423,14 +423,14 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub disconnects from server
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
     assert_eq!(disconnected_hub_id, connected_hub_id);
 
 
     // - host hub server receives nothing else
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
-    let None = host_hub_server.next_report() else { panic!("received connection report unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received connection report unexpectedly"); };
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - hub connects to server
-    let Some(HostHubServerReport::Connected(connected_hub_id, _, _)) = host_hub_server.next_report()
+    let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
 
 
@@ -471,7 +471,7 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let Some((hub_id, HostHubClientVal::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next_val()
+    let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(initial_capacity, GameHubCapacity(10));
@@ -486,7 +486,7 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(initial_capacity.0 - 1));
 
@@ -498,8 +498,8 @@ fn reject_hub_shutdown()
     // - game start report
     let Some((
             hub_id,
-            HostHubClientVal::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
-        )) =host_hub_server.next_val()
+            HostHubServerEvent::Msg(HubToHostMsg::GameStart{ id, request: _, report: _ })
+        )) =host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);
     assert_eq!(id, game_id_1);
@@ -512,7 +512,7 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - updated capacity
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Capacity(capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(capacity, GameHubCapacity(0u16));
 
@@ -524,19 +524,19 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 aborted (shutting down)
-    let Some((_, HostHubClientVal::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next_val()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 
     // - hub disconnects from server
-    let Some(HostHubServerReport::Disconnected(disconnected_hub_id)) = host_hub_server.next_report()
+    let Some((disconnected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Disconnected))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server connection report"); };
     assert_eq!(disconnected_hub_id, connected_hub_id);
 
 
     // - host hub server receives nothing else
-    let None = host_hub_server.next_val() else { panic!("received msg unexpectedly"); };
-    let None = host_hub_server.next_report() else { panic!("received connection report unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received msg unexpectedly"); };
+    let None = host_hub_server.next() else { panic!("received connection report unexpectedly"); };
 }
 
 //-------------------------------------------------------------------------------------------------------------------

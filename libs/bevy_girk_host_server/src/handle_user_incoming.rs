@@ -12,15 +12,12 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_user_connection_reports(world: &mut World)
+fn handle_user_connection_report(world: &mut World, user_id: u128, report: HostUserServerReport)
 {
-    while let Some(connection_report) = world.resource::<HostUserServer>().next_report()
+    match report
     {
-        match connection_report
-        {
-            HostHubServerReport::Connected(user_id, env_type, _) => syscall(world, (user_id, env_type), register_user),
-            HostHubServerReport::Disconnected(user_id) => syscall(world, user_id, unregister_user),
-        }
+        HostHubServerReport::Connected(env_type, ()) => syscall(world, (user_id, env_type), register_user),
+        HostHubServerReport::Disconnected            => syscall(world, user_id, unregister_user),
     }
 }
 
@@ -57,27 +54,15 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
 
 pub(crate) fn handle_user_incoming(world: &mut World)
 {
-    // handle connection reports
-    handle_user_connection_reports(world);
-
-    // handle user messages
-    while let Some((user_id, user_val)) = world.resource::<HostUserServer>().next_val()
+    // handle user events
+    while let Some((user_id, server_event)) = world.resource::<HostUserServer>().next()
     {
-        // handle connection reports
-        // - we do this after extracting a user message because otherwise there is a race condition where
-        //   a user can connect then send a message but the normal message gets handled before the connect message
-        handle_user_connection_reports(world);
-
-        // check that the user is registered
-        // - reason: the user may have been disconnected after sending the message
-        if !syscall(world, user_id, user_is_registered)
-        { tracing::warn!(user_id, "ignoring message from unknown user"); continue; }
-
-        // handle the message
-        match user_val
+        // handle the event
+        match server_event
         {
-            HostUserClientVal::Msg(msg)            => handle_user_message(world, user_id, msg),
-            HostUserClientVal::Request(req, token) => handle_user_request(world, token, req),
+            HostUserServerEvent::Report(report)      => handle_user_connection_report(world, user_id, report),
+            HostUserServerEvent::Msg(msg)            => handle_user_message(world, user_id, msg),
+            HostUserServerEvent::Request(req, token) => handle_user_request(world, token, req),
         }
     }
 }
