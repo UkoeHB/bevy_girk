@@ -8,7 +8,7 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Single-producer.
+/// Multi-producer.
 #[derive(Component, Resource, Clone, Debug)]
 pub struct MessageSender<T>
 {

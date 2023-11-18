@@ -23,13 +23,11 @@ bevy_fn_plugin = { version = "0.1" }
 bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
 #bevy_replicon  = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "a728047" }
 bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "bbed8dd" }
-#bevy_simplenet = { version = "0.3", default-features = false }
-bevy_simplenet = { git = "https://github.com/UkoeHB/bevy_simplenet", rev = "eaa89f0", default-features = false }
+bevy_simplenet = { version = "0.4", default-features = false }
 iyes_progress  = { version = "0.9" , features = [ "assets" ] }
 
 enfync             = { version = "0.1" }
-#ezsockets          = { version = "0.6", default-features = false }
-ezsockets = { git = "https://github.com/gbaranski/ezsockets", rev = "d749124", default-features = false }
+ezsockets          = { version = "0.6", default-features = false }
 serde              = { version = "1.0" }
 serde_json         = { version = "1.0" }
 serde_with         = { version = "3.0" }
