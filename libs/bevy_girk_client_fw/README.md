@@ -5,9 +5,9 @@ PRECONDITION: plugin dependencies
 
 PRECONDITION: the following must be initialized by the client framework manager
 - `Res<ClientFWConfig>`
-- `Res<MessageReceiver<GamePacket>>`
-- `Res<MessageSender<ClientPacket>>`
-- `Res<MessageReceiver<ClientFWCommand>>`
+- `Res<Receiver<GamePacket>>`
+- `Res<Sender<ClientPacket>>`
+- `Res<Receiver<ClientFWCommand>>`
 
 PRECONDITION: the following must be initialized by the client core that uses this client framework
 - `Res<GameMessageHandler>`

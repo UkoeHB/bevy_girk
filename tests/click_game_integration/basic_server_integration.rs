@@ -12,6 +12,7 @@ use crate::host_server::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 use bevy_renet::renet::transport::NetcodeClientTransport;
 
 //standard shortcuts
@@ -125,10 +126,10 @@ fn make_test_game_hub_server(
     hub_server_url      : url::Url,
     startup_pack        : GameHubServerStartupPack,
     game_factory_config : ClickGameFactoryConfig,
-) -> (MessageSender<GameHubCommand>, App)
+) -> (Sender<GameHubCommand>, App)
 {
     // setup
-    let (command_sender, command_receiver) = new_message_channel::<GameHubCommand>();
+    let (command_sender, command_receiver) = new_channel::<GameHubCommand>();
     let (_, host_hub_client)    = make_test_host_hub_client(hub_server_url);
     let game_launch_pack_source = GameLaunchPackSource::new(ClickGameLaunchPackSource::new(&game_factory_config));
     let game_factory            = GameFactory::new(ClickGameFactory{});

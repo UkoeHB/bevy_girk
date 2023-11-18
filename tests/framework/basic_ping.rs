@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -19,8 +20,8 @@ fn basic_ping()
     let num_players = 1;
 
     // prepare message channels
-    let (client_packet_sender, client_packet_receiver) = new_message_channel::<ClientPacket>();
-    let (game_packet_sender, game_packet_receiver)     = new_message_channel::<GamePacket>();
+    let (client_packet_sender, client_packet_receiver) = new_channel::<ClientPacket>();
+    let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
 
     // make the client ready
     client_packet_sender.send(
@@ -73,7 +74,7 @@ fn basic_ping()
 
     let mut found_ping_response: bool = false;
 
-    while let Some(response) = game_packet_receiver.try_get_next()
+    while let Some(response) = game_packet_receiver.try_recv()
     {
         // deserialize ping response
         let AimedMsg::Fw{ bytes: serialized_message } = &response.message.message

@@ -1,11 +1,11 @@
 //local shortcuts
 use crate::*;
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
+use bevy_kot_utils::*;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -19,12 +19,12 @@ fn prestartup_check(world: &World)
 {
     if !world.contains_resource::<ClientFWConfig>()
         { panic!("ClientFWConfig is missing on startup!"); }
-    if !world.contains_resource::<MessageReceiver<GamePacket>>()
-        { panic!("MessageReceiver<GamePacket> is missing on startup!"); }
-    if !world.contains_resource::<MessageSender<ClientPacket>>()
-        { panic!("MessageSender<ClientPacket> is missing on startup!"); }
-    if !world.contains_resource::<MessageReceiver<ClientFWCommand>>()
-        { panic!("MessageReceiver<ClientFWCommand> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<GamePacket>>()
+        { panic!("Receiver<GamePacket> is missing on startup!"); }
+    if !world.contains_resource::<Sender<ClientPacket>>()
+        { panic!("Sender<ClientPacket> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<ClientFWCommand>>()
+        { panic!("Receiver<ClientFWCommand> is missing on startup!"); }
 
     if !world.contains_resource::<Time>()
         { panic!("bevy::Time is missing on startup!"); }

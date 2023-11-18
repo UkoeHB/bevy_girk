@@ -3,8 +3,8 @@ Game framework: `GameFWPlugin`
 PRECONDITION: the following must be initialized by the user
 - `Res<GameFWConfig>`
 - `Res<GameFWInitializer>`
-- `Res<MessageSender<GamePacket>>`
-- `Res<MessageReceiver<ClientPacket>>`
+- `Res<Sender<GamePacket>>`
+- `Res<Receiver<ClientPacket>>`
 
 PRECONDITION: the following must be initialized by the game core that uses this game framework
 - `Res<ClientMessageHandler>`

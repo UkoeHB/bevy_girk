@@ -6,6 +6,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
 use iyes_progress::*;
 
@@ -32,7 +33,7 @@ fn track_connection_state(transport: Res<bevy_renet::renet::transport::NetcodeCl
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn reinitialize_client(client_fw_command_sender: Res<MessageSender<ClientFWCommand>>)
+fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFWCommand>>)
 {
     if let Err(_) = client_fw_command_sender.send(ClientFWCommand::ReInitialize)
     { tracing::error!("failed commanding client framework to reinitialize"); }
@@ -41,12 +42,12 @@ fn reinitialize_client(client_fw_command_sender: Res<MessageSender<ClientFWComma
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFWConfig) -> MessageSender<ClientFWCommand>
+pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFWConfig) -> Sender<ClientFWCommand>
 {
     // prepare message channels
-    let (game_packet_sender, game_packet_receiver)             = new_message_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver)         = new_message_channel::<ClientPacket>();
-    let (client_fw_command_sender, client_fw_command_receiver) = new_message_channel::<ClientFWCommand>();
+    let (game_packet_sender, game_packet_receiver)             = new_channel::<GamePacket>();
+    let (client_packet_sender, client_packet_receiver)         = new_channel::<ClientPacket>();
+    let (client_fw_command_sender, client_fw_command_receiver) = new_channel::<ClientFWCommand>();
 
     // prepare client app framework
     client_app
@@ -67,7 +68,7 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: MessageSender<ClientFWCommand>)
+pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFWCommand>)
 {
     // depends on client framework
 

@@ -5,17 +5,17 @@
 //!
 //! PRECONDITION: the following must be initialized by the client manager
 //! - Res<ClickPlayerInitializer>
-//! - Res<MessageReceiver<PlayerInput>>
+//! - Res<Receiver<PlayerInput>>
 //!
 
 //local shortcuts
 use bevy_girk_client_fw::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::{prelude::*, app::PluginGroupBuilder};
 use bevy_fn_plugin::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -39,8 +39,8 @@ fn prestartup_check(world: &World)
     // check for expected resources
     if !world.contains_resource::<ClickPlayerInitializer>()
         { panic!("ClickPlayerInitializer is missing on startup!"); }
-    if !world.contains_resource::<MessageReceiver<PlayerInput>>()
-        { panic!("MessageReceiver<PlayerInput> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<PlayerInput>>()
+        { panic!("Receiver<PlayerInput> is missing on startup!"); }
 
     // validate consistency between client framework and core
     if !world.contains_resource::<ClientFWConfig>()

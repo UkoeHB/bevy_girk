@@ -8,6 +8,7 @@ publish = false
 bevy           = { workspace = true }
 bevy_fn_plugin = { workspace = true }
 bevy_kot_ecs   = { workspace = true }
+bevy_kot_utils = { workspace = true }
 bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
 bevy_simplenet = { workspace = true }

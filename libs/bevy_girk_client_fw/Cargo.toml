@@ -11,6 +11,7 @@ doctest = false
 bevy           = { workspace = true }
 bevy_fn_plugin = { workspace = true }
 bevy_kot_ecs   = { workspace = true }
+bevy_kot_utils = { workspace = true }
 bevy_replicon  = { workspace = true }
 iyes_progress  = { workspace = true }
 serde          = { workspace = true }

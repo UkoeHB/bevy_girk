@@ -9,6 +9,7 @@ use crate::test_helpers::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 use bevy_renet::renet::transport::NetcodeClientTransport;
 
 //standard shortcuts
@@ -70,7 +71,7 @@ fn raw_localhost_network_demo(num_players: usize)
 
     // prepare player clients
     let mut client_apps          = Vec::<App>::default();
-    let mut player_input_senders = Vec::<MessageSender<PlayerInput>>::default();
+    let mut player_input_senders = Vec::<Sender<PlayerInput>>::default();
     client_apps.reserve(num_players);
     player_input_senders.reserve(num_players);
 

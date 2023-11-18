@@ -1,10 +1,10 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -30,8 +30,8 @@ pub struct RunningGamesCache
     /// game launcher
     game_launcher: GameInstanceLauncher,
     /// game instance channel
-    instance_report_sender   : IOMessageSender<GameInstanceReport>,
-    instance_report_receiver : IOMessageReceiver<GameInstanceReport>,
+    instance_report_sender   : IoSender<GameInstanceReport>,
+    instance_report_receiver : IoReceiver<GameInstanceReport>,
     /// timer
     timer: Instant,
     /// [ game id : (game instance, game start request birth time) ]
@@ -43,7 +43,7 @@ impl RunningGamesCache
     /// make a new cache
     pub fn new(config: RunningGamesCacheConfig, game_launcher: GameInstanceLauncher) -> RunningGamesCache
     {
-        let (instance_report_sender, instance_report_receiver) = new_io_message_channel::<GameInstanceReport>();
+        let (instance_report_sender, instance_report_receiver) = new_io_channel::<GameInstanceReport>();
 
         RunningGamesCache{
                 config,
@@ -106,9 +106,9 @@ impl RunningGamesCache
     }
 
     /// get next available instance report
-    pub fn try_get_next_instance_report(&mut self) -> Option<GameInstanceReport>
+    pub fn try_next_instance_report(&mut self) -> Option<GameInstanceReport>
     {
-        self.instance_report_receiver.try_get_next()
+        self.instance_report_receiver.try_next()
     }
 
     /// drain expired and terminated running games

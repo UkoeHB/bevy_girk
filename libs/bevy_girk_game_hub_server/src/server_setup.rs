@@ -8,6 +8,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::app::*;
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -82,7 +83,7 @@ pub struct GameHubServerStartupPack
 
 pub fn make_game_hub_server(
     startup_pack            : GameHubServerStartupPack,
-    command_receiver        : MessageReceiver<GameHubCommand>,
+    command_receiver        : Receiver<GameHubCommand>,
     host_hub_client         : HostHubClient,
     game_launch_pack_source : GameLaunchPackSource,
     game_launcher           : GameInstanceLauncher,

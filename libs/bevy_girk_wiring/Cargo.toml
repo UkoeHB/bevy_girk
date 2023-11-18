@@ -8,12 +8,13 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy          = { version = "0.11", default-features = false }
-bevy_renet    = { workspace = true }
-bevy_replicon = { workspace = true }
-iyes_progress = { workspace = true }
-serde         = { workspace = true }
-tracing       = { workspace = true }
+bevy           = { version = "0.11", default-features = false }
+bevy_kot_utils = { workspace = true }
+bevy_renet     = { workspace = true }
+bevy_replicon  = { workspace = true }
+iyes_progress  = { workspace = true }
+serde          = { workspace = true }
+tracing        = { workspace = true }
 
 bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }

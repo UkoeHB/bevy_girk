@@ -1,8 +1,8 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::fmt::Debug;
@@ -14,7 +14,7 @@ pub trait GameInstanceLauncherImpl: Debug + Send + Sync
     fn launch(
         &self,
         launch_pack   : GameLaunchPack,
-        report_sender : IOMessageSender<GameInstanceReport>,
+        report_sender : IoSender<GameInstanceReport>,
     ) -> GameInstance;
 }
 
@@ -36,7 +36,7 @@ impl GameInstanceLauncher
     pub fn launch(
         &self,
         launch_pack   : GameLaunchPack,
-        report_sender : IOMessageSender<GameInstanceReport>,
+        report_sender : IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
         self.launcher.launch(launch_pack, report_sender)

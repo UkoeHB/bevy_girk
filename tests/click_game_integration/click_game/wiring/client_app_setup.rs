@@ -9,6 +9,7 @@ use crate::click_game_integration::click_game::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
+use bevy_kot_utils::*;
 use bevy_renet::renet::transport::ClientAuthentication;
 
 //standard shortcuts
@@ -27,12 +28,12 @@ fn DummyClientCorePlugin(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Prepare the core of a click game client.
-pub fn prepare_client_app_core(client_app: &mut App, player_initializer: ClickPlayerInitializer) -> MessageSender<PlayerInput>
+pub fn prepare_client_app_core(client_app: &mut App, player_initializer: ClickPlayerInitializer) -> Sender<PlayerInput>
 {
     // depends on client framework
 
     // player input channel
-    let (player_input_sender, player_input_receiver) = new_message_channel::<PlayerInput>();
+    let (player_input_sender, player_input_receiver) = new_channel::<PlayerInput>();
 
     // make client app
     client_app
@@ -52,7 +53,7 @@ pub fn prepare_client_app_core(client_app: &mut App, player_initializer: ClickPl
 pub fn make_game_client_core(
     expected_protocol_id : u64,
     connect_info         : GameConnectInfo
-) -> (App, Option<MessageSender<PlayerInput>>, Option<ClientIdType>)
+) -> (App, Option<Sender<PlayerInput>>, Option<ClientIdType>)
 {
     // extract connect token and validate protocol version
     let ServerConnectToken::Native{ bytes: serialized_connect_token } = connect_info.server_connect_token;
@@ -70,7 +71,7 @@ pub fn make_game_client_core(
 
     // set up client app
     let mut client_app = App::new();
-    let mut player_input_sender : Option<MessageSender<PlayerInput>> = None;
+    let mut player_input_sender : Option<Sender<PlayerInput>> = None;
     let mut player_id           : Option<ClientIdType>               = None;
 
     let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_start_pack.client_fw_config);

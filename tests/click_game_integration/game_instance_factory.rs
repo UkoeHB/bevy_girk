@@ -8,6 +8,7 @@ use crate::click_game_integration::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 use bevy_renet::renet::transport::NetcodeClientTransport;
 
 //standard shortcuts
@@ -111,7 +112,7 @@ fn game_instance_factory_demo()
 
     // make clients
     let mut client_apps          = Vec::<App>::default();
-    let mut player_input_senders = Vec::<MessageSender<PlayerInput>>::default();
+    let mut player_input_senders = Vec::<Sender<PlayerInput>>::default();
     client_apps.reserve(num_players + num_watchers);
     player_input_senders.reserve(num_players);
 

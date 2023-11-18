@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -63,8 +64,8 @@ pub fn prepare_player_client_contexts(num_players: usize) -> GameFWInitializer
 #[bevy_plugin]
 pub fn AddMockMessageChannelsPlugin(app: &mut App)
 {
-    let (game_packet_sender, game_packet_receiver)     = new_message_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver) = new_message_channel::<ClientPacket>();
+    let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
+    let (client_packet_sender, client_packet_receiver) = new_channel::<ClientPacket>();
 
     // kludge: enable first 10 clients
     for client_id in 0..10

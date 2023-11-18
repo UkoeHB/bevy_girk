@@ -1,9 +1,9 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use enfync::{AdoptOrDefault, Handle};
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -30,11 +30,11 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
     fn launch(
         &self,
         launch_pack   : GameLaunchPack,
-        report_sender : IOMessageSender<GameInstanceReport>,
+        report_sender : IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
         // prepare command channel
-        let (command_sender, command_receiver) = new_message_channel::<GameInstanceCommand>();
+        let (command_sender, command_receiver) = new_channel::<GameInstanceCommand>();
         let command_receiver_clone = command_receiver.clone();
 
         // launch game thread

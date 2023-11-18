@@ -5,6 +5,7 @@ use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::time::Duration;
@@ -15,7 +16,7 @@ use std::time::Duration;
 fn basic_game()
 {
     // prepare game instance layncher
-    let (report_sender, mut report_receiver) = new_io_message_channel::<GameInstanceReport>();
+    let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let factory = GameFactory::new(DummyGameFactory{});
     let game_launcher = GameInstanceLauncher::new(GameInstanceLauncherLocal::new(factory));
 
@@ -36,7 +37,7 @@ fn basic_game()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 
@@ -48,7 +49,7 @@ fn basic_game()
     assert!(instance.try_get().unwrap());
 
     // - game over report
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 }
@@ -59,7 +60,7 @@ fn basic_game()
 fn two_games()
 {
     // prepare game instance factory
-    let (report_sender, mut report_receiver) = new_io_message_channel::<GameInstanceReport>();
+    let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let factory = GameFactory::new(DummyGameFactory{});
     let game_launcher = GameInstanceLauncher::new(GameInstanceLauncherLocal::new(factory));
 
@@ -90,12 +91,12 @@ fn two_games()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report for game 1
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id1);
 
     // - game start report for game 2
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id2);
 
@@ -106,7 +107,7 @@ fn two_games()
     assert!(instance2.try_get().is_none());
 
     // - game over report for game 1
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id1);
 
@@ -117,7 +118,7 @@ fn two_games()
     assert!(instance1.try_get().unwrap());
 
     // - game over report for game 2
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id2);
 }
@@ -128,7 +129,7 @@ fn two_games()
 fn abort_game()
 {
     // prepare game instance factory
-    let (report_sender, mut report_receiver) = new_io_message_channel::<GameInstanceReport>();
+    let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let factory = GameFactory::new(DummyGameFactory{});
     let game_launcher = GameInstanceLauncher::new(GameInstanceLauncherLocal::new(factory));
 
@@ -148,7 +149,7 @@ fn abort_game()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 
@@ -159,7 +160,7 @@ fn abort_game()
     assert!(instance.try_get().unwrap());
 
     // - game aborted report
-    let Some(GameInstanceReport::GameAborted(id)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameAborted(id)) = report_receiver.try_next()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 }

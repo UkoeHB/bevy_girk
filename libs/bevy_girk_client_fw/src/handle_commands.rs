@@ -1,10 +1,10 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -27,9 +27,9 @@ fn handle_client_fw_command(world: &mut World, client_command: &ClientFWCommand)
 /// Handle client controller inputs.
 pub(crate) fn handle_commands(world: &mut World)
 {
-    let Some(client_fw_commands) = world.remove_resource::<MessageReceiver<ClientFWCommand>>() else { return; };
+    let Some(client_fw_commands) = world.remove_resource::<Receiver<ClientFWCommand>>() else { return; };
 
-    while let Some(command) = client_fw_commands.try_get_next()
+    while let Some(command) = client_fw_commands.try_recv()
     {
         handle_client_fw_command(world, &command);
     }

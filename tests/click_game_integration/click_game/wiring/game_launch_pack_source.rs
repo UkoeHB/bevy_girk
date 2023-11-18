@@ -137,7 +137,7 @@ impl GameLaunchPackSourceImpl for ClickGameLaunchPackSource
     }
 
     /// Get the next available report.
-    fn try_get_next(&mut self) -> Option<GameLaunchPackReport>
+    fn try_next(&mut self) -> Option<GameLaunchPackReport>
     {
         self.queue.pop_front()
     }

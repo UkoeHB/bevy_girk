@@ -1,10 +1,10 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -19,10 +19,10 @@ fn prestartup_check(world: &World)
         { panic!("GameFWConfig is missing on startup!"); }
     if !world.contains_resource::<GameFWInitializer>()
         { panic!("GameFWInitializer is missing on startup!"); }
-    if !world.contains_resource::<MessageReceiver<ClientPacket>>()
-        { panic!("MessageReceiver<ClientPacket> is missing on startup!"); }
-    if !world.contains_resource::<MessageSender<GamePacket>>()
-        { panic!("MessageSender<GamePacket> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<ClientPacket>>()
+        { panic!("Receiver<ClientPacket> is missing on startup!"); }
+    if !world.contains_resource::<Sender<GamePacket>>()
+        { panic!("Sender<GamePacket> is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

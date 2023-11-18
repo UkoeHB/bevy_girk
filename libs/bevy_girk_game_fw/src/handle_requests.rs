@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -46,10 +47,10 @@ fn try_handle_game_request(
 /// Handle game framework requests.
 pub(crate) fn handle_requests(world: &mut World)
 {
-    let client_packets     = world.remove_resource::<MessageReceiver<ClientPacket>>().unwrap();
+    let client_packets     = world.remove_resource::<Receiver<ClientPacket>>().unwrap();
     let client_msg_handler = world.remove_resource::<ClientMessageHandler>().unwrap();
 
-    while let Some(client_packet) = client_packets.try_get_next()
+    while let Some(client_packet) = client_packets.try_recv()
     {
         // handle the packet's message
         let client_id = client_packet.client_id;

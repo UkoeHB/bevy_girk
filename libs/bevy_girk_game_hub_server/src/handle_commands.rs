@@ -2,12 +2,12 @@
 use crate::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::app::*;
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -75,7 +75,7 @@ fn command_shut_down(
 
 pub(crate) fn handle_commands(world: &mut World)
 {
-    while let Some(command) = world.resource::<MessageReceiver<GameHubCommand>>().try_get_next()
+    while let Some(command) = world.resource::<Receiver<GameHubCommand>>().try_recv()
     {
         match command
         {

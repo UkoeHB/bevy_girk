@@ -4,6 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -118,7 +119,7 @@ pub(crate) fn refresh_game_init_progress(
 pub(crate) fn dispatch_messages_to_client(
     mut game_message_buffer : ResMut<GameMessageBuffer>,
     game_ticks              : Res<GameFWTicksElapsed>,
-    game_message_sender     : Res<MessageSender<GamePacket>>,
+    game_message_sender     : Res<Sender<GamePacket>>,
     client_query            : Query<(&ClientId, &InfoAccessRights)>
 ){
     let ticks = game_ticks.elapsed.ticks();

@@ -1,8 +1,8 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -18,9 +18,9 @@ pub struct GameInstance
     /// the game instance's id
     game_id: u64,
     /// command sender for the game instance (passes commands into the game instance)
-    command_sender: MessageSender<GameInstanceCommand>,
+    command_sender: Sender<GameInstanceCommand>,
     /// command receiver; cached so the channel will not return errors when the game instance shuts down
-    _command_receiver: MessageReceiver<GameInstanceCommand>,
+    _command_receiver: Receiver<GameInstanceCommand>,
     /// join handle for the game instance (used to detect status of the instance)
     instance_handle: enfync::PendingResult<bool>,
     /// cached result
@@ -34,8 +34,8 @@ impl GameInstance
     /// The report sender is for a channel that passes reports out of the instance.
     pub fn new(
         game_id           : u64,
-        command_sender    : MessageSender<GameInstanceCommand>,
-        _command_receiver : MessageReceiver<GameInstanceCommand>,
+        command_sender    : Sender<GameInstanceCommand>,
+        _command_receiver : Receiver<GameInstanceCommand>,
         instance_handle   : enfync::PendingResult<bool>,
     ) -> GameInstance
     {

@@ -7,6 +7,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -37,9 +38,9 @@ impl GameFactoryImpl for DummyGameFactory
         let player_ids: Vec<u128> = launch_pack.client_init_data.iter().map(|m| m.user_id).collect();
 
         // prepare message channels
-        let (client_packet_sender, client_packet_receiver)      = new_message_channel::<ClientPacket>();
-        let (game_packet_sender, game_packet_receiver)          = new_message_channel::<GamePacket>();
-        let (_client_fw_comand_sender, client_fw_comand_reader) = new_message_channel::<ClientFWCommand>();
+        let (client_packet_sender, client_packet_receiver)      = new_channel::<ClientPacket>();
+        let (game_packet_sender, game_packet_receiver)          = new_channel::<GamePacket>();
+        let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFWCommand>();
 
         // make the client ready
         client_packet_sender.send(

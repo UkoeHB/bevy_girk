@@ -15,7 +15,7 @@ use bevy_kot_ecs::*;
 
 fn player_syscall<A, S, Marker>(world: &mut World, req: GameRequest, id: ClientIdType, arg: A, sys: S)
 where
-    A: Send + 'static,
+    A: Send + Sync + 'static,
     S: IntoSystem<(Entity, A), (), Marker> + Send + Sync + 'static,
 {
     match world.resource::<PlayerMap>().client_to_entity(id)

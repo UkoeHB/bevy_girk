@@ -1,8 +1,8 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -29,7 +29,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
     fn launch(
         &self,
         _launch_pack   : GameLaunchPack,
-        _report_sender : IOMessageSender<GameInstanceReport>,
+        _report_sender : IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
         todo!()

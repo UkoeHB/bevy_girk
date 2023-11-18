@@ -57,7 +57,7 @@ fn report_failure(
 
 pub(crate) fn handle_launch_pack_reports(world: &mut World)
 {
-    while let Some(launch_pack_report) = world.resource_mut::<GameLaunchPackSource>().try_get_next_report()
+    while let Some(launch_pack_report) = world.resource_mut::<GameLaunchPackSource>().try_next_report()
     {
         match launch_pack_report
         {

@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -67,7 +68,7 @@ pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessa
 /// Take client messages, dispatch to game.
 pub(crate) fn dispatch_client_packets(
     mut client_message_buffer : ResMut<ClientMessageBuffer>,
-    client_packet_sender      : Res<MessageSender<ClientPacket>>,
+    client_packet_sender      : Res<Sender<ClientPacket>>,
     client_config             : Res<ClientFWConfig>
 ){
     for pending_client_message in client_message_buffer.drain()

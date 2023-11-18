@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts
@@ -25,8 +26,8 @@ pub fn prepare_game_app_framework(
     game_fw_initializer : GameFWInitializer,
 ){
     // prepare message channels
-    let (game_packet_sender, game_packet_receiver)     = new_message_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver) = new_message_channel::<ClientPacket>();
+    let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
+    let (client_packet_sender, client_packet_receiver) = new_channel::<ClientPacket>();
 
     // prepare server app
     game_app

@@ -6,6 +6,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::app::AppExit;
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -51,9 +52,9 @@ pub(crate) struct GameRunnerState
     /// this game's id
     pub(crate) game_id: u64,
     /// sends commands to the instance's owner
-    pub(crate) report_sender: IOMessageSender<GameInstanceReport>,
+    pub(crate) report_sender: IoSender<GameInstanceReport>,
     /// receives commands from the instance's owner
-    pub(crate) command_receiver: MessageReceiver<GameInstanceCommand>,
+    pub(crate) command_receiver: Receiver<GameInstanceCommand>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -64,8 +65,8 @@ pub(crate) struct GameRunnerState
 pub fn game_instance_setup(
     game_factory     : GameFactory,
     launch_pack      : GameLaunchPack,
-    report_sender    : IOMessageSender<GameInstanceReport>,
-    command_receiver : MessageReceiver<GameInstanceCommand>,
+    report_sender    : IoSender<GameInstanceReport>,
+    command_receiver : Receiver<GameInstanceCommand>,
 ) -> Result<App, ()>
 {
     let game_id = launch_pack.game_id;

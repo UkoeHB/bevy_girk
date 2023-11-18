@@ -1,10 +1,10 @@
 //local shortcuts
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -15,9 +15,9 @@ fn process_player_inputs<F>(world: &mut World, handler: F)
 where
     F: Fn(&mut World, &PlayerInput)
 {
-    let Some(player_inputs) = world.remove_resource::<MessageReceiver<PlayerInput>>() else { return; };
+    let Some(player_inputs) = world.remove_resource::<Receiver<PlayerInput>>() else { return; };
 
-    while let Some(input) = player_inputs.try_get_next()
+    while let Some(input) = player_inputs.try_recv()
     {
         handler(world, &input);
     }

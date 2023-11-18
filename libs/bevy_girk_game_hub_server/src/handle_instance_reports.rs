@@ -81,7 +81,7 @@ fn instance_report_game_aborted(
 
 pub(crate) fn handle_instance_reports(world: &mut World)
 {
-    while let Some(instance_report) = world.resource_mut::<RunningGamesCache>().try_get_next_instance_report()
+    while let Some(instance_report) = world.resource_mut::<RunningGamesCache>().try_next_instance_report()
     {
         match instance_report
         {

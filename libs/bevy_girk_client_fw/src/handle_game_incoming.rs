@@ -6,6 +6,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -49,11 +50,11 @@ fn try_handle_game_message(world: &mut World, ser_message: Vec<u8>, ticks: Ticks
 /// Handle messages sent to the client from the game.
 pub(crate) fn handle_game_incoming(world: &mut World)
 {
-    let game_packets     = world.remove_resource::<MessageReceiver<GamePacket>>().unwrap();
+    let game_packets     = world.remove_resource::<Receiver<GamePacket>>().unwrap();
     let game_msg_handler = world.remove_resource::<GameMessageHandler>().unwrap();
     let this_client_id   = syscall(world, (), get_client_id);
 
-    while let Some(game_packet) = game_packets.try_get_next()
+    while let Some(game_packet) = game_packets.try_recv()
     {
         // validate destination id
         if game_packet.client_id != this_client_id

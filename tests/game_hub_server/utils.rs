@@ -9,6 +9,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::time::Duration;
@@ -47,10 +48,10 @@ pub fn make_test_game_hub_server(
     game_ticks_per_sec        : Ticks,
     game_num_ticks            : Ticks,
     lp_source_works           : Option<bool>,
-) -> (MessageSender<GameHubCommand>, App)
+) -> (Sender<GameHubCommand>, App)
 {
     // misc
-    let (command_sender, command_receiver) = new_message_channel::<GameHubCommand>();
+    let (command_sender, command_receiver) = new_channel::<GameHubCommand>();
     let host_hub_client = make_test_host_hub_client_with_id(0u128, hub_server_url, reconnect_on_server_close);
     let game_factory    = GameFactory::new(DummyGameFactory{});
     let game_launcher   = GameInstanceLauncher::new(GameInstanceLauncherLocal::new(game_factory));

@@ -7,6 +7,7 @@ use crate::test_helpers::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -14,7 +15,7 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn send_player_click(player_input_sender: Res<MessageSender<PlayerInput>>)
+fn send_player_click(player_input_sender: Res<Sender<PlayerInput>>)
 {
     player_input_sender.send(PlayerInput::Play(PlayerInputPlay::ClickButton)).expect("player input receiver is missing");
 }
@@ -39,10 +40,10 @@ fn player_clicks()
     let ticks_per_sec = Ticks(1);
 
     // prepare message channels
-    let (client_packet_sender, client_packet_receiver)        = new_message_channel::<ClientPacket>();
-    let (game_packet_sender, game_packet_receiver)            = new_message_channel::<GamePacket>();
-    let (_client_fw_command_sender, client_fw_command_reader) = new_message_channel::<ClientFWCommand>();
-    let (player_input_sender, player_input_reader)            = new_message_channel::<PlayerInput>();
+    let (client_packet_sender, client_packet_receiver)        = new_channel::<ClientPacket>();
+    let (game_packet_sender, game_packet_receiver)            = new_channel::<GamePacket>();
+    let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFWCommand>();
+    let (player_input_sender, player_input_reader)            = new_channel::<PlayerInput>();
 
     // make the client ready
     client_packet_sender.send(

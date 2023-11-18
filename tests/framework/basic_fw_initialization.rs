@@ -6,6 +6,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -21,9 +22,9 @@ fn basic_fw_initialization()
     let ticks_per_sec = Ticks(1);
 
     // prepare message channels
-    let (client_packet_sender, client_packet_receiver)      = new_message_channel::<ClientPacket>();
-    let (game_packet_sender, game_packet_receiver)          = new_message_channel::<GamePacket>();
-    let (_client_fw_comand_sender, client_fw_comand_reader) = new_message_channel::<ClientFWCommand>();
+    let (client_packet_sender, client_packet_receiver)      = new_channel::<ClientPacket>();
+    let (game_packet_sender, game_packet_receiver)          = new_channel::<GamePacket>();
+    let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFWCommand>();
 
     // make the client ready
     client_packet_sender.send(

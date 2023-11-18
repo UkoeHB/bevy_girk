@@ -31,7 +31,7 @@ pub trait GameLaunchPackSourceImpl
     /// Request a launch pack for a specified game.
     fn request_launch_pack(&mut self, game_request: &GameStartRequest);
     /// Get the next available report.
-    fn try_get_next(&mut self) -> Option<GameLaunchPackReport>;
+    fn try_next(&mut self) -> Option<GameLaunchPackReport>;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -59,9 +59,9 @@ impl GameLaunchPackSource
     }
 
     /// Poll the next available report.
-    pub fn try_get_next_report(&mut self) -> Option<GameLaunchPackReport>
+    pub fn try_next_report(&mut self) -> Option<GameLaunchPackReport>
     {
-        self.source_impl.try_get_next()
+        self.source_impl.try_next()
     }
 }
 

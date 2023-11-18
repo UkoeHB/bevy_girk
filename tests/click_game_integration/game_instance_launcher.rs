@@ -8,6 +8,7 @@ use crate::click_game_integration::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_kot_utils::*;
 use bevy_renet::renet::transport::NetcodeClientTransport;
 
 //standard shortcuts
@@ -125,20 +126,20 @@ fn game_instance_launcher_demo()
 
 
     // make new game instance
-    let (report_sender, mut report_receiver) = new_io_message_channel::<GameInstanceReport>();
+    let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let launch_pack = GameLaunchPack::new(0u64, game_factory_config_ser, client_init_data);
     let mut game_instance = game_launcher.launch(launch_pack, report_sender);
     std::thread::sleep(Duration::from_millis(15));
     assert!(game_instance.is_running());
 
     // extract game start report
-    let Some(GameInstanceReport::GameStart(_, mut game_start_report)) = report_receiver.try_get_next()
+    let Some(GameInstanceReport::GameStart(_, mut game_start_report)) = report_receiver.try_next()
     else { panic!("failed to start game"); };
 
 
     // make clients
     let mut client_apps          = Vec::<App>::default();
-    let mut player_input_senders = Vec::<MessageSender<PlayerInput>>::default();
+    let mut player_input_senders = Vec::<Sender<PlayerInput>>::default();
     client_apps.reserve(num_players + num_watchers);
     player_input_senders.reserve(num_players);
 
@@ -213,7 +214,7 @@ fn game_instance_launcher_demo()
         std::thread::sleep(Duration::from_millis(15));
 
         // check for game over
-        if let Some(GameInstanceReport::GameOver(_, report)) = report_receiver.try_get_next()
+        if let Some(GameInstanceReport::GameOver(_, report)) = report_receiver.try_next()
         {
             // save game over report
             game_over_report = Some(report);
