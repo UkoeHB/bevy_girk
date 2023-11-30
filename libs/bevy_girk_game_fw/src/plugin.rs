@@ -64,25 +64,30 @@ pub fn GameFWStartupPlugin(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Umbrella set for game fw sets.
-/// This set is ordinal.
+///
+/// This set is ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct GameFWSet;
 
 /// Private game fw sets, these sandwich the public sets.
-/// These sets are ordinal.
+///
+/// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum GameFWTickSetPrivate
 {
-    /// PreUpdate
+    /// In schedule `PreUpdate`.
     FWStart,
-    /// Update
+    /// In schedule `Update`. Runs between [`GameFWTickSet::Start`] and [`GameFWTickSet::PreLogic`].
     FWHandleRequests,
-    /// PostUpdate
+    /// In schedule `PostUpdate`.
     FWEnd
 }
 
-/// Public game fw sets (exclusively ordered). Game implementations should put game-related logic in these sets.
-/// These sets are ordinal.
+/// Public game fw sets (exclusively ordered).
+/// 
+/// Game implementations should put game-related logic in these sets.
+///
+/// These sets are ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum GameFWTickSet
 {
@@ -96,7 +101,7 @@ pub enum GameFWTickSet
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Game framework tick plugin. Depends on [GameFWStartupPlugin].
+/// Game framework tick plugin. Depends on [`GameFWStartupPlugin`].
 ///
 /// We treat a tick as a span of time in which events occur: |__stuff_happening__|. Our logic for handling the stuff that
 /// happened in a span runs after the *end* of that span (after the span's tick counter increments). This means we think
@@ -111,7 +116,6 @@ pub enum GameFWTickSet
 /// Note that 'before the virtual tick' is assumed to be [GameFWMode::Init], which means the OnEnter<GameFWMode::Init>
 /// schedule will always be invoked in the app's first update, even if the virtual tick is [GameFWMode::Game] (in which
 /// case OnExit<GameFWMode::Init> and OnEnter<GameFWMode::Game> will also be invoked in the first update).
-///
 #[bevy_plugin]
 pub fn GameFWTickPlugin(app: &mut App)
 {

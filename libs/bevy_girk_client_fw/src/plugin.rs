@@ -84,23 +84,28 @@ pub fn ClientFWStartupPlugin(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Umbrella set for client fw sets.
-/// This set is ordinal.
+///
+/// This set is ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct ClientFWSet;
 
 /// Private client fw sets, these sandwich the public sets.
-/// These sets are ordinal.
+///
+/// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ClientFWTickSetPrivate
 {
-    /// PreUpdate
+    /// In schedule `PreUpdate`.
     FWStart,
-    /// PostUpdate
+    /// In schedule `PostUpdate`.
     FWEnd
 }
 
-/// Public client fw sets (exclusively ordered). Client implementations should put game-related logic in these sets.
-/// These sets are ordinal.
+/// Public client fw sets.
+///
+/// Client implementations should put game-related logic in these sets.
+///
+/// These sets are ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ClientFWTickSet
 {
@@ -112,9 +117,11 @@ pub enum ClientFWTickSet
     End
 }
 
-/// Runs when the client state is 'initializing in progress'. This happens when initially connecting to the game,
-/// and whenever the client reconnects to the game.
-/// This set is modal.
+/// Runs when the client state is 'initializing in progress'.
+///
+/// This happens when initially connecting to the game, and whenever the client reconnects to the game.
+///
+/// This set is modal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct ClientFWLoadingSet;
 
