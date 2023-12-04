@@ -90,7 +90,7 @@ impl PendingGamesCache
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain pending games that have not expired
-        self.pending.drain_filter(
+        self.pending.extract_if(
                 move | game_id, (_, birth_time) |
                 {
                     // retain: game is not expired

@@ -72,12 +72,12 @@ pub fn prepare_game_app_replication(game_app: &mut App)
                 .before(bevy_replicon::prelude::ServerSet::Send)
         )
         //prepare message channels
-        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy);
+        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

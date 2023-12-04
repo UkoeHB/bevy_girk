@@ -1,9 +1,10 @@
 //local shortcuts
 
 //third-party shortcuts
+use bevy_renet::renet::ClientId;
 use bevy_renet::renet::transport::ConnectToken;
 use bevy_replicon::prelude::*;
-use bevy_replicon::network_event::SendPolicy;
+use bevy_replicon::network_event::EventType;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
@@ -23,7 +24,7 @@ pub struct TargetAllExcept(pub u64);
 
 impl From<TargetClient> for SendMode
 {
-    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(client.0) }
+    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(ClientId::from_raw(client.0)) }
 }
 impl From<TargetAll> for SendMode
 {
@@ -31,7 +32,7 @@ impl From<TargetAll> for SendMode
 }
 impl From<TargetAllExcept> for SendMode
 {
-    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(exception.0) }
+    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(ClientId::from_raw(exception.0)) }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -43,17 +44,17 @@ pub struct SendUnordered;
 #[derive(Debug, Copy, Clone)]
 pub struct SendOrdered;
 
-impl From<SendUnreliable> for SendPolicy
+impl From<SendUnreliable> for EventType
 {
-    fn from(_: SendUnreliable) -> SendPolicy { return SendPolicy::Unreliable }
+    fn from(_: SendUnreliable) -> EventType { return EventType::Unreliable }
 }
-impl From<SendUnordered> for SendPolicy
+impl From<SendUnordered> for EventType
 {
-    fn from(_: SendUnordered) -> SendPolicy { return SendPolicy::Unordered }
+    fn from(_: SendUnordered) -> EventType { return EventType::Unordered }
 }
-impl From<SendOrdered> for SendPolicy
+impl From<SendOrdered> for EventType
 {
-    fn from(_: SendOrdered) -> SendPolicy { return SendPolicy::Ordered }
+    fn from(_: SendOrdered) -> EventType { return EventType::Ordered }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

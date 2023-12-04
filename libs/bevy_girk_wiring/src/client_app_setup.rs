@@ -21,11 +21,11 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn track_connection_state(transport: Res<bevy_renet::renet::transport::NetcodeClientTransport>) -> Progress
+fn track_connection_state(client: Res<bevy_renet::renet::RenetClient>) -> Progress
 {
-    if transport.is_disconnected() { return Progress{ done: 0, total: 2 }; }
-    if transport.is_connecting()   { return Progress{ done: 1, total: 2 }; }
-    if transport.is_connected()    { return Progress{ done: 2, total: 2 }; }
+    if client.is_disconnected() { return Progress{ done: 0, total: 2 }; }
+    if client.is_connecting()   { return Progress{ done: 1, total: 2 }; }
+    if client.is_connected()    { return Progress{ done: 2, total: 2 }; }
 
     Progress{ done: 0, total: 2 }
 }
@@ -81,24 +81,27 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //bracket the client logic with message receiving/sending (client logic is in `Update`)
         .add_systems(PreUpdate,
             receive_server_messages
-                .run_if(bevy_renet::transport::client_connected())
+                //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
+                //      better to drop those messages, but need to do a full analysis to establish a precise framework
+                //      for handling reconnects and resynchronization
+                .run_if(bevy_renet::client_connected())
                 .after(bevy_replicon::prelude::ClientSet::Receive)
                 .before(ClientFWTickSetPrivate::FWStart),
         )
-        .configure_set(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
+        .configure_sets(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
         .add_systems(PostUpdate,
             send_client_messages
-                .run_if(bevy_renet::transport::client_connected())
+                .run_if(bevy_renet::client_connected())
                 .after(ClientFWTickSetPrivate::FWEnd)
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
         //prepare message channels
-        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(SendPolicy::Unreliable, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(SendPolicy::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(SendPolicy::Ordered, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
         //add framework command endpoint for use by connection controls
         .insert_resource(client_fw_command_sender)
         //track connection status
@@ -106,7 +109,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .add_systems(Update,
             reinitialize_client
                 .before(ClientFWSet)
-                .run_if(bevy_renet::transport::client_just_disconnected())
+                .run_if(bevy_renet::client_just_disconnected())
         );
 }
 
@@ -119,7 +122,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
         .add_systems(Update,
             setup_renet_client
                 .before(ClientFWSet)
-                .run_if(bevy_renet::transport::client_just_disconnected())
+                .run_if(bevy_renet::client_just_disconnected())
         );
 }
 

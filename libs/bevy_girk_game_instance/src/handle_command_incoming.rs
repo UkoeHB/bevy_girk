@@ -48,7 +48,7 @@ fn handle_command(world: &mut World, command: GameInstanceCommand)
 pub(crate) fn handle_command_incoming(world: &mut World)
 {
     // handle game instance commands
-    while let Some(command) = world.resource_mut::<GameRunnerState>().command_receiver.try_next()
+    while let Some(command) = world.resource_mut::<GameRunnerState>().command_receiver.try_recv()
     {
         // handle the command
         handle_command(world, command);

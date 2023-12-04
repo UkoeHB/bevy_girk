@@ -173,7 +173,7 @@ impl OngoingGamesCache
         let users_ref = &mut self.users;
 
         // retain games that have not expired
-        self.games.drain_filter(
+        self.games.extract_if(
                 move | _, (ongoing_game, birth_time) |
                 {
                     // retain: game was born after min birth time

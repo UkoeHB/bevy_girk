@@ -9,7 +9,7 @@ use crate::click_game_integration::*;
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
 use bevy_kot_utils::*;
-use bevy_renet::renet::transport::NetcodeClientTransport;
+use bevy_renet::renet::RenetClient;
 
 //standard shortcuts
 use std::net::Ipv6Addr;
@@ -153,7 +153,7 @@ fn game_instance_factory_demo()
             if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<NetcodeClientTransport>().is_connected());
+            assert!(client.world.resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 

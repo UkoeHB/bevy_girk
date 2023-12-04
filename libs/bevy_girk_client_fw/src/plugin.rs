@@ -146,7 +146,7 @@ pub fn ClientFWTickPlugin(app: &mut App)
                 ClientFWTickSet::End,
             ).chain().in_set(ClientFWSet)
         );
-    app.configure_set(Update,
+    app.configure_sets(Update,
             ClientFWLoadingSet
                 .run_if(in_state(ClientInitializationState::InProgress))
                 .in_set(ClientFWSet)

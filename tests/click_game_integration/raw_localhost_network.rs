@@ -10,7 +10,7 @@ use crate::test_helpers::*;
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
 use bevy_kot_utils::*;
-use bevy_renet::renet::transport::NetcodeClientTransport;
+use bevy_renet::renet::RenetClient;
 
 //standard shortcuts
 
@@ -152,7 +152,7 @@ fn raw_localhost_network_demo(num_players: usize)
             if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<NetcodeClientTransport>().is_connected());
+            assert!(client.world.resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 

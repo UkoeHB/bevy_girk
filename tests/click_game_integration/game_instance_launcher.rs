@@ -9,7 +9,7 @@ use crate::click_game_integration::*;
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
 use bevy_kot_utils::*;
-use bevy_renet::renet::transport::NetcodeClientTransport;
+use bevy_renet::renet::RenetClient;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -133,7 +133,7 @@ fn game_instance_launcher_demo()
     assert!(game_instance.is_running());
 
     // extract game start report
-    let Some(GameInstanceReport::GameStart(_, mut game_start_report)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameStart(_, mut game_start_report)) = report_receiver.try_recv()
     else { panic!("failed to start game"); };
 
 
@@ -178,7 +178,7 @@ fn game_instance_launcher_demo()
             if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<NetcodeClientTransport>().is_connected());
+            assert!(client.world.resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 
@@ -214,7 +214,7 @@ fn game_instance_launcher_demo()
         std::thread::sleep(Duration::from_millis(15));
 
         // check for game over
-        if let Some(GameInstanceReport::GameOver(_, report)) = report_receiver.try_next()
+        if let Some(GameInstanceReport::GameOver(_, report)) = report_receiver.try_recv()
         {
             // save game over report
             game_over_report = Some(report);

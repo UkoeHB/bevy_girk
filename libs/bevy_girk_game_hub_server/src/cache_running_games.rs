@@ -108,7 +108,7 @@ impl RunningGamesCache
     /// get next available instance report
     pub fn try_next_instance_report(&mut self) -> Option<GameInstanceReport>
     {
-        self.instance_report_receiver.try_next()
+        self.instance_report_receiver.try_recv()
     }
 
     /// drain expired and terminated running games
@@ -122,7 +122,7 @@ impl RunningGamesCache
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain games that have expired or terminated
-        self.games.drain_filter(
+        self.games.extract_if(
                 move | game_id, (running_game, _, birth_time) |
                 {
                     // retain: still running and not expired

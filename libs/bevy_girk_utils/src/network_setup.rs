@@ -140,8 +140,8 @@ fn setup_native_renet_client(
     network_channels        : Res<NetworkChannels>,
 ){
     // get server/client channels
-    let server_channels  = network_channels.server_channels();
-    let client_channels  = network_channels.client_channels();
+    let server_channels  = network_channels.get_server_configs();
+    let client_channels  = network_channels.get_client_configs();
 
     // make server
     let (client, client_transport) = create_client(
@@ -166,8 +166,8 @@ pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerConf
 {
     // get server/client channels
     let network_channels = server_app.world.resource::<NetworkChannels>();
-    let server_channels  = network_channels.server_channels();
-    let client_channels  = network_channels.client_channels();
+    let server_channels  = network_channels.get_server_configs();
+    let client_channels  = network_channels.get_client_configs();
 
     // make server
     let (server, server_transport) = create_server(
@@ -228,8 +228,8 @@ pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Ve
 {
     // get server/client channels
     let network_channels = server_app.world.resource::<NetworkChannels>();
-    let server_channels  = network_channels.server_channels();
-    let client_channels  = network_channels.client_channels();
+    let server_channels  = network_channels.get_server_configs();
+    let client_channels  = network_channels.get_client_configs();
 
     // make server
     let (server, server_transport) = create_localhost_test_server(

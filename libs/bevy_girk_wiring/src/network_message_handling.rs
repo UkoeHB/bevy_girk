@@ -6,7 +6,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_renet::renet::{ClientId, RenetClient, RenetServer, transport::NetcodeClientTransport};
-use bevy_replicon::network_event::{EventChannel, SendPolicy};
+use bevy_replicon::network_event::{EventChannel, EventType};
 
 //standard shortcuts
 use std::marker::PhantomData;
@@ -49,9 +49,9 @@ pub(crate) fn send_server_messages(
 
         match game_packet.send_policy
         {
-            SendPolicy::Unreliable => server.send_message(client_id, unreliable_channel.id, serialized_msg),
-            SendPolicy::Unordered  => server.send_message(client_id, unordered_channel.id, serialized_msg),
-            SendPolicy::Ordered    => server.send_message(client_id, ordered_channel.id, serialized_msg)
+            EventType::Unreliable => server.send_message(client_id, *unreliable_channel, serialized_msg),
+            EventType::Unordered  => server.send_message(client_id, *unordered_channel, serialized_msg),
+            EventType::Ordered    => server.send_message(client_id, *ordered_channel, serialized_msg)
         }
     }
 }
@@ -72,9 +72,9 @@ pub(crate) fn receive_server_messages(
 
     for &(channel_id, send_policy) in
         [
-            (ordered_channel.id, SendPolicy::Ordered),
-            (unordered_channel.id, SendPolicy::Unordered),
-            (unreliable_channel.id, SendPolicy::Unreliable),
+            (Into::<u8>::into(*ordered_channel), EventType::Ordered),
+            (Into::<u8>::into(*unordered_channel), EventType::Unordered),
+            (Into::<u8>::into(*unreliable_channel), EventType::Unreliable),
         ].iter()
     {
         while let Some(message) = client.receive_message(channel_id)
@@ -103,9 +103,9 @@ pub(crate) fn send_client_messages(
 
         match client_packet.send_policy
         {
-            SendPolicy::Unreliable => client.send_message(unreliable_channel.id, serialized_msg),
-            SendPolicy::Unordered  => client.send_message(unordered_channel.id, serialized_msg),
-            SendPolicy::Ordered    => client.send_message(ordered_channel.id, serialized_msg)
+            EventType::Unreliable => client.send_message(*unreliable_channel, serialized_msg),
+            EventType::Unordered  => client.send_message(*unordered_channel, serialized_msg),
+            EventType::Ordered    => client.send_message(*ordered_channel, serialized_msg)
         }
     }
 }
@@ -132,9 +132,9 @@ pub(crate) fn receive_client_messages(
 
         for &(channel_id, send_policy) in
             [
-                (ordered_channel.id, SendPolicy::Ordered),
-                (unordered_channel.id, SendPolicy::Unordered),
-                (unreliable_channel.id, SendPolicy::Unreliable),
+                (Into::<u8>::into(*ordered_channel), EventType::Ordered),
+                (Into::<u8>::into(*unordered_channel), EventType::Unordered),
+                (Into::<u8>::into(*unreliable_channel), EventType::Unreliable),
             ].iter()
         {
             while let Some(message) = server.receive_message(client_id, channel_id)

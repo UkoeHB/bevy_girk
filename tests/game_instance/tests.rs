@@ -37,7 +37,7 @@ fn basic_game()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 
@@ -49,7 +49,7 @@ fn basic_game()
     assert!(instance.try_get().unwrap());
 
     // - game over report
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 }
@@ -91,12 +91,12 @@ fn two_games()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report for game 1
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id1);
 
     // - game start report for game 2
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id2);
 
@@ -107,7 +107,7 @@ fn two_games()
     assert!(instance2.try_get().is_none());
 
     // - game over report for game 1
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id1);
 
@@ -118,7 +118,7 @@ fn two_games()
     assert!(instance1.try_get().unwrap());
 
     // - game over report for game 2
-    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameOver(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id2);
 }
@@ -149,7 +149,7 @@ fn abort_game()
     std::thread::sleep(Duration::from_millis(5));
 
     // - game start report
-    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameStart(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 
@@ -160,7 +160,7 @@ fn abort_game()
     assert!(instance.try_get().unwrap());
 
     // - game aborted report
-    let Some(GameInstanceReport::GameAborted(id)) = report_receiver.try_next()
+    let Some(GameInstanceReport::GameAborted(id)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 }

@@ -2,7 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
-use bevy_replicon::network_event::SendPolicy;
+use bevy_replicon::network_event::EventType;
 use serde::{Serialize, Deserialize};
 use serde_with::{Bytes, serde_as};
 
@@ -59,7 +59,7 @@ pub struct GamePacket
     /// Id of destination client.
     pub client_id: ClientIdType,
     /// Packet send policy (reliability and ordering guarantee).
-    pub send_policy: SendPolicy,
+    pub send_policy: EventType,
     /// The message.
     pub message: GameMessage,
 }
@@ -73,7 +73,7 @@ pub struct ClientPacket
     /// Id of originating client.
     pub client_id: ClientIdType,
     /// Packet send policy (reliability and ordering guarantee).
-    pub send_policy: SendPolicy,
+    pub send_policy: EventType,
     /// The message.
     pub message: ClientMessage,
 }

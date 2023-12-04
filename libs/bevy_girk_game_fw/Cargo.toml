@@ -8,7 +8,7 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.11", default-features = false }
+bevy           = { version = "0.12", default-features = false }
 bevy_fn_plugin = { workspace = true }
 bevy_kot_ecs   = { workspace = true }
 bevy_kot_utils = { workspace = true }

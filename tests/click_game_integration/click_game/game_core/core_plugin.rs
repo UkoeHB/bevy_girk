@@ -74,20 +74,20 @@ pub enum GameSet
 pub fn GameTickPlugin(app: &mut App)
 {
     // GAME Tick systems (after initialization).
-    app.configure_set(Update,
+    app.configure_sets(Update,
             GameSet::PostInit
                 .run_if(not(in_state(GameFWMode::Init)))
         );
 
     // GAME Prep systems.
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 GameSet::Prep
                     .run_if(in_state(GameFWMode::Game))
                     .run_if(in_state(GameMode::Prep))
             );
 
     // GAME Play systems.
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 GameSet::Play
                     .run_if(in_state(GameFWMode::Game))
                     .run_if(in_state(GameMode::Play))
@@ -95,7 +95,7 @@ pub fn GameTickPlugin(app: &mut App)
 
     // GAME GameOver systems.
     //todo: this will only run in the short delay between entering 'game over' and the GameFWMode moving to 'End'
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 GameSet::GameOver
                     .run_if(in_state(GameFWMode::Game))
                     .run_if(in_state(GameMode::GameOver))

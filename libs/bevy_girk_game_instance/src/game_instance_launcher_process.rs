@@ -45,7 +45,7 @@ fn get_game_launch_pack(args: &mut std::env::Args) -> Result<GameLaunchPack, ()>
 /// Forward game instance reports from the app to stdout.
 fn drain_game_instance_reports(report_receiver: &mut IoReceiver<GameInstanceReport>)
 {
-    while let Some(report) = report_receiver.try_next()
+    while let Some(report) = report_receiver.try_recv()
     {
         let report_ser = serde_json::to_string(&report).expect("failed serializing game instance report");
         let _ = std::io::stdout().write(report_ser.as_bytes());

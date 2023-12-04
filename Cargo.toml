@@ -16,16 +16,16 @@ members  = [
 ]
 
 [workspace.dependencies]
-bevy           = { version = "0.11", default-features = false }
-bevy_kot_ecs   = { version = "0.8" }
-bevy_kot_utils = { version = "0.8" }
+bevy           = { version = "0.12", default-features = false }
+bevy_kot_ecs   = { version = "0.9" }
+bevy_kot_utils = { version = "0.9" }
 bevy_fn_plugin = { version = "0.1" }
-#bevy_renet     = { version = "0.0.9" }
-bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
-#bevy_replicon  = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "a728047" }
-bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "bbed8dd" }
-bevy_simplenet = { version = "0.4", default-features = false }
-iyes_progress  = { version = "0.9" , features = [ "assets" ] }
+bevy_renet     = { version = "0.0.10" }
+#bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
+bevy_replicon  = { version = "0.17.0" }
+#bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "bbed8dd" }
+bevy_simplenet = { version = "0.5", default-features = false }
+iyes_progress  = { version = "0.10" , features = [ "assets" ] }
 
 enfync             = { version = "0.1" }
 ezsockets          = { version = "0.6", default-features = false }

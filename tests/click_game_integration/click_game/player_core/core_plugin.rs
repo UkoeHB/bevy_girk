@@ -100,7 +100,7 @@ pub fn ClientCoreTickPlugin(app: &mut App)
 {
     // Init startup. (runs on startup)
     // - load assets
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::InitStartup
                     .run_if(in_state(ClientFWMode::Init))
                     .run_if(in_state(ClientCoreMode::Init))
@@ -108,7 +108,7 @@ pub fn ClientCoreTickPlugin(app: &mut App)
 
     // Init reinitialize. (runs if client needs to be reinitialized during a game)
     // - lock display and show reinitialization progress
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::InitReinit
                     .run_if(in_state(ClientFWMode::Init))  //framework is reinitializing
                     .run_if(not(in_state(ClientCoreMode::Init)))  //client core is not in init
@@ -116,27 +116,27 @@ pub fn ClientCoreTickPlugin(app: &mut App)
 
     // Init core. (always runs when framework is being initialized, regardless of client mode)
     // - connect to game and synchronize times
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::InitCore
                     .run_if(in_state(ClientFWMode::Init))
             );
 
     // Prep systems.
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::Prep
                     .run_if(in_state(ClientFWMode::Game))
                     .run_if(in_state(ClientCoreMode::Prep))
             );
 
     // Play systems.
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::Play
                     .run_if(in_state(ClientFWMode::Game))
                     .run_if(in_state(ClientCoreMode::Play))
             );
 
     // GameOver systems.
-    app.configure_set(Update,
+    app.configure_sets(Update,
                 ClientSet::GameOver
                     .run_if(in_state(ClientFWMode::End))
                     .run_if(in_state(ClientCoreMode::GameOver))

@@ -4,7 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::network_event::SendPolicy;
+use bevy_replicon::network_event::EventType;
 use serde::Serialize;
 
 //standard shortcuts
@@ -16,7 +16,7 @@ use std::collections::{VecDeque, vec_deque::Drain};
 pub struct PendingClientMessage
 {
     pub message     : AimedMsg,
-    pub send_policy : SendPolicy
+    pub send_policy : EventType
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ pub struct ClientMessageBuffer
 
 impl ClientMessageBuffer
 {
-    pub fn add_fw_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<SendPolicy>)
+    pub fn add_fw_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<EventType>)
     {
         self.buffer.push_back(
                 PendingClientMessage{
@@ -41,7 +41,7 @@ impl ClientMessageBuffer
             );
     }
 
-    pub fn add_core_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<SendPolicy>)
+    pub fn add_core_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<EventType>)
     {
         self.buffer.push_back(
             PendingClientMessage{

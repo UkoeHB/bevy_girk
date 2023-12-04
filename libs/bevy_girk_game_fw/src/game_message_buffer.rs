@@ -4,7 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::network_event::SendPolicy;
+use bevy_replicon::network_event::EventType;
 use serde::Serialize;
 
 //standard shortcuts
@@ -18,7 +18,7 @@ pub struct PendingGameMessage
 {
     pub message            : AimedMsg,
     pub access_constraints : Vec<InfoAccessConstraint>,
-    pub send_policy        : SendPolicy,
+    pub send_policy        : EventType,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ impl GameMessageBuffer
     pub fn add_fw_msg<T: Serialize>(&mut self,
         message            : &T,
         access_constraints : Vec<InfoAccessConstraint>,
-        send_policy        : impl Into<SendPolicy>
+        send_policy        : impl Into<EventType>
     ){
         self.buffer.push_back(
                 PendingGameMessage{
@@ -50,7 +50,7 @@ impl GameMessageBuffer
     pub fn add_core_msg<T: Serialize>(&mut self,
         message            : &T,
         access_constraints : Vec<InfoAccessConstraint>,
-        send_policy        : impl Into<SendPolicy>,
+        send_policy        : impl Into<EventType>,
     ){
         self.buffer.push_back(
                 PendingGameMessage{

@@ -171,7 +171,7 @@ impl PendingLobbiesCache
         let ack_timeout       = self.config.ack_timeout;
         let max_lifetime      = ack_timeout + self.config.start_buffer;
 
-        self.pending_lobbies.drain_filter(
+        self.pending_lobbies.extract_if(
                 move |lobby_id, (pending_lobby, birth_time)| -> bool
                 {
                     // remove: if lobby has exceeded max lifetime

@@ -91,7 +91,7 @@ impl GameHubDisconnectBuffer
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain buffered hubs that have not expired
-        self.buffer.drain_filter(
+        self.buffer.extract_if(
                 move | game_hub_id, birth_time |
                 {
                     // retain: hub is not expired

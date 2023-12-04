@@ -1,5 +1,5 @@
 //features
-#![feature(hash_drain_filter)]  //todo: nightly/unstable, will change to extract_if
+#![feature(hash_extract_if)]  //todo: nightly/unstable, will change to extract_if
 
 //module tree
 mod cache_pending_games;
