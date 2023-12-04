@@ -54,7 +54,7 @@ pub(crate) struct GameRunnerState
     /// sends commands to the instance's owner
     pub(crate) report_sender: IoSender<GameInstanceReport>,
     /// receives commands from the instance's owner
-    pub(crate) command_receiver: Receiver<GameInstanceCommand>,
+    pub(crate) command_receiver: IoReceiver<GameInstanceCommand>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ pub fn game_instance_setup(
     game_factory     : GameFactory,
     launch_pack      : GameLaunchPack,
     report_sender    : IoSender<GameInstanceReport>,
-    command_receiver : Receiver<GameInstanceCommand>,
+    command_receiver : IoReceiver<GameInstanceCommand>,
 ) -> Result<App, ()>
 {
     let game_id = launch_pack.game_id;

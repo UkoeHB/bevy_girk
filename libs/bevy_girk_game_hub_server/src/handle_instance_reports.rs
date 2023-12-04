@@ -34,7 +34,10 @@ fn instance_report_game_start(
                     report  : game_start_report 
                 }
         )
-    { tracing::error!(game_id, "failed sending game start report to host"); }
+    { tracing::error!(game_id, "failed sending game start report to host"); return; }
+
+    // log game start
+    tracing::trace!(game_id, "game start report handled");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
