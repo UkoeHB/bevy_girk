@@ -56,7 +56,7 @@ fn drain_game_instance_reports(report_receiver: &mut IoReceiver<GameInstanceRepo
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Forward game instance commands from stdin to the app.
-fn monitor_for_commands(command_sender: Res<Sender<GameInstanceCommand>>)
+fn monitor_for_commands(command_sender: Res<IoSender<GameInstanceCommand>>)
 {
     let mut stdin_reader = BufReader::new(std::io::stdin());
     let mut line = String::new();
@@ -195,7 +195,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                         Ok(_) =>
                         {
                             let Ok(report) = serde_json::de::from_str::<GameInstanceReport>(&buf)
-                            else { tracing::warn!(game_id, "failed deserializing game instance report"); continue; };
+                            else { tracing::warn!(game_id, "failed deserializing game instance report"); return false; };
 
                             match &report
                             {
