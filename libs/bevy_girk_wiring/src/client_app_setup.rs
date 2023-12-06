@@ -42,6 +42,10 @@ fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFWCommand>>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Set up a client app with the bevy_girk client framework.
+///
+/// REQUIREMENTS:
+/// - `bevy::time::TimePlugin`.
 pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFWConfig) -> Sender<ClientFWCommand>
 {
     // prepare message channels
@@ -51,8 +55,6 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 
     // prepare client app framework
     client_app
-        //bevy plugins
-        .add_plugins(bevy::time::TimePlugin)
         //setup components
         .add_plugins(ClientFWPlugin)
         //client framework
@@ -74,7 +76,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
 
     // setup client with bevy_replicon (includes bevy_renet)
     client_app
-        // add bevy_replicon client
+        //add bevy_replicon client
         .add_plugins(ReplicationPlugins
             .build()
             .disable::<ServerPlugin>())

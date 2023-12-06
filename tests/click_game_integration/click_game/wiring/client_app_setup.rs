@@ -74,6 +74,7 @@ pub fn make_game_client_core(
     let mut player_input_sender : Option<Sender<PlayerInput>> = None;
     let mut player_id           : Option<ClientIdType>               = None;
 
+    client_app.add_plugins(bevy::time::TimePlugin);
     let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_start_pack.client_fw_config);
     prepare_client_app_replication(&mut client_app, client_fw_command_sender);
     prepare_client_app_network(
