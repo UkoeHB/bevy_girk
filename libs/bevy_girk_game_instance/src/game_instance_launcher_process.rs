@@ -149,6 +149,12 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                                 let _ = child_process.kill().await;
                                 return;
                             }
+                            if let Err(err) = child_stdin_writer.flush().await
+                            {
+                                tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
+                                let _ = child_process.kill().await;
+                                return;
+                            }
                             tracing::trace!(game_id, ?command, "forwarded command to game instance process");
                         }
 
@@ -258,7 +264,6 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
                 // read the next stdin
                 line.clear();
                 let _ = stdin_reader.read_line(&mut line);
-tracing::error!(game_id, ?line, "read line");
 
                 if line.is_empty()
                 {
