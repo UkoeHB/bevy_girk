@@ -18,6 +18,8 @@ serde_json     = { workspace = true }
 serde_with     = { workspace = true }
 tracing        = { workspace = true }
 
+atty = "0.2.14"#todo: for testing
+
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils   = { path = "../bevy_girk_utils" }
 

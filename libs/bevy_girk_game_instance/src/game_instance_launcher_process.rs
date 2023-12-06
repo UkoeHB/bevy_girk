@@ -253,12 +253,21 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
             let mut stdin_reader = BufReader::new(std::io::stdin());
             let mut line = String::new();
 
+            if atty::is(atty::Stream::Stdin)
+            {
+tracing::error!("game instance stdin is not piped");
+            }
+            else
+            {
+tracing::error!("game instance stdin is piped");
+            }
+
             loop
             {
                 // read the next stdin
                 line.clear();
                 let _ = stdin_reader.read_line(&mut line);
-                tracing::trace!(game_id, "read line");
+tracing::error!(game_id, "read line");
 
                 if line.is_empty() { return; }
 
