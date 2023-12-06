@@ -255,12 +255,18 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
 
             loop
             {
+                // read the next stdin
                 line.clear();
                 let _ = stdin_reader.read_line(&mut line);
+                tracing::trace!(game_id, "read line");
 
                 if line.is_empty() { return; }
 
+                // deserialize command
                 let command = serde_json::de::from_str::<GameInstanceCommand>(&line).expect("failed deserializing command");
+                tracing::trace!(game_id, ?command, "received game instance command");
+
+                // forward to app
                 if command_sender.send(command).is_err() { break; }
             }
         }
