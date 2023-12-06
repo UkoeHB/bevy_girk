@@ -55,28 +55,6 @@ fn drain_game_instance_reports(report_receiver: &mut IoReceiver<GameInstanceRepo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Forward game instance commands from stdin to the app.
-fn monitor_for_commands(command_sender: Res<IoSender<GameInstanceCommand>>)
-{
-    let mut stdin_reader = BufReader::new(std::io::stdin());
-    let mut line = String::new();
-
-    loop
-    {
-        line.clear();
-        let _ = stdin_reader.read_line(&mut line);
-
-        if line.is_empty() { return; }
-
-        let command = serde_json::de::from_str::<GameInstanceCommand>(&line).expect("failed deserializing command");
-
-        let _ = command_sender.send(command);
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 fn monitor_for_game_instance_reports(mut report_receiver: ResMut<IoReceiver<GameInstanceReport>>)
 {
     drain_game_instance_reports(&mut report_receiver);
@@ -248,6 +226,7 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
     // get game launch pack
     let launch_pack = get_game_launch_pack(args).expect("failed getting game launch pack from args");
     let game_id = launch_pack.game_id;
+    tracing::trace!(game_id, "game instance process start");
 
     // prepare game app
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
@@ -260,10 +239,28 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
             command_receiver,
         ).expect("failed setting up game instance");
 
-    // add systems for marshalling game instance reports and commands to/from the parent process
+    // spawn thread for monitoring input commands
+    std::thread::spawn(
+        move ||
+        {
+            let mut stdin_reader = BufReader::new(std::io::stdin());
+            let mut line = String::new();
+
+            loop
+            {
+                line.clear();
+                let _ = stdin_reader.read_line(&mut line);
+
+                if line.is_empty() { return; }
+
+                let command = serde_json::de::from_str::<GameInstanceCommand>(&line).expect("failed deserializing command");
+                if command_sender.send(command).is_err() { break; }
+            }
+        }
+    );
+
+    // add system for marshalling game instance reports to the parent process
     app.insert_resource(report_receiver.clone())
-        .insert_resource(command_sender)
-        .add_systems(First, monitor_for_commands)
         .add_systems(Last, monitor_for_game_instance_reports);
 
     // run the app to completion
