@@ -164,10 +164,15 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                                 let _ = child_process.kill().await;
                                 return;
                             }
+                            tracing::trace!(game_id, ?command, "forwarded command to game instance process");
                         }
 
                         // await process termination
-                        _ = child_process.wait() => return,
+                        _ = child_process.wait() =>
+                        {
+                            tracing::trace!(game_id, "game instance process closed");
+                            return;
+                        }
 
                         // catch errors
                         else =>
@@ -202,15 +207,18 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                                 GameInstanceReport::GameStart(_, _) =>
                                 {
                                     let _ = report_sender.send(report);
+                                    tracing::trace!(game_id, "game instance process report: game start");
                                 }
                                 GameInstanceReport::GameOver(_, _) =>
                                 {
                                     let _ = report_sender.send(report);
+                                    tracing::trace!(game_id, "game instance process report: game over");
                                     return true;
                                 }
                                 GameInstanceReport::GameAborted(_) =>
                                 {
                                     let _ = report_sender.send(report);
+                                    tracing::trace!(game_id, "game instance process report: game aborted");
                                     return false;
                                 }
                             }
@@ -230,7 +238,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Launch a game in a standalone process.
+/// Launch a game inside a standalone process.
 ///
 /// Assumes the next useful `std::env::Args` item is the game launch pack.
 ///
@@ -239,6 +247,7 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
 {
     // get game launch pack
     let launch_pack = get_game_launch_pack(args).expect("failed getting game launch pack from args");
+    let game_id = launch_pack.game_id;
 
     // prepare game app
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
@@ -262,6 +271,8 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
 
     // drain any lingering game instance reports
     drain_game_instance_reports(&mut report_receiver);
+
+    tracing::trace!(game_id, "game instance process finished");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
