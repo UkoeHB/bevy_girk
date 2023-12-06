@@ -49,6 +49,7 @@ fn drain_game_instance_reports(report_receiver: &mut IoReceiver<GameInstanceRepo
     {
         let report_ser = serde_json::to_string(&report).expect("failed serializing game instance report");
         let _ = std::io::stdout().write(report_ser.as_bytes());
+        let _ = std::io::stdout().write("\n".as_bytes());
     }
 }
 
@@ -137,6 +138,12 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                                 return;
                             };
                             if let Err(err) = child_stdin_writer.write(command_ser.as_bytes()).await
+                            {
+                                tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
+                                let _ = child_process.kill().await;
+                                return;
+                            }
+                            if let Err(err) = child_stdin_writer.write("\n".as_bytes()).await
                             {
                                 tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
                                 let _ = child_process.kill().await;
