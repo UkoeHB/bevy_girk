@@ -74,7 +74,7 @@ fn player_clicks()
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1) ))
+        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
         .set_runner(make_test_runner(8))

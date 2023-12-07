@@ -48,7 +48,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         .set_runner(make_test_runner(num_prep_ticks + num_game_ticks + 3))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1) ))
+        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
         .insert_resource(

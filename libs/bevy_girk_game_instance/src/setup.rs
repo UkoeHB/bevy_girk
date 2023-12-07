@@ -4,7 +4,6 @@ use bevy_girk_game_fw::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 
@@ -27,10 +26,9 @@ fn set_game_app_runner(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_end_game(
+fn try_collect_game_over_report(
     mut game_end_flag : ResMut<GameEndFlag>,
     runner_state      : Res<GameRunnerState>,
-    mut app_exit      : EventWriter<AppExit>,
 ){
     // try to get game over report
     let Some(game_over_report) = game_end_flag.take_report() else { return; };
@@ -39,8 +37,8 @@ fn try_end_game(
     if let Err(_) = runner_state.report_sender.send(GameInstanceReport::GameOver(runner_state.game_id, game_over_report))
     { tracing::error!(runner_state.game_id, "failed sending game over message"); }
 
-    // exit the game
-    app_exit.send(AppExit{});
+    // log
+    tracing::info!("game over report collected from game app");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -93,7 +91,7 @@ pub fn game_instance_setup(
     game_app
         .insert_resource(runner_state)
         .add_systems(First, handle_command_incoming)
-        .add_systems(Last, try_end_game);
+        .add_systems(Last, try_collect_game_over_report);
 
     // return the app
     Ok(game_app)

@@ -56,7 +56,7 @@ fn basic_ping()
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
-        .insert_resource(GameFWConfig::new( Ticks(1), Ticks(1) ))
+        .insert_resource(GameFWConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
         .insert_resource(client_packet_receiver)
         .insert_resource(game_packet_sender)
         //setup client framework

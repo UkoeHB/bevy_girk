@@ -69,7 +69,7 @@ fn cache_ongoing_games_basic()
 fn cache_ongoing_games_expiration()
 {
     // make a cache
-    let one_third_duration = Duration::from_millis(5);
+    let one_third_duration = Duration::from_millis(10);
     let cache_config = OngoingGamesCacheConfig{
             expiry_duration: one_third_duration + one_third_duration + one_third_duration
         };

@@ -61,7 +61,7 @@ fn raw_localhost_network_demo(num_players: usize)
     let game_play_ticks = Ticks(200);
 
     // game framework config
-    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks );
+    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
 
     // game context
     let game_initializer = test_utils::prepare_game_initializer(
@@ -120,13 +120,12 @@ fn raw_localhost_network_demo(num_players: usize)
     client_apps.push(watcher_client_app);
 
     // client initializers for server
-    let mut client_initialization_state = prepare_player_client_contexts(num_players);
-    append_client(&mut client_initialization_state);
+    let mut game_fw_initializer = prepare_player_client_contexts(num_players);
+    append_client(&mut game_fw_initializer);
 
     // prepare game server app
-    // note: we do this after clients because the game_ctx will be moved in
     let mut game_server_app = App::new();
-    prepare_game_app_framework(&mut game_server_app, game_fw_config, client_initialization_state);
+    prepare_game_app_framework(&mut game_server_app, game_fw_config, game_fw_initializer);
     prepare_game_app_replication(&mut game_server_app);
     prepare_game_app_core(&mut game_server_app, game_initializer);
 
@@ -163,6 +162,7 @@ fn raw_localhost_network_demo(num_players: usize)
     }
 
     // check that we have left the init phase as expected
+    std::thread::sleep(std::time::Duration::from_millis(15));
     game_server_app.update();  //one update to collect client inputs notifying completion
     game_server_app.update();  //one update to update the mode
     assert_eq!(*game_server_app.world.resource::<State<GameFWMode>>(), GameFWMode::Game);
@@ -186,7 +186,9 @@ fn raw_localhost_network_demo(num_players: usize)
         game_server_app.update();
 
         for client in client_apps.iter_mut()
-            { client.update(); }
+        {
+            client.update();
+        }
     }
 
 

@@ -15,6 +15,7 @@ fn setup_misc_resources(world: &mut World)
 {
     world.insert_resource(GameEndFlag::default());
     world.insert_resource(GameFWTicksElapsed::default());
+    world.insert_resource(GameFWEndTick::default());
     world.spawn(GameInitProgressEntity::default());
 }
 

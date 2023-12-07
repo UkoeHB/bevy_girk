@@ -14,6 +14,7 @@ use iyes_progress::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Update client's intialization cache.
+///
 /// Note: the ProgressCounter is removed when it reaches 100%, but we may still need the initialization cache.
 pub(crate) fn update_initialization_cache(
     progress_counter                  : Option<Res<ProgressCounter>>,

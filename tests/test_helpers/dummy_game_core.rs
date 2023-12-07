@@ -35,6 +35,7 @@ fn try_end_dummy_game(
     mut end_flag    : ResMut<GameEndFlag>
 ){
     if duration_config.max_ticks > game_fw_ticks.elapsed.ticks() { return; }
+    if end_flag.is_set() { return; }
     end_flag.set(GameOverReport::default());
 }
 
@@ -51,7 +52,7 @@ pub fn DummyGameCorePlugin(app: &mut App)
     app.add_systems(PreStartup, prestartup_check);
 
     // game termination condition
-    app.add_systems(Update, try_end_dummy_game.in_set(GameFWTickSet::End));
+    app.add_systems(PostUpdate, try_end_dummy_game);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

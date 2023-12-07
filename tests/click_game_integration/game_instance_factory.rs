@@ -72,7 +72,7 @@ fn game_instance_factory_demo()
         };
 
     // game framework config
-    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks );
+    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
 
     // game duration config
     let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_play_ticks);
@@ -162,6 +162,7 @@ fn game_instance_factory_demo()
     }
 
     // check that we have left the init phase as expected
+    std::thread::sleep(std::time::Duration::from_millis(15));
     game_server_app.update();  //one update to collect client inputs notifying completion
     game_server_app.update();  //one update to update the mode
     assert_eq!(*game_server_app.world.resource::<State<GameFWMode>>(), GameFWMode::Game);

@@ -61,7 +61,7 @@ fn test_game_setup(num_players: usize)
         .set_runner(make_test_runner(2))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1) ))
+        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
         .insert_resource(

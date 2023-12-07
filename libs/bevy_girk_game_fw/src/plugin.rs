@@ -176,7 +176,13 @@ pub fn GameFWTickPlugin(app: &mut App)
     // Respond to state transitions
     app.add_systems(OnEnter(GameFWMode::Init), notify_game_fw_mode_all)
         .add_systems(OnEnter(GameFWMode::Game), notify_game_fw_mode_all)
-        .add_systems(OnEnter(GameFWMode::End), notify_game_fw_mode_all);
+        .add_systems(OnEnter(GameFWMode::End),
+            (
+                notify_game_fw_mode_all,
+                start_end_countdown,
+            )
+        )
+        .add_systems(Last, try_terminate_app.run_if(in_state(GameFWMode::End)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

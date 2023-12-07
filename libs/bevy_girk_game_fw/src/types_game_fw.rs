@@ -20,6 +20,12 @@ pub struct GameFWTicksElapsed
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// The game fw tick where `GameFWMode::End` was entered.
+#[derive(Resource, Default)]
+pub struct GameFWEndTick(pub Option<Ticks>);
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Total initialization progress of the game; is replicated to clients.
 #[derive(Component, Debug, Default, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub struct GameInitProgress(pub f32);

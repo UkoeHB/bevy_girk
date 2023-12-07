@@ -30,8 +30,7 @@ pub(crate) fn handle_current_game_fw_mode(
             GameFWMode::End  => ClientFWMode::End,
         };
 
-    if new_client_fw_mode == **current_client_fw_mode
-        { return; }
+    if new_client_fw_mode == **current_client_fw_mode { return; }
     next_client_fw_mode.set(new_client_fw_mode);
     tracing::info!(?new_client_fw_mode, "new client framework mode");
 }

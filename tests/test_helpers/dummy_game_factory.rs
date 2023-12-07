@@ -58,7 +58,7 @@ impl GameFactoryImpl for DummyGameFactory
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
             //setup game framework
-            .insert_resource(GameFWConfig::new( config.ticks_per_sec, Ticks(1) ))
+            .insert_resource(GameFWConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
             .insert_resource(client_packet_receiver)
             .insert_resource(game_packet_sender)

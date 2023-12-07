@@ -90,7 +90,7 @@ fn game_instance_launcher_demo()
         };
 
     // game framework config
-    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks );
+    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
 
     // game duration config
     let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_play_ticks);
@@ -129,7 +129,7 @@ fn game_instance_launcher_demo()
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let launch_pack = GameLaunchPack::new(0u64, game_factory_config_ser, client_init_data);
     let mut game_instance = game_launcher.launch(launch_pack, report_sender);
-    std::thread::sleep(Duration::from_millis(15));
+    std::thread::sleep(Duration::from_millis(30));
     assert!(game_instance.is_running());
 
     // extract game start report

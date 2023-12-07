@@ -4,6 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy::app::AppExit;
 use bevy_kot_utils::*;
 
 //standard shortcuts
@@ -168,6 +169,42 @@ pub(crate) fn notify_game_fw_mode_all(
             vec![],
             SendOrdered
         );
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_end_tick: ResMut<GameFWEndTick>)
+{
+    game_end_tick.0 = Some(game_ticks.elapsed.ticks());
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Terminate the app if all game end ticks have elapsed.
+///
+/// If the max game end ticks equals zero, then the app will be terminated in the same tick that `GameFWMode::End` is set.
+//todo: consider terminating early if all clients have acked the game end state
+pub(crate) fn try_terminate_app(
+    current_game_mode : Res<State<GameFWMode>>,
+    game_ticks        : Res<GameFWTicksElapsed>,
+    game_end_tick     : Res<GameFWEndTick>,
+    game_fw_config    : Res<GameFWConfig>,
+    mut app_exit      : EventWriter<AppExit>,
+){
+    // sanity check
+    if *current_game_mode != GameFWMode::End
+    { tracing::error!("tried to terminate game app but not in GameFWMode::End"); return; }
+
+    // get end tick
+    let Some(end_tick) = game_end_tick.0
+    else { tracing::error!("tried to terminate game app but game fw end tick is missing"); return; };
+
+    // check if game end ticks have elapsed
+    if game_ticks.elapsed.ticks().0.saturating_sub(end_tick.0) < game_fw_config.max_end_ticks().0 { return; }
+
+    // exit the game
+    tracing::info!("terminating game app");
+    app_exit.send(AppExit{});
 }
 
 //-------------------------------------------------------------------------------------------------------------------

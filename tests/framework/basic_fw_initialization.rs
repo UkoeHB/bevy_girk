@@ -43,7 +43,7 @@ fn basic_fw_initialization()
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1) ))
+        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         .insert_resource(client_packet_receiver)
         .insert_resource(game_packet_sender)
