@@ -17,8 +17,8 @@ members  = [
 
 [workspace.dependencies]
 bevy           = { version = "0.12", default-features = false }
-bevy_kot_ecs   = { version = "0.9" }
-bevy_kot_utils = { version = "0.9" }
+bevy_kot_ecs   = { version = "0.10" }
+bevy_kot_utils = { version = "0.10" }
 bevy_fn_plugin = { version = "0.1" }
 bevy_renet     = { version = "0.0.10" }
 #bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
