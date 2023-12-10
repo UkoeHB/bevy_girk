@@ -207,6 +207,8 @@ pub enum RenetClientConnectPack
 /// - Assumes there is a [`RenetClientConnectPack`] resource already loaded in the app.
 pub fn setup_renet_client(world: &mut World)
 {
+    tracing::debug!("setting up renet client");
+
     let connect_pack = world.resource::<RenetClientConnectPack>().clone();
     match connect_pack
     {

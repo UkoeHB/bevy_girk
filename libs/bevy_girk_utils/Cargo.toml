@@ -15,6 +15,7 @@ bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
 serde          = { workspace = true }
 serde_with     = { workspace = true }
+tracing        = { workspace = true }
 
 bincode     = { version = "1.3" }
 crossbeam   = { version = "0.8" }
