@@ -208,7 +208,6 @@ pub enum RenetClientConnectPack
 pub fn setup_renet_client(world: &mut World)
 {
     tracing::debug!("setting up renet client");
-panic!("debugging renet client setup");
 
     let connect_pack = world.resource::<RenetClientConnectPack>().clone();
     match connect_pack
