@@ -327,9 +327,9 @@ fn reject_no_capacity()
 
     // shut down hub
     hub_command_sender.send(GameHubCommand::ShutDown).unwrap();
-    std::thread::sleep(Duration::from_millis(15));
+    std::thread::sleep(Duration::from_millis(30));
     hub_server_app.update();
-    std::thread::sleep(Duration::from_millis(15));
+    std::thread::sleep(Duration::from_millis(30));
 
     // - game 2 either finishes or gets aborted (shutting down)
     let Some(_) = host_hub_server.next()

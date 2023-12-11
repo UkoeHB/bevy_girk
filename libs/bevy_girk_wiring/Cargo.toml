@@ -14,6 +14,7 @@ bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
 iyes_progress  = { workspace = true }
 serde          = { workspace = true }
+renet          = { workspace = true, features = ["transport"] }  #todo: want this feature on wasm?
 tracing        = { workspace = true }
 
 bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }

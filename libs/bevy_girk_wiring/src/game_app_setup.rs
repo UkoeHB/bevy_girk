@@ -20,6 +20,17 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn log_transport_errors(mut transport_errors: EventReader<renet::transport::NetcodeTransportError>)
+{
+    for error in transport_errors.read()
+    {
+        tracing::debug!(?error);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 pub fn prepare_game_app_framework(
     game_app            : &mut App,
     game_fw_config      : GameFWConfig,
@@ -77,7 +88,9 @@ pub fn prepare_game_app_replication(game_app: &mut App)
         .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy);
+        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        //log transport errors
+        .add_systems(Last, log_transport_errors);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

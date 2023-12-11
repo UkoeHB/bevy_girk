@@ -42,6 +42,17 @@ fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFWCommand>>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn log_transport_errors(mut transport_errors: EventReader<renet::transport::NetcodeTransportError>)
+{
+    for error in transport_errors.read()
+    {
+        tracing::warn!(?error);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Set up a client app with the bevy_girk client framework.
 ///
 /// REQUIREMENTS:
@@ -112,7 +123,10 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             reinitialize_client
                 .before(ClientFWSet)
                 .run_if(bevy_renet::client_just_disconnected())
-        );
+        )
+        //log transport errors
+        .add_systems(Last, log_transport_errors)
+        ;
 }
 
 //-------------------------------------------------------------------------------------------------------------------

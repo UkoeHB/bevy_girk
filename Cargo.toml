@@ -26,6 +26,7 @@ bevy_replicon  = { version = "0.17.0" }
 #bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "bbed8dd" }
 bevy_simplenet = { version = "0.5", default-features = false }
 iyes_progress  = { version = "0.10" , features = [ "assets" ] }
+renet          = { version = "0.0.14", default-features = false }
 
 enfync             = { version = "0.1" }
 ezsockets          = { version = "0.6", default-features = false }
