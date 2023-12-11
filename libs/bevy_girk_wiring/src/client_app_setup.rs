@@ -120,6 +120,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //track connection status
         .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
         .add_systems(Update,
+            //todo: better to do this before ClientFWTickSetPrivate::FWStart so that client initialization is not delayed? 
             reinitialize_client
                 .before(ClientFWSet)
                 .run_if(bevy_renet::client_just_disconnected())
@@ -136,6 +137,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
     client_app.insert_resource(connect_pack)
         .add_systems(Startup, setup_renet_client)
         .add_systems(Update,
+            //todo: better to do this before ClientFWTickSetPrivate::FWStart so that client initialization is not delayed?
             setup_renet_client
                 .before(ClientFWSet)
                 .after(reinitialize_client)  //client_just_disconnected() will be false after setup_renet_client runs

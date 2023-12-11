@@ -152,7 +152,6 @@ fn setup_native_renet_client(
         );
 
     // add client and transport
-    // - this will over-write any preexisting client/transport (useful for when a client is disconnected)
     client_app_commands.insert_resource(client);
     client_app_commands.insert_resource(client_transport);
 }
@@ -214,7 +213,22 @@ pub fn setup_renet_client(world: &mut World)
     {
         RenetClientConnectPack::Native(authentication, client_addr) =>
         {
-            syscall(world, (authentication, client_addr), setup_native_renet_client);
+            syscall(world, (authentication, client_addr),
+                |
+                    In((
+                        authentication,
+                        client_address
+                    ))    : In<(ClientAuthentication, SocketAddr)>,
+                    world : &mut World,
+                |
+                {
+                    // drop the existing transport to free its address in case we are re-using a client address
+                    world.remove_resource::<NetcodeClientTransport>();
+
+                    // setup client
+                    syscall(world, (authentication, client_address), setup_native_renet_client);
+                }
+            );
         }
     }
 }
