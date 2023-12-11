@@ -138,6 +138,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
         .add_systems(Update,
             setup_renet_client
                 .before(ClientFWSet)
+                .after(reinitialize_client)  //client_just_disconnected() will be false after setup_renet_client runs
                 .run_if(bevy_renet::client_just_disconnected())
         );
 }
