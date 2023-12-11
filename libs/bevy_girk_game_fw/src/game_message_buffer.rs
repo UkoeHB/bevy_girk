@@ -9,6 +9,7 @@ use serde::Serialize;
 
 //standard shortcuts
 use std::collections::{VecDeque, vec_deque::Drain};
+use std::fmt::Debug;
 use std::vec::Vec;
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -33,11 +34,12 @@ pub struct GameMessageBuffer
 //todo: adding messages requires synchronization between adders (may be fine for single-threaded game server)
 impl GameMessageBuffer
 {
-    pub fn add_fw_msg<T: Serialize>(&mut self,
+    pub fn add_fw_msg<T: Serialize + Debug>(&mut self,
         message            : &T,
         access_constraints : Vec<InfoAccessConstraint>,
         send_policy        : impl Into<EventType>
     ){
+        tracing::trace!(?message, "buffering fw message");
         self.buffer.push_back(
                 PendingGameMessage{
                         message: AimedMsg::Fw{ bytes: ser_msg(message) },
@@ -47,11 +49,12 @@ impl GameMessageBuffer
             );
     }
 
-    pub fn add_core_msg<T: Serialize>(&mut self,
+    pub fn add_core_msg<T: Serialize + Debug>(&mut self,
         message            : &T,
         access_constraints : Vec<InfoAccessConstraint>,
         send_policy        : impl Into<EventType>,
     ){
+        tracing::trace!(?message, "buffering core message");
         self.buffer.push_back(
                 PendingGameMessage{
                         message: AimedMsg::Core{ bytes: ser_msg(message) },
