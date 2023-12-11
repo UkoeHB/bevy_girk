@@ -20,6 +20,17 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn log_server_events(mut server: ResMut<RenetServer>)
+{
+    while let Some(event) = server.get_event()
+    {
+        tracing::debug!(?event);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 fn log_transport_errors(mut transport_errors: EventReader<renet::transport::NetcodeTransportError>)
 {
     for error in transport_errors.read()
@@ -89,8 +100,8 @@ pub fn prepare_game_app_replication(game_app: &mut App)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
-        //log transport errors
-        .add_systems(Last, log_transport_errors);
+        //log server events and errors
+        .add_systems(Last, (log_server_events, log_transport_errors).chain());
 }
 
 //-------------------------------------------------------------------------------------------------------------------
