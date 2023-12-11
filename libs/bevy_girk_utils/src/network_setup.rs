@@ -215,8 +215,6 @@ pub fn setup_renet_client(world: &mut World)
         RenetClientConnectPack::Native(authentication, client_addr) =>
         {
             syscall(world, (authentication, client_addr), setup_native_renet_client);
-let t = world.resource::<NetcodeClientTransport>().time_since_last_received_packet();
-tracing::error!(?t);
         }
     }
 }
