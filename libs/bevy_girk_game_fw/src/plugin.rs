@@ -108,14 +108,20 @@ pub enum GameFWTickSet
 /// in terms of a span (a tick) having 'elapsed'. The very first time our logic runs, no tick has elapsed yet. To handle
 /// that, we imagine a 'virtual tick' that ends just before our first logic run.
 ///
-/// Each tick is assigned one game mode, represented by [GameFWMode]. Game mode transitions occur **between** two ticks,
+/// Each tick is assigned one game mode, represented by [`GameFWMode`]. Game mode transitions occur **between** two ticks,
 /// which means they occur after one tick's logic run and before the span of the tick with the new game mode begins.
-/// In practice, the order of events in a tick is: time span -> 'elapsed tick' counter increments -> determine mode -> logic.
-/// Transition logic can use the OnEnter<GameFWMode::*> and OnExit<GameFWMode::*> schedules.
 ///
-/// Note that 'before the virtual tick' is assumed to be [GameFWMode::Init], which means the OnEnter<GameFWMode::Init>
-/// schedule will always be invoked in the app's first update, even if the virtual tick is [GameFWMode::Game] (in which
-/// case OnExit<GameFWMode::Init> and OnEnter<GameFWMode::Game> will also be invoked in the first update).
+/// In practice, the order of events in a tick is:
+/// 1) Elapse a time span (tick).
+/// 2) Increment 'elapsed tick' counter for the elapsed tick.
+/// 3) Determine mode for the elapsed tick.
+/// 4) Execute logic for the elapsed tick.
+///
+/// Transition logic can use the `OnEnter(GameFWMode::*)` and `OnExit(GameFWMode::*)` schedules.
+///
+/// Note that 'before the virtual tick' is assumed to be [`GameFWMode::Init`], which means the `OnEnter(GameFWMode::Init)`
+/// schedule will always be invoked in the app's first update, even if the virtual tick is [`GameFWMode::Game`] (in which
+/// case `OnExit(GameFWMode::Init)` and `OnEnter(GameFWMode::Game)` will also be invoked in the first update).
 #[bevy_plugin]
 pub fn GameFWTickPlugin(app: &mut App)
 {
@@ -147,7 +153,7 @@ pub fn GameFWTickPlugin(app: &mut App)
     // TICK START
 
     // TICK FWHANDLEREQUESTS
-    // note: we handle inputs after the game fw and game core have updated their ticks and modes (in the start sets)
+    // note: we handle inputs after the game fw and game core have updated their ticks and modes (in their start sets)
     app.add_systems(Update,
             (
                 handle_requests,
