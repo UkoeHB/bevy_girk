@@ -23,7 +23,7 @@ bevy_fn_plugin = { version = "0.1" }
 bevy_renet     = { version = "0.0.10" }
 #bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
 #bevy_replicon  = { version = "0.17.0" }
-bevy_replicon  = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "6e440e2" }
+bevy_replicon  = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "c21f454" }
 bevy_simplenet = { version = "0.5", default-features = false }
 iyes_progress  = { version = "0.10" , features = [ "assets" ] }
 renet          = { version = "0.0.14", default-features = false }
