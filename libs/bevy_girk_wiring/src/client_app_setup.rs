@@ -93,11 +93,16 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             .disable::<ServerPlugin>())
         //bracket the client logic with message receiving/sending (client logic is in `Update`)
         .add_systems(PreUpdate,
-            receive_server_messages
-                //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
-                //      better to drop those messages, but need to do a full analysis to establish a precise framework
-                //      for handling reconnects and resynchronization
-                .run_if(bevy_renet::client_connected())
+            (
+                reinitialize_client
+                    .run_if(bevy_renet::client_just_disconnected()),
+                receive_server_messages
+                    //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
+                    //      better to drop those messages, but need to do a full analysis to establish a precise framework
+                    //      for handling reconnects and resynchronization
+                    .run_if(bevy_renet::client_connected())
+            )
+                .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
                 .before(ClientFWTickSetPrivate::FWStart),
         )
@@ -119,12 +124,6 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .insert_resource(client_fw_command_sender)
         //track connection status
         .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
-        .add_systems(Update,
-            //todo: better to do this before ClientFWTickSetPrivate::FWStart so that client initialization is not delayed? 
-            reinitialize_client
-                .before(ClientFWSet)
-                .run_if(bevy_renet::client_just_disconnected())
-        )
         //log transport errors
         .add_systems(Last, log_transport_errors)
         ;
