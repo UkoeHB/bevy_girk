@@ -106,9 +106,6 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                 reinitialize_client
                     .run_if(bevy_renet::client_just_disconnected()),
                 receive_server_messages
-                    //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
-                    //      better to drop those messages, but need to do a full analysis to establish a precise framework
-                    //      for handling reconnects and resynchronization
                     .run_if(bevy_renet::client_connected())
             )
                 .chain()
@@ -121,6 +118,12 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
         //message sending
         .add_systems(PostUpdate,
+            //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
+            //      better to drop those messages, but need to do a full analysis to establish a precise framework
+            //      for handling reconnects and resynchronization
+            //note that bevy_replicon events also internally pile up while waiting, but since we add a layer between
+            //  our events and replicon here, and both systems currently use client_connected(), there should not be
+            //  any race conditions where messages can hang as replicon events
             send_client_messages
                 .run_if(bevy_renet::client_connected())
                 .after(ClientFWTickSetPrivate::FWEnd)
