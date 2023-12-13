@@ -239,7 +239,7 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
     // get game launch pack
     let launch_pack = get_game_launch_pack(args).expect("failed getting game launch pack from args");
     let game_id = launch_pack.game_id;
-    tracing::trace!(game_id, "game instance process start");
+    tracing::info!(game_id, "game instance process started");
 
     // prepare game app
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
@@ -274,7 +274,7 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
 
                 // deserialize command
                 let command = serde_json::de::from_str::<GameInstanceCommand>(&line).expect("failed deserializing command");
-                tracing::trace!(game_id, ?command, "received game instance command");
+                tracing::info!(game_id, ?command, "received game instance command");
 
                 // forward to app
                 if command_sender.send(command).is_err() { break; }
@@ -292,7 +292,7 @@ pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactor
     // drain any lingering game instance reports
     drain_game_instance_reports(&mut report_receiver);
 
-    tracing::trace!(game_id, "game instance process finished");
+    tracing::info!(game_id, "game instance process finished");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
