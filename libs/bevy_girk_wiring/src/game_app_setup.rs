@@ -80,19 +80,6 @@ pub fn prepare_game_app_replication(game_app: &mut App)
                 .disable::<ClientPlugin>()
                 .set( ServerPlugin::new(TickPolicy::EveryFrame) )
         )
-        //bracket the game logic with message receiving/sending (game logic is in `Update`)
-        .add_systems(PreUpdate,
-            receive_client_messages
-                .run_if(resource_exists::<RenetServer>())
-                .after(bevy_replicon::prelude::ServerSet::Receive)
-                .before(GameFWTickSetPrivate::FWStart)
-        )
-        .add_systems(PostUpdate,
-            send_server_messages
-                .run_if(resource_exists::<RenetServer>())
-                .after(GameFWTickSetPrivate::FWEnd)
-                .before(bevy_replicon::prelude::ServerSet::Send)
-        )
         //prepare message channels
         .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
@@ -100,6 +87,21 @@ pub fn prepare_game_app_replication(game_app: &mut App)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
         .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        //message receiving
+        .add_systems(PreUpdate,
+            receive_client_messages
+                .run_if(resource_exists::<RenetServer>())
+                .after(bevy_replicon::prelude::ServerSet::Receive)
+                .before(GameFWTickSetPrivate::FWStart)
+        )
+        // <- client logic is in Update
+        //message sending
+        .add_systems(PostUpdate,
+            send_server_messages
+                .run_if(resource_exists::<RenetServer>())
+                .after(GameFWTickSetPrivate::FWEnd)
+                .before(bevy_replicon::prelude::ServerSet::Send)
+        )
         //log server events and errors
         .add_systems(Last, (log_server_events, log_transport_errors).chain());
 }

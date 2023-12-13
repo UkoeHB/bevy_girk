@@ -91,7 +91,16 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .add_plugins(ReplicationPlugins
             .build()
             .disable::<ServerPlugin>())
-        //bracket the client logic with message receiving/sending (client logic is in `Update`)
+        //prepare message channels
+        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
+        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        //add framework command endpoint for use by connection controls
+        .insert_resource(client_fw_command_sender)
+        //message receiving
         .add_systems(PreUpdate,
             (
                 reinitialize_client
@@ -106,24 +115,17 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                 .after(bevy_replicon::prelude::ClientSet::Receive)
                 .before(ClientFWTickSetPrivate::FWStart),
         )
+        //client logic
         .configure_sets(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
+        //track connection status
+        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
+        //message sending
         .add_systems(PostUpdate,
             send_client_messages
                 .run_if(bevy_renet::client_connected())
                 .after(ClientFWTickSetPrivate::FWEnd)
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
-        //prepare message channels
-        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
-        //add framework command endpoint for use by connection controls
-        .insert_resource(client_fw_command_sender)
-        //track connection status
-        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
         //log transport errors
         .add_systems(Last, log_transport_errors)
         ;
