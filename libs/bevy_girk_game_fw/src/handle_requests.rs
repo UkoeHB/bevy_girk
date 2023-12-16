@@ -15,10 +15,11 @@ use bevy_kot_utils::*;
 
 fn try_handle_game_fw_request(world: &mut World, ser_message: Vec<u8>, client_id: ClientIdType) -> bool
 {
-    let Some(game_message) = deser_msg::<GameFWRequest>(&ser_message[..])
+    let Some(request) = deser_msg::<GameFWRequest>(&ser_message[..])
     else { tracing::trace!("failed to deserialize game framework request"); return false; };
 
-    match game_message
+    tracing::trace!(?request, "received game fw request");
+    match request
     {
         GameFWRequest::ClientInitProgress(prog) => syscall(world, (client_id, prog), handle_client_init_progress_request),
         GameFWRequest::PingRequest(req)         => syscall(world, (client_id, req),  handle_ping_request),
@@ -38,6 +39,7 @@ fn try_handle_game_request(
     handler     : &ClientMessageHandler
 ) -> bool
 {
+    tracing::trace!("received client message");  //todo: use generic and deserialize client message here, then log it
     handler.try_call(world, ser_message, client_id)
 }
 

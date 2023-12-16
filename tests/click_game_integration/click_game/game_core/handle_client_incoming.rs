@@ -36,7 +36,7 @@ fn handle_client_input_init(world: &mut World, req: GameRequest, id: ClientIdTyp
 {
     match req
     {
-        GameRequest::GameModeRequest => syscall(world, (id, req, RejectionReason::ModeMismatch), notify_request_rejected),
+        GameRequest::GameModeRequest => syscall(world, id, handle_game_mode_request),
         GameRequest::ClickButton     => syscall(world, (id, req, RejectionReason::ModeMismatch), notify_request_rejected),
         GameRequest::None            => ()
     }

@@ -9,6 +9,7 @@ use serde::Serialize;
 
 //standard shortcuts
 use std::collections::{VecDeque, vec_deque::Drain};
+use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -31,8 +32,9 @@ pub struct ClientMessageBuffer
 
 impl ClientMessageBuffer
 {
-    pub fn add_fw_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<EventType>)
+    pub fn add_fw_msg<T: Serialize + Debug>(&mut self, message: &T, send_policy: impl Into<EventType>)
     {
+        tracing::trace!(?message, "buffering fw message");
         self.buffer.push_back(
                 PendingClientMessage{
                         message     : AimedMsg::Fw{ bytes: ser_msg(message) },
@@ -41,8 +43,9 @@ impl ClientMessageBuffer
             );
     }
 
-    pub fn add_core_msg<T: Serialize>(&mut self, message: &T, send_policy: impl Into<EventType>)
+    pub fn add_core_msg<T: Serialize + Debug>(&mut self, message: &T, send_policy: impl Into<EventType>)
     {
+        tracing::trace!(?message, "buffering core message");
         self.buffer.push_back(
             PendingClientMessage{
                     message     : AimedMsg::Core{ bytes: ser_msg(message) },

@@ -27,6 +27,7 @@ fn try_handle_game_fw_message(world: &mut World, ser_message: Vec<u8>, ticks: Ti
     let Some(message) = deser_msg::<GameFWMsg>(&ser_message[..])
     else { tracing::warn!("failed to deserialize game framework message"); return false; };
 
+    tracing::trace!(?message, "received game fw message");
     match message
     {
         GameFWMsg::CurrentGameFWMode(mode) => syscall(world, mode, handle_current_game_fw_mode),
@@ -41,6 +42,7 @@ fn try_handle_game_fw_message(world: &mut World, ser_message: Vec<u8>, ticks: Ti
 
 fn try_handle_game_message(world: &mut World, ser_message: Vec<u8>, ticks: Ticks, handler: &GameMessageHandler) -> bool
 {
+    tracing::trace!("received game message");  //todo: use generic to deserialize here, then log the game message
     handler.try_call(world, ser_message, ticks)
 }
 

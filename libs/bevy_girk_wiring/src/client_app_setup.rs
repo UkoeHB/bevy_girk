@@ -121,6 +121,8 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
             //      better to drop those messages, but need to do a full analysis to establish a precise framework
             //      for handling reconnects and resynchronization
+            //      - one problem here is the client sends ClientInitProgress messages while loading, and dropping
+            //        those may cause problems (resend them periodically?)
             //note that bevy_replicon events also internally pile up while waiting, but since we add a layer between
             //  our events and replicon here, and both systems currently use client_connected(), there should not be
             //  any race conditions where messages can hang as replicon events

@@ -54,6 +54,13 @@ fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_cl
 /// Collect clicks from clients and replicate them back out to the clients.
 fn raw_localhost_network_demo(num_players: usize)
 {
+    // /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    // */
+
     // durations
     let ticks_per_sec   = Ticks(1);
     let max_init_ticks  = Ticks(200);
