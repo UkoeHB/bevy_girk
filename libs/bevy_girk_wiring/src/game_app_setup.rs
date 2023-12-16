@@ -20,9 +20,9 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn log_server_events(mut server: ResMut<RenetServer>)
+fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEvent>)
 {
-    while let Some(event) = server.get_event()
+   for event in server_events.read()
     {
         tracing::debug!(?event);
     }

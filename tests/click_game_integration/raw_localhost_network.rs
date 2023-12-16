@@ -54,13 +54,6 @@ fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_cl
 /// Collect clicks from clients and replicate them back out to the clients.
 fn raw_localhost_network_demo(num_players: usize)
 {
-    // /*
-    let subscriber = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(tracing::Level::TRACE)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    // */
-
     // durations
     let ticks_per_sec   = Ticks(1);
     let max_init_ticks  = Ticks(200);
@@ -220,6 +213,25 @@ fn raw_localhost_network_demo(num_players: usize)
 #[test]
 fn raw_localhost_network()
 {
+    /*
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(tracing_subscriber::filter::LevelFilter::INFO.into())
+        .from_env().unwrap()
+        .add_directive("bevy_simplenet=trace".parse().unwrap())
+        .add_directive("renet=trace".parse().unwrap())
+        .add_directive("renetcode=trace".parse().unwrap())
+        .add_directive("bevy_replicon=trace".parse().unwrap())
+        .add_directive("bevy_girk_host_server=trace".parse().unwrap())
+        .add_directive("bevy_girk_game_hub_server=trace".parse().unwrap())
+        .add_directive("bevy_girk_wiring=trace".parse().unwrap())
+        .add_directive("bevy_girk_demo_game_core=trace".parse().unwrap())
+        .add_directive("bevy_girk_game_fw=trace".parse().unwrap());
+    tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .init();
+    */
+
     raw_localhost_network_demo(1usize);
     raw_localhost_network_demo(2usize);
     raw_localhost_network_demo(3usize);
