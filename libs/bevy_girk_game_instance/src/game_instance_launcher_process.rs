@@ -1,25 +1,17 @@
 //local shortcuts
 use crate::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use clap::Parser;
 use enfync::{AdoptOrDefault, Handle};
-use serde::Deserialize;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 //standard shortcuts
 use std::io::{BufRead, BufReader, Write};
 use std::process::Stdio;
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn parse_json<T: for<'de> Deserialize<'de>>(arg: &str) -> Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>
-{
-    Ok(serde_json::de::from_str::<T>(&arg)?)
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------

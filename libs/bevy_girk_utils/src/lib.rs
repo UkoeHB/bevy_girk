@@ -1,4 +1,5 @@
 //module tree
+mod cli;
 mod misc_utils;
 mod network_setup;
 mod network_utils;
@@ -7,6 +8,7 @@ mod serialization;
 mod tick_counter;
 
 //API exports
+pub use crate::cli::*;
 pub use crate::misc_utils::*;
 pub use crate::network_setup::*;
 pub use crate::network_utils::*;

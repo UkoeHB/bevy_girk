@@ -14,6 +14,7 @@ bevy_fn_plugin = { workspace = true }
 bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
 serde          = { workspace = true }
+serde_json     = { workspace = true }
 serde_with     = { workspace = true }
 tracing        = { workspace = true }
 
