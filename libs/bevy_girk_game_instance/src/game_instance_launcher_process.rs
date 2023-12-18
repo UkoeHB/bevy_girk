@@ -4,7 +4,9 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
+use clap::Parser;
 use enfync::{AdoptOrDefault, Handle};
+use serde::Deserialize;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 //standard shortcuts
@@ -14,29 +16,9 @@ use std::process::Stdio;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Arg tag for passing a game launch pack into a game app subprocess.
-const GAME_LAUNCH_PACK_TAG: &'static str = "-glp";
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn get_game_launch_pack(args: &mut std::env::Args) -> Result<GameLaunchPack, ()>
+fn parse_json<T: for<'de> Deserialize<'de>>(arg: &str) -> Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>
 {
-    // find launch pack tag
-    loop
-    {
-        match args.next()
-        {
-            Some(arg) => if arg == GAME_LAUNCH_PACK_TAG { break; },
-            None => return Err(()),
-        }
-    }
-
-    // extract launch pack
-    let Some(arg) = args.next() else { return Err(()); };
-    let launch_pack = serde_json::de::from_str::<GameLaunchPack>(&arg).map_err(|_| ())?;
-
-    Ok(launch_pack)
+    Ok(serde_json::de::from_str::<T>(&arg)?)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -62,6 +44,15 @@ fn monitor_for_game_instance_reports(mut report_receiver: ResMut<IoReceiver<Game
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+#[derive(Parser, Debug)]
+pub struct GameInstanceCli
+{
+    #[arg(short = 'G', value_parser = parse_json::<GameLaunchPack>)]
+    pub launch_pack: GameLaunchPack,
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Launch a game instance in a new process on the current machine.
@@ -104,7 +95,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
         let Ok(mut child_process) = tokio::process::Command::new(&self.path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .args([GAME_LAUNCH_PACK_TAG, &launch_pack_ser])
+            .args(["-G", &launch_pack_ser])
             .spawn()
         else
         {
@@ -234,10 +225,10 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
 /// Assumes the next useful `std::env::Args` item is the game launch pack.
 ///
 /// Reads [`GameInstanceCommand`]s from `stdin` and writes [`GameInstanceReport`]s to `stdout`.
-pub fn process_game_launcher(args: &mut std::env::Args, game_factory: GameFactory)
+pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
 {
     // get game launch pack
-    let launch_pack = get_game_launch_pack(args).expect("failed getting game launch pack from args");
+    let launch_pack = args.launch_pack;
     let game_id = launch_pack.game_id;
     tracing::info!(game_id, "game instance process started");
 

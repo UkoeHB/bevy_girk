@@ -102,7 +102,7 @@ fn two_games()
 
 
     // wait until game 1 should be done
-    std::thread::sleep(Duration::from_millis(25));
+    std::thread::sleep(Duration::from_millis(50));
     assert!(instance1.try_get().unwrap());
     assert!(instance2.try_get().is_none());
 

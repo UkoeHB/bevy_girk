@@ -11,7 +11,7 @@ use serde_with::{Bytes, serde_as};
 
 /// Used by a game factory to initialize a client in the game.
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ClientInitDataForGame
 {
     /// The client's environment type.
@@ -29,7 +29,7 @@ pub struct ClientInitDataForGame
 
 /// Contains all data needed to launch a game with a game factory.
 #[serde_as]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameLaunchPack
 {
     /// Id of the game.
