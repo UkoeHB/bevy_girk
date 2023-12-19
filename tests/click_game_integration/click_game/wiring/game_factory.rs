@@ -181,7 +181,7 @@ fn prepare_game_start_report(
 ) -> Result<GameStartReport, ()>
 {
     // extract data
-    let game_initializer  = app.world.resource::<ClickGameInitializer>();
+    let game_initializer = app.world.resource::<ClickGameInitializer>();
     let ticks_per_sec = app.world.resource::<GameFWConfig>().ticks_per_sec();
 
     // make start infos for each client

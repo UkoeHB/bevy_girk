@@ -77,7 +77,8 @@ impl GameServerSetupConfig
     /// Should not be used to connect to a real renet server.
     pub fn dummy() -> Self
     {
-        Self { protocol_id: 0u64,
+        Self {
+            protocol_id: 0u64,
             expire_seconds: 10u64,
             timeout_seconds: 5i32,
             server_ip: Ipv6Addr::LOCALHOST,
@@ -102,9 +103,10 @@ impl GameServerConnectMetaNative
     {
         let mut auth_key = [0u8; 32];
         auth_key[0] = 1;
+
         Self{
-            server_config: GameServerSetupConfig::dummy(),
-            server_addresses: vec![SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080u16))],
+            server_config    : GameServerSetupConfig::dummy(),
+            server_addresses : vec![SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080u16))],
             auth_key,
         }
     }
