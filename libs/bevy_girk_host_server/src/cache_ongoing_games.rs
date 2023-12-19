@@ -164,14 +164,18 @@ impl OngoingGamesCache
             EnvType::Native =>
             {
                 let Some(meta) = &ongoing_game.native_meta
-                else { tracing::error!(user_id, game_id, "native connect meta missing for native client"); return None; };
+                else { tracing::debug!(user_id, game_id, "no native connect meta for native client"); return None; };
                 let Ok(connect_token) = prep_connect_token_native(meta, start_info.client_id)
                 else { tracing::error!(user_id, game_id, "failed preparing connect token"); return None; };
                 connect_token
             }
             EnvType::Wasm =>
             {
-                todo!();
+                let Some(_meta) = &ongoing_game.wasm_meta
+                else { tracing::debug!(user_id, game_id, "no wasm connect meta for wasm client"); return None; };
+
+                tracing::error!(user_id, game_id, "connect tokens for wasm users not yet implemented");
+                return None;
             }
         };
 
