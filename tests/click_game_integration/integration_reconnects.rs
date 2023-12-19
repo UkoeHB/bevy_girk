@@ -16,7 +16,6 @@ use bevy_kot_utils::*;
 use bevy_renet::renet::RenetClient;
 
 //standard shortcuts
-use std::collections::HashMap;
 use std::net::Ipv6Addr;
 use std::time::Duration;
 
@@ -99,7 +98,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: Ticks, game_num_ticks: Ticks
     let server_setup_config = GameServerSetupConfig{
             protocol_id     : test_protocol_id,
             expire_seconds  : 10u64,
-            timeout_seconds : 5i32,
+            timeout_seconds : 1i32,  //very short for this test
             server_ip       : Ipv6Addr::LOCALHOST,
         };
 
@@ -164,7 +163,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     loop
     {
         // wait a bit for the game to update
-        std::thread::sleep(Duration::from_millis(15));
+        std::thread::sleep(Duration::from_millis(100));
 
         // update clients
         let mut num_inits = 0;
@@ -197,49 +196,13 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn check_game_over_report(expected_scores: &HashMap<ClientIdType, PlayerScore>, game_over_report: GameOverReport)
+fn launch_game(
+    host_server: &mut App,
+    hub_server: &mut App,
+    user1: &HostUserClient,
+    user2: &HostUserClient,
+) -> (App, App)
 {
-    let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.serialized_game_over_data).unwrap();
-    assert_eq!(expected_scores.len(), game_over_report.player_reports.len());
-
-    for ClickPlayerReport{ client_id, score } in game_over_report.player_reports.iter()
-    {
-        let expected_score = expected_scores.get(&client_id).unwrap();
-        assert_eq!(*score, *expected_score);
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-#[test]
-fn basic_server_integration()
-{
-    // prepare tracing
-    /*
-    let subscriber = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(tracing::Level::TRACE)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    */
-
-    // launch host server
-    let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
-
-    // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(100);
-    let game_num_ticks     = Ticks(10);
-    let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
-            host_hub_url,
-            make_hub_server_test_configs(),
-            make_click_game_test_configs(game_ticks_per_sec, game_num_ticks)
-        );
-
-    // make user clients
-    let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
-    let (user2_id, user2) = make_test_host_user_client(host_user_url);
-
-
     // wait for everything to start up
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
@@ -322,42 +285,86 @@ fn basic_server_integration()
     // - users 1, 2 receive game start
     let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: connect1, start: start1 })) = user1.next()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(user1_id, start1.user_id);
     let game_id = id;
 
     let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: connect2, start: start2 })) = user2.next()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(user2_id, start2.user_id);
     assert_eq!(id, game_id);
 
 
     // users 1, 2 make game clients
     // - we only make the cores here, no client skins
-    let (
-            mut client_app1,
-            Some(player_input_sender1),
-            Some(player1_id)
-        ) = make_game_client_core(get_test_protocol_id(), connect1, start1) else { panic!(""); };
-    let (
-            mut client_app2,
-            Some(player_input_sender2),
-            Some(player2_id)
-        ) = make_game_client_core(get_test_protocol_id(), connect2, start2) else { panic!(""); };
+    let (mut client_app1, _, _) = make_game_client_core(get_test_protocol_id(), connect1, start1);
+    let (mut client_app2, _, _) = make_game_client_core(get_test_protocol_id(), connect2, start2);
 
 
-    // tick user clients until the game is fully initialized
+    // tick clients until the game is fully initialized
     tick_clients_until_game_initialized(vec![&mut client_app1, &mut client_app2]);
 
+    (client_app1, client_app2)
+}
 
-    // users 1, 2 send clicks to the game
-    player_input_sender1.send(PlayerInput::Play(PlayerInputPlay::ClickButton)).unwrap();
-    player_input_sender2.send(PlayerInput::Play(PlayerInputPlay::ClickButton)).unwrap();
-    client_app1.update(); client_app2.update(); std::thread::sleep(Duration::from_millis(25));
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+#[test]
+fn integration_reconnect_userclient_restart()
+{
+    // prepare tracing
+    /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    */
+
+    // launch host server
+    let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
+
+    // launch game hub server attached to host server
+    let game_ticks_per_sec = Ticks(10);
+    let game_num_ticks     = Ticks(15);
+    let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
+            host_hub_url,
+            make_hub_server_test_configs(),
+            make_click_game_test_configs(game_ticks_per_sec, game_num_ticks)
+        );
+
+    // make user clients
+    let user1_id = 0u128;
+    let user2_id = 1u128;
+    let (user1_id, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    let (_, user2)        = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
 
 
-    // user 2 sends another click to the game
-    player_input_sender2.send(PlayerInput::Play(PlayerInputPlay::ClickButton)).unwrap();
-    client_app1.update(); client_app2.update(); std::thread::sleep(Duration::from_millis(25));
+    // launch game
+    let (_, mut client_app2) = launch_game(&mut host_server, &mut hub_server, &user1, &user2);
+
+
+    // disconnect client 1
+    // - we do this *before* the server times out the connection to make sure rapid reconnects work
+    user1.close();
+    host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
+
+    // reconnect client 1
+    let (user1_id, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
+    host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
+
+    let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
+
+    // receive game start on reconnect
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: connect1, start: start1 })) = user1.next()
+    else { panic!("client did not receive server msg"); };
+    assert_eq!(user1_id, start1.user_id);
+    let game_id = id;
+
+    // remake game client 1
+    let (mut client_app1, _, _) = make_game_client_core(get_test_protocol_id(), connect1, start1);
+
+
+    // tick clients until the game is fully initialized for the reconnected client
+    tick_clients_until_game_initialized(vec![&mut client_app1, &mut client_app2]);
 
 
     // wait for game over
@@ -385,14 +392,6 @@ fn basic_server_integration()
         // we are done when both users have game over reports
         if report1.is_some() && report2.is_some() { break; }
     }
-
-
-    // validate game over reports
-    let mut expected_scores: HashMap<ClientIdType, PlayerScore> = HashMap::default();
-    let _ = expected_scores.insert(player1_id, PlayerScore{ score: 1 });
-    let _ = expected_scores.insert(player2_id, PlayerScore{ score: 2 });
-    check_game_over_report(&expected_scores, report1.unwrap());
-    check_game_over_report(&expected_scores, report2.unwrap());
 
 
     // - users 1, 2 receive nothing else

@@ -6,6 +6,7 @@ mod game_instance_factory;
 mod game_instance_launcher;
 mod game_state;
 mod game_ticks;
+mod integration_reconnects;
 mod player_clicks;
 mod raw_localhost_network;
 mod test_utils;
