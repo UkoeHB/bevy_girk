@@ -185,7 +185,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     }
 
     // check that we have left the init phase as expected
-    std::thread::sleep(Duration::from_millis(40));  //wait for server to finalize initialization
+    std::thread::sleep(Duration::from_millis(50));  //wait for server to finalize initialization
 
     for client in game_clients.iter_mut()
     {
