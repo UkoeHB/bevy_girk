@@ -14,7 +14,6 @@ use bevy::prelude::*;
 use bevy_kot_ecs::*;
 use bevy_kot_utils::*;
 use bevy_renet::renet::RenetClient;
-use bevy_renet::renet::transport::ClientAuthentication;
 
 //standard shortcuts
 use std::net::Ipv6Addr;
@@ -462,7 +461,7 @@ fn integration_reconnect_gameclient_reconnect()
     client_app1.update();
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
     client_app1.update(); std::thread::sleep(Duration::from_millis(45));
-    assert!(client_app1.world.resource::<RenetClient>().is_connecting());
+    assert!(client_app1.world.resource::<RenetClient>().is_disconnected());
     assert_eq!(*client_app1.world.resource::<State<ClientInitializationState>>().get(), ClientInitializationState::InProgress);
 
     // request new connect token for client 1
@@ -477,12 +476,9 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // reconnect game client app
-    let ServerConnectToken::Native{ bytes } = connect;
-    let connect_token = connect_token_from_bytes(&bytes).unwrap();
-    let client_address = client_address_from_server_address(&connect_token.server_addresses[0].unwrap());
-    let connect_pack = RenetClientConnectPack::Native(ClientAuthentication::Secure{ connect_token }, client_address);
+    let connect_pack = RenetClientConnectPack::new(get_test_protocol_id(), connect).unwrap();
     client_app1.insert_resource(connect_pack);
-    setup_renet_client(&mut client_app1.world);
+    setup_renet_client(&mut client_app1.world).unwrap();
 
 
     // tick clients until the game is fully initialized for the reconnected client

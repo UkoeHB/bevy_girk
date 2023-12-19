@@ -10,7 +10,6 @@ use crate::click_game_integration::click_game::*;
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
 use bevy_kot_utils::*;
-use bevy_renet::renet::transport::ClientAuthentication;
 
 //standard shortcuts
 
@@ -56,32 +55,19 @@ pub fn make_game_client_core(
     start_info           : GameStartInfo
 ) -> (App, Option<Sender<PlayerInput>>, Option<ClientIdType>)
 {
-    // extract connect token and validate protocol version
-    let ServerConnectToken::Native{ bytes: serialized_connect_token } = connect_token;
-    //else { panic!("only native connect tokens currently supported"); };
-
-    let connect_token = connect_token_from_bytes(&serialized_connect_token).unwrap();
-    if connect_token.protocol_id != expected_protocol_id { panic!("protocol id mismatch"); }
-
     // extract client startup pack
     let client_start_pack = deser_msg::<ClickClientStartPack>(&start_info.serialized_start_data).unwrap();
 
-    // get client address based on server address
-    let server_addr = connect_token.server_addresses[0].expect("only one server address is currently supported");
-    let client_address = client_address_from_server_address(&server_addr);
+    // new connect pack
+    let connect_pack = RenetClientConnectPack::new(expected_protocol_id, connect_token).unwrap();
 
     // set up client app
     let mut client_app = App::new();
     let mut player_input_sender : Option<Sender<PlayerInput>> = None;
-    let mut player_id           : Option<ClientIdType>               = None;
+    let mut player_id           : Option<ClientIdType>        = None;
 
     client_app.add_plugins(bevy::time::TimePlugin);
-    let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_start_pack.client_fw_config);
-    prepare_client_app_replication(&mut client_app, client_fw_command_sender);
-    prepare_client_app_network(
-            &mut client_app,
-            RenetClientConnectPack::Native(ClientAuthentication::Secure{ connect_token }, client_address),
-        );
+    prepare_client_app_backend(&mut client_app, client_start_pack.client_fw_config, connect_pack);
 
     match client_start_pack.click_client_initializer
     {

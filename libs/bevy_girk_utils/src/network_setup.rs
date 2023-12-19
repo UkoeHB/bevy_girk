@@ -1,8 +1,9 @@
 //local shortcuts
-use bevy_kot_ecs::syscall;
+use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_kot_ecs::syscall;
 use bevy_renet::renet::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
 use bevy_renet::renet::transport::{
     ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
@@ -189,6 +190,9 @@ pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerConf
 /// Information needed to connect a renet client to a renet server.
 ///
 /// Add this as a resource to your app before trying to set up a renet client.
+///
+/// Connect packs should be considered single-use. If you need to reconnect, make a new connect pack with fresh
+/// connection authentication.
 #[derive(Resource, Debug, Clone)]
 pub enum RenetClientConnectPack
 {
@@ -200,37 +204,52 @@ pub enum RenetClientConnectPack
     //Local,
 }
 
+impl RenetClientConnectPack
+{
+    /// Make a new connect pack from a server connect token.
+    pub fn new(expected_protocol_id: u64, token: ServerConnectToken) -> Result<Self, String>
+    {
+        // extract connect token
+        let ServerConnectToken::Native{ bytes } = token;
+        //else { panic!("only native connect tokens currently supported"); };
+
+        let connect_token = connect_token_from_bytes(&bytes)
+            .map_err(|_| String::from("failed deserializing renet connect token"))?;
+
+        // check protocol version
+        if connect_token.protocol_id != expected_protocol_id { return Err(String::from("protocol id mismatch")); }
+
+        // prepare client address based on server address
+        let Some(server_addr) = connect_token.server_addresses[0]
+        else { return Err(String::from("server address is missing")); };
+        let client_address = client_address_from_server_address(&server_addr);
+
+        Ok(Self::Native(ClientAuthentication::Secure{ connect_token }, client_address))
+    }
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up a renet client with pre-loaded connection information.
-/// - Assumes there is a [`RenetClientConnectPack`] resource already loaded in the app.
-pub fn setup_renet_client(world: &mut World)
+/// - Removes the [`RenetClientConnectPack`] resource from the world, or returns an error if it is missing.
+pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
 {
     tracing::debug!("setting up renet client");
 
-    let connect_pack = world.resource::<RenetClientConnectPack>().clone();
+    let connect_pack = world.remove_resource::<RenetClientConnectPack>().ok_or(())?;
     match connect_pack
     {
-        RenetClientConnectPack::Native(authentication, client_addr) =>
+        RenetClientConnectPack::Native(authentication, client_address) =>
         {
-            syscall(world, (authentication, client_addr),
-                |
-                    In((
-                        authentication,
-                        client_address
-                    ))    : In<(ClientAuthentication, SocketAddr)>,
-                    world : &mut World,
-                |
-                {
-                    // drop the existing transport to free its address in case we are re-using a client address
-                    world.remove_resource::<NetcodeClientTransport>();
+            // drop the existing transport to free its address in case we are re-using a client address
+            world.remove_resource::<NetcodeClientTransport>();
 
-                    // setup client
-                    syscall(world, (authentication, client_address), setup_native_renet_client);
-                }
-            );
+            // setup client
+            syscall(world, (authentication, client_address), setup_native_renet_client);
         }
     }
+
+    Ok(())
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -238,7 +257,7 @@ pub fn setup_renet_client(world: &mut World)
 /// Automates server and client creation for a local test server. Assumes app and clients are in separate bevy Apps.
 ///
 /// Requires:
-/// - All apps need `bevy_replicon::ReplicationCorePlugin`.
+/// - All apps need `bevy_replicon::prelude::RepliconCorePlugin`.
 /// - Must be called after ALL server and client channels have been set up.
 pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Vec<App>)
 {

@@ -53,7 +53,7 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a client app with the bevy_girk client framework.
+/// Set up a client app with the `bevy_girk` client framework.
 ///
 /// REQUIREMENTS:
 /// - `bevy::time::TimePlugin`.
@@ -81,6 +81,7 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Set up `bevy_replicon` in a client app.
 pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFWCommand>)
 {
     // depends on client framework
@@ -138,17 +139,35 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Set up a renet client and enable renet reconnects.
 pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
 {
     client_app.insert_resource(connect_pack)
-        .add_systems(Startup, setup_renet_client)
-        .add_systems(Update,
-            //todo: better to do this before ClientFWTickSetPrivate::FWStart so that client initialization is not delayed?
-            setup_renet_client
-                .before(ClientFWSet)
-                .after(reinitialize_client)  //client_just_disconnected() will be false after setup_renet_client runs
-                .run_if(bevy_renet::client_just_disconnected())
+        .add_systems(Startup, setup_renet_client.map(Result::unwrap))
+        //todo: add system to request a new connect pack from the app owner on a timer when disconnected
+        .add_systems(PreUpdate,
+            setup_renet_client.map(Result::unwrap)
+                .after(reinitialize_client)  //setting up the client sets `bevy_renet::client_just_disconnected()` to false
+                .before(ClientFWTickSetPrivate::FWStart)
+                .run_if(bevy_renet::client_disconnected())
+                .run_if(resource_exists::<RenetClientConnectPack>())
         );
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Set up a client app to hook into the `bevy_girk` backend.
+/// - Sets up the client framework.
+/// - Sets up replication.
+/// - Sets up the renet client.
+pub fn prepare_client_app_backend(
+    client_app       : &mut App,
+    client_fw_config : ClientFWConfig,
+    connect_pack     : RenetClientConnectPack,
+){
+    let client_fw_command_sender = prepare_client_app_framework(client_app, client_fw_config);
+    prepare_client_app_replication(client_app, client_fw_command_sender);
+    prepare_client_app_network(client_app, connect_pack);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
