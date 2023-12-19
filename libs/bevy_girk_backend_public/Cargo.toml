@@ -16,3 +16,4 @@ tracing        = { workspace = true }
 
 bevy_girk_game_fw       = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
+bevy_girk_utils         = { path = "../bevy_girk_utils" }

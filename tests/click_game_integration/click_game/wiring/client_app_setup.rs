@@ -52,18 +52,19 @@ pub fn prepare_client_app_core(client_app: &mut App, player_initializer: ClickPl
 ///       client app.
 pub fn make_game_client_core(
     expected_protocol_id : u64,
-    connect_info         : GameConnectInfo
+    connect_token        : ServerConnectToken,
+    start_info           : GameStartInfo
 ) -> (App, Option<Sender<PlayerInput>>, Option<ClientIdType>)
 {
     // extract connect token and validate protocol version
-    let ServerConnectToken::Native{ bytes: serialized_connect_token } = connect_info.server_connect_token;
+    let ServerConnectToken::Native{ bytes: serialized_connect_token } = connect_token;
     //else { panic!("only native connect tokens currently supported"); };
 
-    let connect_token = connect_token_from_bytes(serialized_connect_token).unwrap();
+    let connect_token = connect_token_from_bytes(&serialized_connect_token).unwrap();
     if connect_token.protocol_id != expected_protocol_id { panic!("protocol id mismatch"); }
 
     // extract client startup pack
-    let client_start_pack = deser_msg::<ClickClientStartPack>(&connect_info.serialized_start_data).unwrap();
+    let client_start_pack = deser_msg::<ClickClientStartPack>(&start_info.serialized_start_data).unwrap();
 
     // get client address based on server address
     let server_addr = connect_token.server_addresses[0].expect("only one server address is currently supported");

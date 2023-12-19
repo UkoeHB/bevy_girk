@@ -14,7 +14,7 @@ use bevy_renet::renet::RenetClient;
 //standard shortcuts
 use std::collections::HashMap;
 use std::net::Ipv6Addr;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -136,6 +136,13 @@ fn game_instance_launcher_demo()
     let Some(GameInstanceReport::GameStart(_, mut game_start_report)) = report_receiver.try_recv()
     else { panic!("failed to start game"); };
 
+    // get token meta
+    let token_meta = game_start_report.native_meta.unwrap();
+
+    // current time
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap();
 
     // make clients
     let mut client_apps          = Vec::<App>::default();
@@ -143,15 +150,18 @@ fn game_instance_launcher_demo()
     client_apps.reserve(num_players + num_watchers);
     player_input_senders.reserve(num_players);
 
-    for connect_info in game_start_report.connect_infos.drain(..)
+    for start_info in game_start_report.start_infos.drain(..)
     {
+        // make connect token
+        let connect_token = new_connect_token_native(&token_meta, current_time, start_info.client_id).unwrap();
+
         // make client core
         // - we only make the core here, no client skin
         let (
                 client_app,
                 player_input_sender,
                 _player_id
-            ) = make_game_client_core(get_test_protocol_id(), connect_info);
+            ) = make_game_client_core(get_test_protocol_id(), connect_token, start_info);
 
         client_apps.push(client_app);
         if let Some(player_input_sender) = player_input_sender

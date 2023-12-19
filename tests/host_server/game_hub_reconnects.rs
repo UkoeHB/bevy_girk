@@ -138,7 +138,7 @@ fn game_hub_reconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 1 receives game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 
@@ -251,7 +251,7 @@ fn game_hub_reconnects()
     std::thread::sleep(Duration::from_millis(15));
 
     // - user 2 receives game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user2.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user2.next()
     else { panic!("client did not receive server msg"); };
 
 

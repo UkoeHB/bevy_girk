@@ -82,11 +82,14 @@ impl GameFactoryImpl for DummyGameFactory
             //configure execution flow
             .configure_sets(Update, (GameFWSet, ClientFWSet).chain());
 
+        // prepare dummy token meta
+        let native_meta = Some(GameServerConnectMetaNative::dummy());
+
         // prepare dummy connect infos
-        let connect_infos: Vec<GameConnectInfo> = player_ids.iter().map(|id| GameConnectInfo::new_from_id(*id)).collect();
+        let start_infos: Vec<GameStartInfo> = player_ids.iter().map(|id| GameStartInfo::new_from_id(*id)).collect();
 
         // prepare dummy game start report
-        let game_start_report = GameStartReport{ connect_infos };
+        let game_start_report = GameStartReport{ native_meta, wasm_meta: None, start_infos };
 
         Ok(game_start_report)
     }

@@ -2,6 +2,7 @@
 use crate::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
@@ -25,7 +26,7 @@ pub enum HostToUserMsg
     LobbyLeave{ id: u64 },
     PendingLobbyAckRequest{ id: u64 },
     PendingLobbyAckFail{ id: u64 },
-    GameStart{ id: u64, connect: GameConnectInfo },
+    GameStart{ id: u64, connect: ServerConnectToken, start: GameStartInfo },
     GameAborted{ id: u64 },
     GameOver{ id: u64, report: GameOverReport },
 }
@@ -39,6 +40,8 @@ pub enum HostToUserResponse
     LobbySearchResult(LobbySearchResult),
     /// Response to [`UserToHostRequest::MakeLobby`] and [`UserToHostRequest::JoinLobby`].
     LobbyJoin{ lobby: LobbyData },
+    /// Response to [`UserToHostRequest::GetConnectToken`];
+    ConnectToken{ id: u64, connect: ServerConnectToken },
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -57,18 +60,31 @@ pub enum UserToHostMsg
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum UserToHostRequest
 {
+    /// Request lobby data from the server.
     LobbySearch(LobbySearchRequest),
+    /// Make a new lobby.
     MakeLobby{
         mcolor: LobbyMemberColor,
         pwd: String,
         #[serde_as(as = "Bytes")]
         data: Vec<u8>
     },
+    /// Join the specified lobby.
     JoinLobby{ id: u64, mcolor: LobbyMemberColor, pwd: String },
+    /// Leave the specified lobby.
+    ///
     /// Will be acked on success.
     LeaveLobby{ id: u64 },
+    /// Try to launch the specified lobby as a game.
+    ///
+    /// Only the lobby owner can send this.
+    ///
     /// Will be acked on success.
     LaunchLobbyGame{ id: u64 },
+    /// Request a game connect token.
+    ///
+    /// Used to reconnect to ongoing games.
+    GetConnectToken{ id: u64 },
 }
 
 //-------------------------------------------------------------------------------------------------------------------

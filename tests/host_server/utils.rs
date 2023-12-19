@@ -111,13 +111,13 @@ pub fn make_test_host_user_client(user_server_url: url::Url) -> (u128, HostUserC
 
 pub fn dummy_game_start_report(user_ids: Vec<u128>) -> GameStartReport
 {
-    let mut connect_infos = Vec::default();
+    let mut start_infos = Vec::default();
     for user_id in user_ids.iter()
     {
-        connect_infos.push(GameConnectInfo { user_id: *user_id, ..default() });
+        start_infos.push(GameStartInfo { user_id: *user_id, ..default() });
     }
 
-    GameStartReport{ connect_infos }
+    GameStartReport{ native_meta: Some(GameServerConnectMetaNative::dummy()), wasm_meta: None, start_infos }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

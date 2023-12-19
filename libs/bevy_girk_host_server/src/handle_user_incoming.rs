@@ -45,6 +45,7 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
         UserToHostRequest::JoinLobby{ id, mcolor, pwd }   => syscall(world, (token, id, mcolor, pwd), user_join_lobby),
         UserToHostRequest::LeaveLobby{ id }               => syscall(world, (token, id), user_leave_lobby),
         UserToHostRequest::LaunchLobbyGame{ id }          => syscall(world, (token, id), user_launch_lobby_game),
+        UserToHostRequest::GetConnectToken{ id }          => syscall(world, (token, id), user_get_connect_token),
     }
 }
 

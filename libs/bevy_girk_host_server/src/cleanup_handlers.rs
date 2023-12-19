@@ -46,7 +46,7 @@ pub(crate) fn clean_ongoing_games(
         // send game aborted message to users and update their states to idle
         send_game_abort_messages_and_update_states(
                 game_id,
-                &ongoing_game.connect_infos,
+                &ongoing_game.start_infos,
                 &mut users_cache,
                 &user_server
             );

@@ -519,10 +519,10 @@ fn pending_lobby_expires_then_reacks()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 3 receive game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ })) = user3.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user3.next()
     else { panic!("client did not receive server msg"); };
 
 

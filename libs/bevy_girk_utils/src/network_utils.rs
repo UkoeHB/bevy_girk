@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
 //standard shortcuts
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
 use std::vec::Vec;
 
@@ -59,7 +59,9 @@ impl From<SendOrdered> for EventType
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Serialize, Deserialize)]
+/// Configuration details for setting up a renet server.
+/// - Used to set up renet servers for clients on native targets.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameServerSetupConfig
 {
     pub protocol_id     : u64,
@@ -68,26 +70,73 @@ pub struct GameServerSetupConfig
     pub server_ip       : Ipv6Addr,
 }
 
+impl GameServerSetupConfig
+{
+    /// Make a dummy config.
+    /// 
+    /// Should not be used to connect to a real renet server.
+    pub fn dummy() -> Self
+    {
+        Self { protocol_id: 0u64,
+            expire_seconds: 10u64,
+            timeout_seconds: 5i32,
+            server_ip: Ipv6Addr::LOCALHOST,
+        }
+    }
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn new_connect_token(
-    current_time     : Duration,
-    server_config    : &GameServerSetupConfig,
-    auth_key         : &[u8; 32],
-    client_id        : u64,
-    server_addresses : Vec<SocketAddr>
-) -> ConnectToken
+/// Metadata required to generate connect tokens.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameServerConnectMetaNative
 {
-    ConnectToken::generate(
-            current_time,
-            server_config.protocol_id,
-            server_config.expire_seconds,
-            client_id,
-            server_config.timeout_seconds,
-            server_addresses,
-            None,
+    pub server_config    : GameServerSetupConfig,
+    pub server_addresses : Vec<SocketAddr>,
+    pub auth_key         : [u8; 32],
+}
+
+impl GameServerConnectMetaNative
+{
+    pub fn dummy() -> Self
+    {
+        let mut auth_key = [0u8; 32];
+        auth_key[0] = 1;
+        Self{
+            server_config: GameServerSetupConfig::dummy(),
+            server_addresses: vec![SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080u16))],
             auth_key,
-        ).expect("failed to make connect token")
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Metadata required to generate connect tokens.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameServerConnectMetaWasm;
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Generate a new connect token for a native client.
+pub fn new_connect_token_native(
+    meta         : &GameServerConnectMetaNative,
+    current_time : Duration,
+    client_id    : u64,
+) -> Result<ServerConnectToken, ()>
+{
+    let token =  ConnectToken::generate(
+        current_time,
+        meta.server_config.protocol_id,
+        meta.server_config.expire_seconds,
+        client_id,
+        meta.server_config.timeout_seconds,
+        meta.server_addresses.clone(),
+        None,
+        &meta.auth_key,
+    ).map_err(|_|())?;
+
+    Ok(ServerConnectToken::Native{ bytes: connect_token_to_bytes(&token)? })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -102,7 +151,7 @@ pub fn connect_token_to_bytes(connect_token: &ConnectToken) -> Result<Vec<u8>, (
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn connect_token_from_bytes(connect_token_bytes: Vec<u8>) -> Result<ConnectToken, ()>
+pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Result<ConnectToken, ()>
 {
     ConnectToken::read(&mut &connect_token_bytes[..]).map_err(|_| ())
 }
@@ -120,9 +169,9 @@ pub enum ServerConnectToken
         bytes: Vec<u8>
     },
     //Wasm(??),
+    //InMemory,
     //The server app will contain `Res<[client transports]>` which you must extract and insert to your client apps
     //manually.
-    //InMemory,
 }
 
 impl Default for ServerConnectToken

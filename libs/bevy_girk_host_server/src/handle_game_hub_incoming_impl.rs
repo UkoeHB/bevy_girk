@@ -93,7 +93,7 @@ pub(crate) fn unregister_game_hub(
             // send game aborted message to users and update their states to idle
             send_game_abort_messages_and_update_states(
                     lobby_id,
-                    &removed_game.connect_infos,
+                    &removed_game.start_infos,
                     &mut users_cache,
                     &user_server
                 );
@@ -192,7 +192,13 @@ pub(crate) fn hub_start_game(
     }
 
     // add to ongoing games
-    let ongoing_game = OngoingGame{ game_id, game_hub_id, connect_infos: game_start_report.connect_infos };
+    let ongoing_game = OngoingGame{
+        game_id,
+        game_hub_id,
+        native_meta : game_start_report.native_meta,
+        wasm_meta   : game_start_report.wasm_meta,
+        start_infos : game_start_report.start_infos,
+    };
     if let Err(_) = ongoing_games_cache.add_ongoing_game(ongoing_game)
     {
         tracing::error!(game_hub_id, "aborting game because registering ongoing game failed");
@@ -254,7 +260,7 @@ pub(crate) fn hub_game_over(
     send_game_over_messages_and_update_states(
             game_id,
             game_over_report,
-            &dead_game.connect_infos,
+            &dead_game.start_infos,
             &mut users_cache,
             &user_server
         );

@@ -14,24 +14,27 @@ use std::vec::Vec;
 /// Information used by a client to connect to a game.
 #[serde_as]
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct GameConnectInfo
+pub struct GameStartInfo
 {
-    /// User id.
+    /// User's server id.
     pub user_id: u128,
-    /// Token for connecting to the game server.
-    pub server_connect_token: ServerConnectToken,
+    /// User's client id within the game.
+    pub client_id: u64,
     /// Data needed for a user to start a game.
     #[serde_as(as = "Bytes")]
     pub serialized_start_data: Vec<u8>,
 }
 
-impl GameConnectInfo
+impl GameStartInfo
 {
-    pub fn new_from_id(user_id: u128) -> GameConnectInfo
+    /// Generate an empty start info.
+    ///
+    /// Used for testing.
+    pub fn new_from_id(user_id: u128) -> GameStartInfo
     {
-        GameConnectInfo{
+        GameStartInfo{
             user_id,
-            server_connect_token: ServerConnectToken::default(),
+            client_id: 0u64,
             serialized_start_data: Vec::default()
         }
     }
@@ -40,12 +43,15 @@ impl GameConnectInfo
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Report emitted by a game factory that has initialized a game.
-///
-/// Contains information needed by clients in order to set up their local game clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameStartReport
 {
-    pub connect_infos: Vec<GameConnectInfo>,
+    /// Metadata for generating native-target connect tokens for the game.
+    pub native_meta: Option<GameServerConnectMetaNative>,
+    /// Metadata for generating wasm-target connect tokens for the game.
+    pub wasm_meta: Option<GameServerConnectMetaWasm>,
+    /// Contains information needed by clients in order to set up their local game clients.
+    pub start_infos: Vec<GameStartInfo>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

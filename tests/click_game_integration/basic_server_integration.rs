@@ -320,14 +320,14 @@ fn basic_server_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: game_connect_info1 })) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: game_connect1, start: game_start1 })) = user1.next()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(user1_id, game_connect_info1.user_id);
+    assert_eq!(user1_id, game_start1.user_id);
     let game_id = id;
 
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: game_connect_info2 })) = user2.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: game_connect2, start: game_start2 })) = user2.next()
     else { panic!("client did not receive server msg"); };
-    assert_eq!(user2_id, game_connect_info2.user_id);
+    assert_eq!(user2_id, game_start2.user_id);
     assert_eq!(id, game_id);
 
 
@@ -337,12 +337,12 @@ fn basic_server_integration()
             mut client_app1,
             Some(player_input_sender1),
             Some(player1_id)
-        ) = make_game_client_core(get_test_protocol_id(), game_connect_info1) else { panic!(""); };
+        ) = make_game_client_core(get_test_protocol_id(), game_connect1, game_start1) else { panic!(""); };
     let (
             mut client_app2,
             Some(player_input_sender2),
             Some(player2_id)
-        ) = make_game_client_core(get_test_protocol_id(), game_connect_info2) else { panic!(""); };
+        ) = make_game_client_core(get_test_protocol_id(), game_connect2, game_start2) else { panic!(""); };
 
 
     // tick user clients until the game is fully initialized

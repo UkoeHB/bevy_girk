@@ -124,7 +124,7 @@ pub(crate) fn send_pending_lobby_ack_fails_and_update_states(
 
 pub(crate) fn send_game_abort_messages_and_update_states(
     aborted_lobby_id : u64,
-    user_infos       : &Vec<GameConnectInfo>,
+    user_infos       : &Vec<GameStartInfo>,
     users_cache      : &mut UsersCache,
     user_server      : &HostUserServer,
 ){
@@ -145,7 +145,7 @@ pub(crate) fn send_game_abort_messages_and_update_states(
 pub(crate) fn send_game_over_messages_and_update_states(
     game_id          : u64,
     game_over_report : GameOverReport,
-    user_infos       : &Vec<GameConnectInfo>,
+    user_infos       : &Vec<GameStartInfo>,
     users_cache      : &mut UsersCache,
     user_server      : &HostUserServer,
 ){
@@ -221,16 +221,20 @@ pub(crate) fn try_connect_user_to_game(
     user_server         : &HostUserServer,
 ) -> bool
 {
+    // get the user's environment
+    let Some(user_env) = users_cache.get_user_env(user_id)
+    else { tracing::trace!(user_id, "failed connecting user, user is unknown"); return false; };
+
     // check if the user is already connected to a game
     if let Some(UserState::InGame(_)) = users_cache.get_user_state(user_id)
     { tracing::warn!(user_id, "trying to connect a user, but user is already in-game"); return true; };
 
-    // check if the user is in a game
-    let Some((game_id, connect_info)) = ongoing_games_cache.get_user_connect_info(user_id)
+    // get start info
+    let Some((game_id, connect, start)) = ongoing_games_cache.get_user_start_info(user_id, user_env)
     else { tracing::trace!(user_id, "trying to connect a user, user is not in a game"); return false; };
 
     // send game connect info to user
-    if let Err(_) = user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect: connect_info.clone() })
+    if let Err(_) = user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect, start: start.clone() })
     { tracing::error!(user_id, "failed sending game start notification"); }
 
     // update user state
@@ -473,7 +477,7 @@ pub(crate) fn try_request_game_start(
     };
 
     // sanity check: game should not be ongoing
-    let None = ongoing_games_cache.get_connect_infos(lobby_id)
+    let None = ongoing_games_cache.get_start_infos(lobby_id)
     else { tracing::error!(user_id, lobby_id, "user is in pending lobby that already has an ongoing game"); return Err(()); };
 
     // if lobby is not fully acked then game is not ready to launch
@@ -570,7 +574,7 @@ pub(crate) fn try_abort_hub_ongoing_game(
     // forward abort game message to users and update states to idle
     send_game_abort_messages_and_update_states(
             game_id,
-            &dead_game.connect_infos,
+            &dead_game.start_infos,
             &mut users_cache,
             &user_server
         );

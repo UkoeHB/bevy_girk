@@ -184,44 +184,52 @@ fn prepare_game_start_report(
     let game_initializer  = app.world.resource::<ClickGameInitializer>();
     let ticks_per_sec = app.world.resource::<GameFWConfig>().ticks_per_sec();
 
-    // make connect infos for each client
-    let mut connect_infos = Vec::<GameConnectInfo>::new();
-    connect_infos.reserve(user_clients.len());
+    // make start infos for each client
+    let mut native_count = 0;
+    let mut wasm_count = 0;
+    let mut start_infos = Vec::<GameStartInfo>::new();
+    start_infos.reserve(user_clients.len());
 
-    let current_time = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-
-    for (_env, user_id, client_id) in user_clients.iter()
+    for (env, user_id, client_id) in user_clients.iter()
     {
+        // count client types
+        match env
+        {
+            bevy_simplenet::EnvType::Native => native_count += 1,
+            bevy_simplenet::EnvType::Wasm => wasm_count += 1,
+        }
+
         // get game start package for client
         let client_start_pack = prepare_client_start_pack(&*game_initializer, *client_id, ticks_per_sec)?;
 
-        //todo: differentiate connect token based on client env type
-
-        // get connect token for client
-        let client_connect_token = new_connect_token(
-                current_time,
-                server_config,
-                auth_key,
-                *client_id as u64,
-                server_addresses.clone()
-            );
-
-        // save client's connect info
-        let Ok(serialized_connect_token) = connect_token_to_bytes(&client_connect_token)
-        else { tracing::error!("unable to serialize connect token"); return Err(()); };
-
-        connect_infos.push(
-                GameConnectInfo{
+        start_infos.push(
+                GameStartInfo{
                         user_id: *user_id,
-                        server_connect_token: ServerConnectToken::Native{ bytes: serialized_connect_token },
+                        client_id: *client_id as u64,
                         serialized_start_data: ser_msg(&client_start_pack),
                     }
             );
     }
 
-    Ok(GameStartReport{ connect_infos })
+    // prepare connect metas based on client types
+    let mut native_meta = None;
+    let wasm_meta = None;
+
+    if native_count > 0
+    {
+        native_meta = Some(GameServerConnectMetaNative{
+            server_config    : server_config.clone(),
+            server_addresses : server_addresses.clone(),
+            auth_key         : auth_key.clone(),
+        });
+    }
+
+    if wasm_count > 0
+    {
+        tracing::error!("wasm clients not yet supported");
+    }
+
+    Ok(GameStartReport{ native_meta, wasm_meta, start_infos })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
