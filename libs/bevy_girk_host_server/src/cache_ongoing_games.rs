@@ -15,7 +15,7 @@ use std::vec::Vec;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn prep_connect_token_native(connect_meta: &GameServerConnectMetaNative, client_id: u64) -> Result<ServerConnectToken, ()>
+fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -> Result<ServerConnectToken, ()>
 {
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -34,9 +34,9 @@ pub struct OngoingGame
     /// Id of game hub hosting this game.
     pub game_hub_id: u128,
     /// Metadata for generating native-target connect tokens for the game.
-    pub native_meta: Option<GameServerConnectMetaNative>,
+    pub native_meta: Option<ConnectMetaNative>,
     /// Metadata for generating wasm-target connect tokens for the game.
-    pub wasm_meta: Option<GameServerConnectMetaWasm>,
+    pub wasm_meta: Option<ConnectMetaWasm>,
     /// Game startup information for users (cached in case of reconnections).
     pub start_infos: Vec<GameStartInfo>,
 }

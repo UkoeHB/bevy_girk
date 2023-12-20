@@ -117,7 +117,7 @@ pub fn dummy_game_start_report(user_ids: Vec<u128>) -> GameStartReport
         start_infos.push(GameStartInfo { user_id: *user_id, ..default() });
     }
 
-    GameStartReport{ native_meta: Some(GameServerConnectMetaNative::dummy()), wasm_meta: None, start_infos }
+    GameStartReport{ native_meta: Some(ConnectMetaNative::dummy()), wasm_meta: None, start_infos }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

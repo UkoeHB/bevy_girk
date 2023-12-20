@@ -83,7 +83,7 @@ impl GameFactoryImpl for DummyGameFactory
             .configure_sets(Update, (GameFWSet, ClientFWSet).chain());
 
         // prepare dummy token meta
-        let native_meta = Some(GameServerConnectMetaNative::dummy());
+        let native_meta = Some(ConnectMetaNative::dummy());
 
         // prepare dummy connect infos
         let start_infos: Vec<GameStartInfo> = player_ids.iter().map(|id| GameStartInfo::new_from_id(*id)).collect();

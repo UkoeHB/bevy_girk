@@ -47,9 +47,9 @@ impl GameStartInfo
 pub struct GameStartReport
 {
     /// Metadata for generating native-target connect tokens for the game.
-    pub native_meta: Option<GameServerConnectMetaNative>,
+    pub native_meta: Option<ConnectMetaNative>,
     /// Metadata for generating wasm-target connect tokens for the game.
-    pub wasm_meta: Option<GameServerConnectMetaWasm>,
+    pub wasm_meta: Option<ConnectMetaWasm>,
     /// Contains information needed by clients in order to set up their local game clients.
     pub start_infos: Vec<GameStartInfo>,
 }

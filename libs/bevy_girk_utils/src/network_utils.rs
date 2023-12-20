@@ -88,16 +88,16 @@ impl GameServerSetupConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Metadata required to generate connect tokens.
+/// Metadata required to generate connect tokens for native-target clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameServerConnectMetaNative
+pub struct ConnectMetaNative
 {
     pub server_config    : GameServerSetupConfig,
     pub server_addresses : Vec<SocketAddr>,
     pub auth_key         : [u8; 32],
 }
 
-impl GameServerConnectMetaNative
+impl ConnectMetaNative
 {
     pub fn dummy() -> Self
     {
@@ -114,15 +114,15 @@ impl GameServerConnectMetaNative
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Metadata required to generate connect tokens.
+/// Metadata required to generate connect tokens for wasm-target clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameServerConnectMetaWasm;
+pub struct ConnectMetaWasm;
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Generate a new connect token for a native client.
 pub fn new_connect_token_native(
-    meta         : &GameServerConnectMetaNative,
+    meta         : &ConnectMetaNative,
     current_time : Duration,
     client_id    : u64,
 ) -> Result<ServerConnectToken, ()>
@@ -160,6 +160,7 @@ pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Result<Connect
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// A token that a client can use to connect to a renet server.
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServerConnectToken

@@ -26,7 +26,7 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(GameServerConnectMetaNative::dummy()),
+                    native_meta: Some(ConnectMetaNative::dummy()),
                     wasm_meta: None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
@@ -46,7 +46,7 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(GameServerConnectMetaNative::dummy()),
+                    native_meta: Some(ConnectMetaNative::dummy()),
                     wasm_meta: None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
@@ -58,7 +58,7 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id: game_id_2,
                     game_hub_id,
-                    native_meta: Some(GameServerConnectMetaNative::dummy()),
+                    native_meta: Some(ConnectMetaNative::dummy()),
                     wasm_meta: None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
@@ -90,7 +90,7 @@ fn cache_ongoing_games_envtype()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(GameServerConnectMetaNative::dummy()),
+                    native_meta: Some(ConnectMetaNative::dummy()),
                     wasm_meta: None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
@@ -122,7 +122,7 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_1,
                     game_hub_id : 0u128,
-                    native_meta : Some(GameServerConnectMetaNative::dummy()),
+                    native_meta : Some(ConnectMetaNative::dummy()),
                     wasm_meta   : None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1)],
                 }
@@ -138,7 +138,7 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_2,
                     game_hub_id : 0u128,
-                    native_meta : Some(GameServerConnectMetaNative::dummy()),
+                    native_meta : Some(ConnectMetaNative::dummy()),
                     wasm_meta   : None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_2)],
                 }
@@ -170,7 +170,7 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_3,
                     game_hub_id : 0u128,
-                    native_meta : Some(GameServerConnectMetaNative::dummy()),
+                    native_meta : Some(ConnectMetaNative::dummy()),
                     wasm_meta   : None,
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1)],
                 }

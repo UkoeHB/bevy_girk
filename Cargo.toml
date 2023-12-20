@@ -14,6 +14,7 @@ members  = [
     "libs/*",
     "tests"
 ]
+exclude = [ "libs/bevy_girk_client_instance" ]
 
 [workspace.dependencies]
 bevy           = { version = "0.12", default-features = false }
