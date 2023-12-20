@@ -61,6 +61,7 @@ impl From<SendOrdered> for EventType
 
 /// Configuration details for setting up a renet server.
 /// - Used to set up renet servers for clients on native targets.
+//todo: include setup configs for wasm and in-memory transports (each one optional?)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameServerSetupConfig
 {

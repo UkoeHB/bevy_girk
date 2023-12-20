@@ -7,6 +7,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+#[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
 
 //standard shortcuts
