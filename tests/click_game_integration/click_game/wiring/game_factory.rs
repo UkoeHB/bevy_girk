@@ -279,13 +279,6 @@ impl GameFactoryImpl for ClickGameFactory
         // initialize clients and game config
         let startup = prepare_game_startup(&launch_pack.client_init_data, config.game_duration_config)?;
 
-        // prepare renet server config
-        // - we use a unique auth key so clients can only interact with the server created here
-        //todo: wasm single player, we don't need auth key, just use in-memory transport (need server config enum)
-        //todo: set up renet server transports based on client types
-        #[cfg(target_family = "wasm")]
-        { panic!("todo: gen random bytes not supported on WASM"); }
-
         // prepare game app
         let (native_meta, wasm_meta) = prepare_game_app_backend(
                 app,

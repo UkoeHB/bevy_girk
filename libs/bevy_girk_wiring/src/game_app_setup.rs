@@ -140,8 +140,10 @@ pub fn prepare_game_app_network(
     wasm_count         : usize,
 ) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    let auth_key = generate_random_bytes::<32>();
-    let server_config = new_server_config(native_count, &game_server_config, &auth_key);
+    //todo: wasm single player, we don't need auth key, just use in-memory transport (need server config enum)
+    //todo: set up renet server transports based on client types
+    #[cfg(target_family = "wasm")]
+    { panic!("todo: gen random bytes not supported on WASM"); }
 
     let mut native_meta = None;
     let wasm_meta = None;
@@ -150,7 +152,12 @@ pub fn prepare_game_app_network(
     {
         if native_count > 0
         {
+            // set up renet server
+            // - we use a unique auth key so clients can only interact with the server created here
+            let auth_key = generate_random_bytes::<32>();
+            let server_config = new_server_config(native_count, &game_server_config, &auth_key);
             let server_addr = setup_native_renet_server(game_app, server_config);
+
             native_meta = Some(ConnectMetaNative{
                 server_config    : game_server_config,
                 server_addresses : vec![server_addr],
