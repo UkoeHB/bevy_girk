@@ -188,7 +188,7 @@ pub fn GameFWTickPlugin(app: &mut App)
                 start_end_countdown,
             )
         )
-        .add_systems(Last, try_terminate_app.run_if(in_state(GameFWMode::End)));
+        .add_systems(Last, try_exit_app.run_if(in_state(GameFWMode::End)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

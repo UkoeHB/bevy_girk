@@ -180,11 +180,11 @@ pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Terminate the app if all game end ticks have elapsed.
+/// Exit the app if all game end ticks have elapsed.
 ///
-/// If the max game end ticks equals zero, then the app will be terminated in the same tick that `GameFWMode::End` is set.
-//todo: consider terminating early if all clients have acked the game end state
-pub(crate) fn try_terminate_app(
+/// If the max game end ticks equals zero, then the app will be exited in the same tick that `GameFWMode::End` is set.
+//todo: consider exiting early if all clients have acked the game end state
+pub(crate) fn try_exit_app(
     current_game_mode : Res<State<GameFWMode>>,
     game_ticks        : Res<GameFWTicksElapsed>,
     game_end_tick     : Res<GameFWEndTick>,
@@ -203,7 +203,7 @@ pub(crate) fn try_terminate_app(
     if game_ticks.elapsed.ticks().0.saturating_sub(end_tick.0) < game_fw_config.max_end_ticks().0 { return; }
 
     // exit the game
-    tracing::info!("terminating game app");
+    tracing::info!("exiting game app");
     app_exit.send(AppExit{});
 }
 
