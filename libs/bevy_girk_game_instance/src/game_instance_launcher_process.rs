@@ -6,8 +6,6 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use clap::Parser;
-use enfync::{AdoptOrDefault, Handle};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 //standard shortcuts
 use std::io::{BufRead, BufReader, Write};
@@ -72,7 +70,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
     ) -> GameInstance
     {
         // prepare command channel
-        let (command_sender, mut command_receiver) = new_io_channel::<GameInstanceCommand>();
+        let (command_sender, command_receiver) = new_io_channel::<GameInstanceCommand>();
         let command_receiver_clone = command_receiver.clone();
 
         // launch game process
@@ -84,7 +82,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
             return GameInstance::new(game_id, command_sender, command_receiver, enfync::PendingResult::make_ready(false));
         };
 
-        let Ok(mut child_process) = tokio::process::Command::new(&self.path)
+        let Ok(child_process) = tokio::process::Command::new(&self.path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .args(["-G", &launch_pack_ser])
@@ -95,126 +93,48 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
             return GameInstance::new(game_id, command_sender, command_receiver, enfync::PendingResult::make_ready(false));
         };
 
-        // extract child process io
-        let child_stdin = child_process.stdin.take().unwrap();
-        let child_stdout = child_process.stdout.take().unwrap();
-        let mut child_stdin_writer = tokio::io::BufWriter::new(child_stdin);
-        let mut child_stdout_reader = tokio::io::BufReader::new(child_stdout);
-
-        // manage game instance process
-        let tokio_spawner = enfync::builtin::native::TokioHandle::adopt_or_default();
-        tokio_spawner.spawn(
-            async move
-            {
-                loop
+        // manage the process
+        let (_process_handle, stdout_handle) = manage_child_process(
+                game_id,
+                child_process,
+                command_receiver,
+                move |report: GameInstanceReport| -> Option<bool>
                 {
-                    tokio::select!
+                    match &report
                     {
-                        // forward commands to the process
-                        Some(command) = command_receiver.recv() =>
+                        GameInstanceReport::GameStart(_, _) =>
                         {
-                            let Ok(command_ser) = serde_json::to_string(&command)
-                            else
-                            {
-                                tracing::warn!(game_id, "game process monitor failed serializing command, aborting");
-                                let _ = child_process.kill().await;
-                                return;
-                            };
-                            if let Err(err) = child_stdin_writer.write(command_ser.as_bytes()).await
-                            {
-                                tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
-                                let _ = child_process.kill().await;
-                                return;
-                            }
-                            if let Err(err) = child_stdin_writer.write("\n".as_bytes()).await
-                            {
-                                tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
-                                let _ = child_process.kill().await;
-                                return;
-                            }
-                            if let Err(err) = child_stdin_writer.flush().await
-                            {
-                                tracing::warn!(game_id, ?err, "game process monitor failed sending command, aborting");
-                                let _ = child_process.kill().await;
-                                return;
-                            }
-                            tracing::trace!(game_id, ?command, "forwarded command to game instance process");
+                            let _ = report_sender.send(report);
+                            tracing::trace!(game_id, "game instance process report: game start");
                         }
-
-                        // await process termination
-                        _ = child_process.wait() =>
+                        GameInstanceReport::GameOver(_, _) =>
                         {
-                            tracing::trace!(game_id, "game instance process closed");
-                            return;
+                            let _ = report_sender.send(report);
+                            tracing::trace!(game_id, "game instance process report: game over");
+                            return Some(true);
                         }
-
-                        // catch errors
-                        else =>
+                        GameInstanceReport::GameAborted(_) =>
                         {
-                            tracing::warn!(game_id, "game process monitor failed unexpectedly, aborting");
-                            let _ = child_process.kill().await;
-                            return;
+                            let _ = report_sender.send(report);
+                            tracing::trace!(game_id, "game instance process report: game aborted");
+                            return Some(false);
                         }
                     }
+
+                    None
                 }
-            }
-        );
-
-        // monitor process outputs
-        let handle = tokio_spawner.spawn(
-            async move
-            {
-                let mut buf = String::default();
-
-                loop
-                {
-                    buf.clear();
-                    match child_stdout_reader.read_line(&mut buf).await
-                    {
-                        Ok(_) =>
-                        {
-                            let Ok(report) = serde_json::de::from_str::<GameInstanceReport>(&buf)
-                            else { tracing::warn!(game_id, "failed deserializing game instance report"); return false; };
-
-                            match &report
-                            {
-                                GameInstanceReport::GameStart(_, _) =>
-                                {
-                                    let _ = report_sender.send(report);
-                                    tracing::trace!(game_id, "game instance process report: game start");
-                                }
-                                GameInstanceReport::GameOver(_, _) =>
-                                {
-                                    let _ = report_sender.send(report);
-                                    tracing::trace!(game_id, "game instance process report: game over");
-                                    return true;
-                                }
-                                GameInstanceReport::GameAborted(_) =>
-                                {
-                                    let _ = report_sender.send(report);
-                                    tracing::trace!(game_id, "game instance process report: game aborted");
-                                    return false;
-                                }
-                            }
-                        }
-                        Err(_) => return false,
-                    }
-                }
-            }
-        );
+            );
 
         // return game instance
         // - we monitor the stdout reader instead of the process status because we want to wait for the game over report
         //   before terminating the instance
-        GameInstance::new(game_id, command_sender, command_receiver_clone, handle)
+        GameInstance::new(game_id, command_sender, command_receiver_clone, stdout_handle)
     }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Launch a game inside a standalone process.
-///
-/// Assumes the next useful `std::env::Args` item is the game launch pack.
 ///
 /// Reads [`GameInstanceCommand`]s from `stdin` and writes [`GameInstanceReport`]s to `stdout`.
 pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)

@@ -15,15 +15,15 @@ use std::fmt::Debug;
 /// - Spawns a tokio task for managing the child process. Items received from `stdin_receiver` will be serialized
 ///   to JSON and forwarded to the child's `stdin`.
 /// - Spawns a tokio task for monitoring the child process `stdout`. Lines received from the child's `stdout`
-///   will be deserialized from JSON and passed to the `stdout_handler` callback. That callback can return `false`
-///   if the task should shut down (e.g. on receipt of a 'process aborted' message).
+///   will be deserialized from JSON and passed to the `stdout_handler` callback. If that callback returns `Some`
+///   (e.g. on receipt of a 'process aborted' message), then the contained result will be returned from the task.
 ///
 /// Returns handles to the two tasks.
 pub fn manage_child_process<I, O>(
     id                 : u64,
     mut child_process  : tokio::process::Child,
     mut stdin_receiver : IoReceiver<I>,
-    mut stdout_handler : impl FnMut(O) -> bool + Send + Sync + 'static,
+    mut stdout_handler : impl FnMut(O) -> Option<bool> + Send + Sync + 'static,
 ) -> (enfync::PendingResult<()>, enfync::PendingResult<bool>)
 where
     I: Debug + Serialize + Send + Sync + 'static,
@@ -110,7 +110,7 @@ where
                         let Ok(output) = serde_json::de::from_str::<O>(&buf)
                         else { tracing::warn!(id, "failed deserializing process output"); return false; };
 
-                        if !(stdout_handler)(output) { return false; }
+                        if let Some(result) = (stdout_handler)(output) { return result; }
                     }
                     Err(_) => return false,
                 }
