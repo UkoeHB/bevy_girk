@@ -250,7 +250,7 @@ pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
 
                 if line.is_empty()
                 {
-                    let _ = command_sender.send(GameInstanceCommand::AbortGame);
+                    let _ = command_sender.send(GameInstanceCommand::Abort);
                     tracing::error!(game_id, "received null value at stdin, aborting game");
                     return;
                 }

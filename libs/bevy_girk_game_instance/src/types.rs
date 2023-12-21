@@ -40,7 +40,7 @@ pub struct GameLaunchPack
     pub game_init_data: Vec<u8>,
 
     /// Client init data.
-    /// - Note: This should should be pre-shuffled.
+    /// - Note: This should be pre-shuffled.
     pub client_init_data: Vec<ClientInitDataForGame>
 }
 

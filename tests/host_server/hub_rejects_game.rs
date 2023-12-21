@@ -176,7 +176,7 @@ fn host_rejects_game()
 
 
     // game hub sends reject game
-    hub.send(HubToHostMsg::AbortGame{ id: made_lobby_id }).expect("send failed");
+    hub.send(HubToHostMsg::Abort{ id: made_lobby_id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -195,7 +195,7 @@ fn host_rejects_game()
 
 
     // game hub sends reject game again
-    hub.send(HubToHostMsg::AbortGame{ id: made_lobby_id }).expect("send failed");
+    hub.send(HubToHostMsg::Abort{ id: made_lobby_id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

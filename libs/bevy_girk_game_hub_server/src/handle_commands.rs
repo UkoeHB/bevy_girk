@@ -44,7 +44,7 @@ fn command_shut_down(
         tracing::warn!(game_id, "...removed pending game");
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
     }
 
@@ -58,11 +58,11 @@ fn command_shut_down(
         if let Some(true) = game_instance.try_get() { continue; }
 
         // command game instance to abort (otherwise it may hang)
-        if let Err(_) = game_instance.send_command(GameInstanceCommand::AbortGame)
+        if let Err(_) = game_instance.send_command(GameInstanceCommand::Abort)
         { tracing::error!(game_id, "failed sending abort game command to game instance"); }
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
     }
 

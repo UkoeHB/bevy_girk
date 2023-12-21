@@ -182,6 +182,7 @@ fn prepare_client_start_pack(
 /// Get game start infos for participants to use when setting up their game clients.
 fn get_game_start_infos(
     app          : &App,
+    game_id      : u64,
     user_clients : &Vec<(u128, ClientIdType)>,
 ) -> Result<Vec<GameStartInfo>, ()>
 {
@@ -200,6 +201,7 @@ fn get_game_start_infos(
 
         start_infos.push(
                 GameStartInfo{
+                    game_id,
                     user_id: *user_id,
                     client_id: *client_id as u64,
                     serialized_start_data: ser_msg(&client_start_pack),
@@ -292,7 +294,7 @@ impl GameFactoryImpl for ClickGameFactory
 
         // game start info
         // - must call this AFTER prepping the game app and setting up the renet server
-        let start_infos = get_game_start_infos(&app, &startup.clients)?;
+        let start_infos = get_game_start_infos(&app, launch_pack.game_id, &startup.clients)?;
 
         Ok(GameStartReport{ native_meta, wasm_meta, start_infos })
     }

@@ -11,7 +11,7 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// remove expired pending games and send 'abort game' to host
+/// Remove expired pending games and send 'abort game' to host.
 pub(crate) fn clean_pending_games(
     mut pending_games_cache : ResMut<PendingGamesCache>,
     host_client             : Res<HostHubClient>,
@@ -22,15 +22,15 @@ pub(crate) fn clean_pending_games(
         tracing::warn!(game_id, "removed expired pending game");
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
     }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// remove running games that are expired or no longer running
-/// - this should not run very often, it is inefficient
+/// Remove running games that are expired or no longer running.
+/// - This should not run very often, it is inefficient.
 pub(crate) fn clean_running_games(
     mut running_games_cache : ResMut<RunningGamesCache>,
     host_client             : Res<HostHubClient>,
@@ -44,11 +44,11 @@ pub(crate) fn clean_running_games(
         if let Some(true) = game_instance.try_get() { continue; }
 
         // command game instance to abort (otherwise it may hang)
-        if let Err(_) = game_instance.send_command(GameInstanceCommand::AbortGame)
+        if let Err(_) = game_instance.send_command(GameInstanceCommand::Abort)
         { tracing::error!(game_id, "failed sending abort game command to game instance"); }
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
     }
 }

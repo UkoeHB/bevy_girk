@@ -47,11 +47,11 @@ fn try_collect_game_over_report(
 #[derive(Resource)]
 pub(crate) struct GameRunnerState
 {
-    /// this game's id
+    /// This game's id.
     pub(crate) game_id: u64,
-    /// sends commands to the instance's owner
+    /// Sends reports to the instance's owner.
     pub(crate) report_sender: IoSender<GameInstanceReport>,
-    /// receives commands from the instance's owner
+    /// Receives commands from the instance's owner.
     pub(crate) command_receiver: IoReceiver<GameInstanceCommand>,
 }
 

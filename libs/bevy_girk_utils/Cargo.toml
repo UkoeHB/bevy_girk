@@ -10,9 +10,11 @@ doctest = false
 [dependencies]
 bevy           = { workspace = true }
 bevy_kot_ecs   = { workspace = true }
+bevy_kot_utils = { workspace = true }
 bevy_fn_plugin = { workspace = true }
 bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
+enfync         = { workspace = true }
 serde          = { workspace = true }
 serde_json     = { workspace = true }
 serde_with     = { workspace = true }
@@ -25,3 +27,8 @@ siphasher   = { version = "1.0" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rand = { version = "0.8" }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.tokio]
+version = "1.34"
+default-features = false
+features = ["io-util", "process", "macros"]

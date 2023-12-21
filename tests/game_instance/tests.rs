@@ -155,7 +155,7 @@ fn abort_game()
 
 
     // abort the game
-    instance.send_command(GameInstanceCommand::AbortGame).expect("send instance command should succeed");
+    instance.send_command(GameInstanceCommand::Abort).expect("send instance command should succeed");
     std::thread::sleep(Duration::from_millis(15));
     assert!(instance.try_get().unwrap());
 

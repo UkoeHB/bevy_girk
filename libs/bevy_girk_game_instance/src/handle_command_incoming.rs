@@ -12,7 +12,7 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn command_abort_game(
+fn handle_command_abort(
     runner_state : Res<GameRunnerState>,
     mut app_exit : EventWriter<AppExit>,
 ){
@@ -32,19 +32,17 @@ fn command_abort_game(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Returns `false` when aborted.
 fn handle_command(world: &mut World, command: GameInstanceCommand)
 {
     match command
     {
-        GameInstanceCommand::AbortGame => syscall(world, (), command_abort_game),
+        GameInstanceCommand::Abort => syscall(world, (), handle_command_abort),
     }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Returns `false` when aborted.
 pub(crate) fn handle_command_incoming(world: &mut World)
 {
     // handle game instance commands

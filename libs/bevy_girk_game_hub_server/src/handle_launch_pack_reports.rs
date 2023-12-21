@@ -48,7 +48,7 @@ fn report_failure(
     { tracing::warn!(game_id, "tried to discard pending game but game is not present"); return; }
 
     // notify host server of aborted game
-    if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+    if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
     { tracing::error!(game_id, "failed sending abort game to host"); }
 }
 

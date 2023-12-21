@@ -46,7 +46,7 @@ fn host_start_game(
     // send 'abort game' if no capacity
     if capacity_tracker.capacity() == GameHubCapacity(0u16)
     {
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
         return;
     }
@@ -72,7 +72,7 @@ fn host_abort_game(
     if let Some(_) = pending_games_cache.extract_game(game_id)
     {
         // notify host server
-        if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
         { tracing::error!(game_id, "failed sending abort game to host"); }
         return;
     }
@@ -80,13 +80,13 @@ fn host_abort_game(
     // try to remove the game instance and tell it to abort
     let Some(instance) = running_games_cache.extract_instance(game_id)
     else { tracing::trace!(game_id, "tried to abort game but could not find it"); return; };
-    if let Err(_) = instance.send_command(GameInstanceCommand::AbortGame)
+    if let Err(_) = instance.send_command(GameInstanceCommand::Abort)
     { tracing::error!(game_id, "failed sending abort game command to game instance"); }
 
     // notify host server
     // - if the game was not available then we don't notify the server, because we assume it was notified by another
     //   process in the hub
-    if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+    if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
     { tracing::error!(game_id, "failed sending abort game to host"); }
 }
 
@@ -114,7 +114,7 @@ pub(crate) fn handle_host_incoming(world: &mut World)
             HostHubClientEvent::Msg(host_message) => match host_message
             {
                 HostToHubMsg::StartGame(req) => syscall(world, req, host_start_game),
-                HostToHubMsg::AbortGame{id}  => syscall(world, id, host_abort_game),
+                HostToHubMsg::Abort{id}  => syscall(world, id, host_abort_game),
             }
             _ => tracing::warn!("received unexpected host-hub client event")
         }

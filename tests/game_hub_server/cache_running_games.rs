@@ -113,7 +113,7 @@ fn cache_running_games_expiration()
     for mut instance in cache.drain_invalid()
     {
         let None = instance.try_get() else { panic!("instance should be running"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
 
     assert_eq!(cache.num_running(), 2);
@@ -127,7 +127,7 @@ fn cache_running_games_expiration()
     {
         count += 1;
         let None = instance.try_get() else { panic!("instance should be running"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
     assert_eq!(count, 1);
 
@@ -153,7 +153,7 @@ fn cache_running_games_expiration()
     {
         count += 1;
         let None = instance.try_get() else { panic!("instance should be running"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
     assert_eq!(count, 1);
 
@@ -201,7 +201,7 @@ fn cache_running_games_termination()
     for mut instance in cache.drain_invalid()
     {
         let Some(true) = instance.try_get() else { panic!("instance should be terminated successfully"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
 
     assert_eq!(cache.num_running(), 2);
@@ -215,7 +215,7 @@ fn cache_running_games_termination()
     {
         count += 1;
         let Some(true) = instance.try_get() else { panic!("instance should be terminated successfully"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
     assert_eq!(count, 1);
 
@@ -241,7 +241,7 @@ fn cache_running_games_termination()
     {
         count += 1;
         let Some(true) = instance.try_get() else { panic!("instance should be terminated successfully"); };
-        instance.send_command(GameInstanceCommand::AbortGame).unwrap();
+        instance.send_command(GameInstanceCommand::Abort).unwrap();
     }
     assert_eq!(count, 1);
 

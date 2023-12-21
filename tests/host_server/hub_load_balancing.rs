@@ -216,7 +216,7 @@ fn host_load_balancing()
 
 
     // hub 2 sends reject game
-    hub2.send(HubToHostMsg::AbortGame{ id: made_lobby_id1 }).expect("send failed");
+    hub2.send(HubToHostMsg::Abort{ id: made_lobby_id1 }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

@@ -75,7 +75,7 @@ fn instance_report_game_aborted(
     // notify host server
     // - only notify if the aborted game was removed; we assume the host server was already notified if the game isn't
     //   present
-    if let Err(_) = host_client.send(HubToHostMsg::AbortGame{ id: game_id })
+    if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
     { tracing::error!(game_id, "failed sending abort game to host"); }
 }
 

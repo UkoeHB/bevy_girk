@@ -16,6 +16,8 @@ use std::vec::Vec;
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct GameStartInfo
 {
+    /// The game id.
+    pub game_id: u64,
     /// User's server id.
     pub user_id: u128,
     /// User's client id within the game.
@@ -27,12 +29,13 @@ pub struct GameStartInfo
 
 impl GameStartInfo
 {
-    /// Generate an empty start info.
+    /// Generate an empty start info from a user id.
     ///
     /// Used for testing.
     pub fn new_from_id(user_id: u128) -> GameStartInfo
     {
         GameStartInfo{
+            game_id: 0u64,
             user_id,
             client_id: 0u64,
             serialized_start_data: Vec::default()

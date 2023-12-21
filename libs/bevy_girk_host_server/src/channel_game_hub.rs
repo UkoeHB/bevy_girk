@@ -22,7 +22,7 @@ const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub enum HostToHubMsg
 {
     StartGame(GameStartRequest),
-    AbortGame{ id: u64 },
+    Abort{ id: u64 },
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ pub enum HostToHubMsg
 pub enum HubToHostMsg
 {
     Capacity(GameHubCapacity),
-    AbortGame{ id: u64 },
+    Abort{ id: u64 },
     GameStart{ id: u64, request: GameStartRequest, report: GameStartReport },
     GameOver{ id: u64, report: GameOverReport },
 }

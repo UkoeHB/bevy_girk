@@ -491,7 +491,7 @@ fn pending_lobby_expires_then_reacks()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game hub receives abort game (due to new lobby membership, the game start was rejected by host server)
-    let Some(HostHubClientEvent::Msg(HostToHubMsg::AbortGame{ id: made_lobby_id })) = hub.next()
+    let Some(HostHubClientEvent::Msg(HostToHubMsg::Abort{ id: made_lobby_id })) = hub.next()
     else { panic!("hub did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 
@@ -500,7 +500,7 @@ fn pending_lobby_expires_then_reacks()
 
 
     // game hub sends reject game for aborted game
-    hub.send(HubToHostMsg::AbortGame{ id: made_lobby_id }).expect("send failed");
+    hub.send(HubToHostMsg::Abort{ id: made_lobby_id }).expect("send failed");
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

@@ -202,7 +202,7 @@ fn ongoing_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game hub receives abort game
-    let Some(HostHubClientEvent::Msg(HostToHubMsg::AbortGame{ id: made_lobby_id })) = hub.next()
+    let Some(HostHubClientEvent::Msg(HostToHubMsg::Abort{ id: made_lobby_id })) = hub.next()
     else { panic!("hub did not receive server msg"); };
     assert_eq!(id, made_lobby_id);
 

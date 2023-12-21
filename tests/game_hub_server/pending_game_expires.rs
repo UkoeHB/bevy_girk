@@ -99,7 +99,7 @@ fn pending_game_expires()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 aborted (pending game expires)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 

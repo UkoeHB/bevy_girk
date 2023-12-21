@@ -166,7 +166,7 @@ pub(crate) fn hub_start_game(
     if !game_hubs_cache.has_pending_game(game_hub_id, game_id)
     {
         tracing::error!(game_hub_id, game_id, "aborting game because game is not registered to hub cache as pending");
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::AbortGame{ id: game_id })
+        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
         { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
         return;
     }
@@ -176,7 +176,7 @@ pub(crate) fn hub_start_game(
     else
     {
         tracing::warn!(game_hub_id, game_id, "aborting game because lobby is unavailable");
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::AbortGame{ id: game_id })
+        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
         { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
         return;
     };
@@ -186,7 +186,7 @@ pub(crate) fn hub_start_game(
     if game_start_request.lobby_data != *lobby_data_ref
     {
         tracing::warn!(game_hub_id, game_id, "aborting game because game's lobby data doesn't match cached lobby");
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::AbortGame{ id: game_id })
+        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
         { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
         return;
     }
@@ -202,7 +202,7 @@ pub(crate) fn hub_start_game(
     if let Err(_) = ongoing_games_cache.add_ongoing_game(ongoing_game)
     {
         tracing::error!(game_hub_id, "aborting game because registering ongoing game failed");
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::AbortGame{ id: game_id })
+        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
         { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
         return;
     }
@@ -211,7 +211,7 @@ pub(crate) fn hub_start_game(
     if let Err(_) = game_hubs_cache.upgrade_pending_game(game_hub_id, game_id)
     {
         tracing::error!(game_hub_id, "aborting game because updating game hub failed");
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::AbortGame{ id: game_id })
+        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
         { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
         return;
     }

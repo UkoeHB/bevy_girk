@@ -165,12 +165,12 @@ fn reject_duplicate_game()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 or 2 aborted (shutting down)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert!((id == game_id_1) || (id == game_id_2));
 
     // - game 1 or 2 aborted (shutting down)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert!((id == game_id_1) || (id == game_id_2));
 
@@ -266,7 +266,7 @@ fn reject_no_capacity()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game aborted (no capacity)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_2);
 
@@ -399,7 +399,7 @@ fn reject_launch_pack_fail()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 aborted (launch pack failed)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 
@@ -524,7 +524,7 @@ fn reject_hub_shutdown()
     std::thread::sleep(Duration::from_millis(15));
 
     // - game 1 aborted (shutting down)
-    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::AbortGame{ id }))) = host_hub_server.next()
+    let Some((_, HostHubServerEvent::Msg(HubToHostMsg::Abort{ id }))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(id, game_id_1);
 
