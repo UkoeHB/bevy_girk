@@ -153,7 +153,7 @@ where
 
 /// Run an app in a child process.
 /// - Reads `I` messages from `stdin` (deserialized from JSON) and forwards them to the app via `stdin_sender`. If
-///   the `stdin` handle closes, then `abort_message` will be sent to `stdin_sender`. This facilitates graceful
+///   the `stdin` handle closes, then `on_stdin_null` will be invoked. This facilitates graceful
 ///   handling of parent process closure, although graceful shutdown is not guaranteed on all machines.
 /// - Reads `O` messages from `stdout_receiver`, serializes them to JSON, and forwards them to the process's `stdout`.
 ///
@@ -163,7 +163,7 @@ pub fn run_app_in_child_process<I, O>(
     mut app             : App,
     stdin_sender        : IoSender<I>,
     mut stdout_receiver : IoReceiver<O>,
-    abort_message       : I,
+    on_stdin_null       : impl FnOnce() + Send + Sync + 'static,
 )
 where
     I: Debug + for<'de> Deserialize<'de> + Send + Sync + 'static,
@@ -184,8 +184,7 @@ where
 
                 if line.is_empty()
                 {
-                    let _ = stdin_sender.send(abort_message);
-                    tracing::error!(id, "received null value at stdin, aborting process");
+                    (on_stdin_null)();
                     return;
                 }
 

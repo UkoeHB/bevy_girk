@@ -130,7 +130,17 @@ pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
         ).expect("failed setting up game instance");
 
     // run the app
-    run_app_in_child_process(game_id, app, command_sender, report_receiver, GameInstanceCommand::Abort);
+    run_app_in_child_process(
+            game_id,
+            app,
+            command_sender.clone(),
+            report_receiver,
+            move ||
+            {
+                let _ = command_sender.send(GameInstanceCommand::Abort);
+                tracing::error!("stdin received null unexpectedly, aborting game");
+            }
+        );
 
     tracing::info!(game_id, "game instance process finished");
 }

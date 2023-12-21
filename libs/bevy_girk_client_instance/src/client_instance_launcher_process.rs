@@ -135,7 +135,17 @@ pub fn process_client_launcher(args: ClientInstanceCli, factory: ClientFactory)
         ).expect("failed setting up client instance");
 
     // run the app
-    run_app_in_child_process(game_id, app, command_sender, report_receiver, ClientInstanceCommand::Abort);
+    run_app_in_child_process(
+            game_id,
+            app,
+            command_sender.clone(),
+            report_receiver,
+            move ||
+            {
+                let _ = command_sender.send(ClientInstanceCommand::Abort);
+                tracing::error!("stdin received null unexpectedly, aborting client");
+            }
+        );
 
     tracing::info!(game_id, "client instance process finished");
 }
