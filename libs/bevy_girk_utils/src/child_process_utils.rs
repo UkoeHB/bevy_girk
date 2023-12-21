@@ -1,6 +1,7 @@
 //local shortcuts
 
 //third-party shortcuts
+use bevy::prelude::*;
 use bevy_kot_utils::*;
 use enfync::{AdoptOrDefault, Handle};
 use serde::{Serialize, Deserialize};
@@ -8,7 +9,31 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 //standard shortcuts
 use std::fmt::Debug;
+use std::io::{BufRead, BufReader, Write};
 
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Forward process outputs from the app to `stdout`.
+fn drain_outputs<O: Serialize>(output_receiver: &mut IoReceiver<O>)
+{
+    while let Some(output) = output_receiver.try_recv()
+    {
+        let output_ser = serde_json::to_string(&output).expect("failed serializing process output");
+        let _ = std::io::stdout().write(output_ser.as_bytes());
+        let _ = std::io::stdout().write("\n".as_bytes());
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver: ResMut<IoReceiver<O>>)
+{
+    drain_outputs(&mut output_receiver);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Manage a child process.
@@ -119,6 +144,65 @@ where
     );
 
     (process_handle, stdout_handle)
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Run an app in a child process.
+/// - Reads `I` messages from `stdin` (deserialized from JSON) and forwards them to the app via `stdin_sender`. If
+///   the `stdin` handle closes, then `abort_message` will be sent to `stdin_sender`. This facilitates graceful
+///   handling of parent process closure, although graceful shutdown is not guaranteed on all machines.
+/// - Reads `O` messages from `stdout_receiver`, serializes them to JSON, and forwards them to the process's `stdout`.
+pub fn run_app_in_child_process<I, O>(
+    id                  : u64,
+    mut app             : App,
+    stdin_sender        : IoSender<I>,
+    mut stdout_receiver : IoReceiver<O>,
+    abort_message       : I,
+)
+where
+    I: Debug + for<'de> Deserialize<'de> + Send + Sync + 'static,
+    O: Clone + Serialize + Send + Sync + 'static
+{
+    // spawn thread for monitoring inputs
+    std::thread::spawn(
+        move ||
+        {
+            let mut stdin_reader = BufReader::new(std::io::stdin());
+            let mut line = String::new();
+
+            loop
+            {
+                // read the next stdin
+                line.clear();
+                let _ = stdin_reader.read_line(&mut line);
+
+                if line.is_empty()
+                {
+                    let _ = stdin_sender.send(abort_message);
+                    tracing::error!(id, "received null value at stdin, aborting process");
+                    return;
+                }
+
+                // deserialize input
+                let input = serde_json::de::from_str::<I>(&line).expect("failed deserializing input");
+                tracing::info!(id, ?input, "received process input");
+
+                // forward to app
+                if stdin_sender.send(input).is_err() { break; }
+            }
+        }
+    );
+
+    // add system for marshalling outputs to the parent process
+    app.insert_resource(stdout_receiver.clone())
+        .add_systems(Last, monitor_for_outputs::<O>);
+
+    // run the app to completion
+    app.run();
+
+    // drain any lingering outputs
+    drain_outputs(&mut stdout_receiver);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

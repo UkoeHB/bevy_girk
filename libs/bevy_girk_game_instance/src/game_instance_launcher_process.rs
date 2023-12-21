@@ -3,37 +3,12 @@ use crate::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy::prelude::*;
 use bevy_kot_utils::*;
 use clap::Parser;
 
 //standard shortcuts
-use std::io::{BufRead, BufReader, Write};
 use std::process::Stdio;
 
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Forward game instance reports from the app to stdout.
-fn drain_game_instance_reports(report_receiver: &mut IoReceiver<GameInstanceReport>)
-{
-    while let Some(report) = report_receiver.try_recv()
-    {
-        let report_ser = serde_json::to_string(&report).expect("failed serializing game instance report");
-        let _ = std::io::stdout().write(report_ser.as_bytes());
-        let _ = std::io::stdout().write("\n".as_bytes());
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn monitor_for_game_instance_reports(mut report_receiver: ResMut<IoReceiver<GameInstanceReport>>)
-{
-    drain_game_instance_reports(&mut report_receiver);
-}
-
-//-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Parser, Debug)]
@@ -140,60 +115,22 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
 pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
 {
     // get game launch pack
-    let launch_pack = args.launch_pack;
-    let game_id = launch_pack.game_id;
+    let game_id = args.launch_pack.game_id;
     tracing::info!(game_id, "game instance process started");
 
     // prepare game app
-    let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
+    let (report_sender, report_receiver) = new_io_channel::<GameInstanceReport>();
     let (command_sender, command_receiver) = new_io_channel::<GameInstanceCommand>();
 
-    let mut app = game_instance_setup(
+    let app = game_instance_setup(
             game_factory,
-            launch_pack,
+            args.launch_pack,
             report_sender,
             command_receiver,
         ).expect("failed setting up game instance");
 
-    // spawn thread for monitoring input commands
-    std::thread::spawn(
-        move ||
-        {
-            let mut stdin_reader = BufReader::new(std::io::stdin());
-            let mut line = String::new();
-
-            loop
-            {
-                // read the next stdin
-                line.clear();
-                let _ = stdin_reader.read_line(&mut line);
-
-                if line.is_empty()
-                {
-                    let _ = command_sender.send(GameInstanceCommand::Abort);
-                    tracing::error!(game_id, "received null value at stdin, aborting game");
-                    return;
-                }
-
-                // deserialize command
-                let command = serde_json::de::from_str::<GameInstanceCommand>(&line).expect("failed deserializing command");
-                tracing::info!(game_id, ?command, "received game instance command");
-
-                // forward to app
-                if command_sender.send(command).is_err() { break; }
-            }
-        }
-    );
-
-    // add system for marshalling game instance reports to the parent process
-    app.insert_resource(report_receiver.clone())
-        .add_systems(Last, monitor_for_game_instance_reports);
-
-    // run the app to completion
-    app.run();
-
-    // drain any lingering game instance reports
-    drain_game_instance_reports(&mut report_receiver);
+    // run the app
+    run_app_in_child_process(game_id, app, command_sender, report_receiver, GameInstanceCommand::Abort);
 
     tracing::info!(game_id, "game instance process finished");
 }
