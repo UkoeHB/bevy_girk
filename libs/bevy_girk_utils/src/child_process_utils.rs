@@ -39,7 +39,7 @@ fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver
 /// Manage a child process.
 /// - Spawns a tokio task for managing the child process. Items received from `stdin_receiver` will be serialized
 ///   to JSON and forwarded to the child's `stdin`.
-/// - Spawns a tokio task for monitoring the child process `stdout`. Lines received from the child's `stdout`
+/// - Spawns a tokio task for monitoring the child process's `stdout`. Lines received from the child's `stdout`
 ///   will be deserialized from JSON and passed to the `stdout_handler` callback. If that callback returns `Some`
 ///   (e.g. on receipt of a 'process aborted' message), then the contained result will be returned from the task. The
 ///   possible results are true/false to indicate if the task closed 'normally'.

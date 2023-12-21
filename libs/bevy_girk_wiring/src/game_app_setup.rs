@@ -195,6 +195,7 @@ pub fn prepare_game_app_network(
 ///   client transports will be added to the app and the user must manually move the client transport into their client app.
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
+//todo: 'backend' is wrong term here?
 pub fn prepare_game_app_backend(
     game_app            : &mut App,
     game_fw_config      : GameFWConfig,

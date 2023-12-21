@@ -160,6 +160,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
 /// - Sets up the client framework.
 /// - Sets up replication.
 /// - Sets up the renet client.
+//todo: 'backend' is wrong term here?
 pub fn prepare_client_app_backend(
     client_app       : &mut App,
     client_fw_config : ClientFWConfig,
