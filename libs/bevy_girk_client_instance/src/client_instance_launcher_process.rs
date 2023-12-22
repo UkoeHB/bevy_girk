@@ -10,7 +10,6 @@ use clap::Parser;
 //standard shortcuts
 use std::fmt::Debug;
 use std::process::Stdio;
-use std::sync::Arc;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -33,12 +32,12 @@ pub struct ClientInstanceLauncherProcess<S: enfync::Handle + Debug + Send + Sync
     /// Path to the game app binary.
     path: String,
     /// Spawner for internal async tasks.
-    spawner: Arc<S>,
+    spawner: S,
 }
 
 impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherProcess<S>
 {
-    pub fn new(path: String, spawner: Arc<S>) -> Self
+    pub fn new(path: String, spawner: S) -> Self
     {
         Self{ path, spawner }
     }
@@ -83,7 +82,7 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherIm
 
         // manage the process
         let (process_handle, _stdout_handle) = manage_child_process(
-                &*self.spawner,
+                &self.spawner,
                 game_id,
                 child_process,
                 command_receiver,
