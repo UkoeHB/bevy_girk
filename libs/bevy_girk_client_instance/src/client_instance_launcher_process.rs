@@ -8,7 +8,9 @@ use bevy_kot_utils::*;
 use clap::Parser;
 
 //standard shortcuts
+use std::fmt::Debug;
 use std::process::Stdio;
+use std::sync::Arc;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -26,21 +28,23 @@ pub struct ClientInstanceCli
 
 /// Launch a client instance in a new process on the current machine.
 #[derive(Debug)]
-pub struct ClientInstanceLauncherProcess
+pub struct ClientInstanceLauncherProcess<S: enfync::Handle + Debug + Send + Sync + 'static>
 {
-    /// Path to the client app binary.
+    /// Path to the game app binary.
     path: String,
+    /// Spawner for internal async tasks.
+    spawner: Arc<S>,
 }
 
-impl ClientInstanceLauncherProcess
+impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherProcess<S>
 {
-    pub fn new(path: String) -> Self
+    pub fn new(path: String, spawner: Arc<S>) -> Self
     {
-        Self{ path }
+        Self{ path, spawner }
     }
 }
 
-impl ClientInstanceLauncherImpl for ClientInstanceLauncherProcess
+impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherImpl for ClientInstanceLauncherProcess<S>
 {
     fn launch(
         &self,
@@ -79,6 +83,7 @@ impl ClientInstanceLauncherImpl for ClientInstanceLauncherProcess
 
         // manage the process
         let (process_handle, _stdout_handle) = manage_child_process(
+                &*self.spawner,
                 game_id,
                 child_process,
                 command_receiver,

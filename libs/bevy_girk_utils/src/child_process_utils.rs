@@ -3,7 +3,6 @@
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
-use enfync::{AdoptOrDefault, Handle};
 use serde::{Serialize, Deserialize};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
@@ -48,6 +47,7 @@ fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver
 ///
 /// This is designed for compatibility with [`run_app_in_child_process()`].
 pub fn manage_child_process<I, O>(
+    spawner            : &impl enfync::Handle,
     id                 : u64,
     mut child_process  : tokio::process::Child,
     mut stdin_receiver : IoReceiver<I>,
@@ -64,8 +64,7 @@ where
     let mut child_stdout_reader = tokio::io::BufReader::new(child_stdout);
 
     // manage process
-    let tokio_spawner = enfync::builtin::native::TokioHandle::adopt_or_default();
-    let process_handle = tokio_spawner.spawn(
+    let process_handle = spawner.spawn(
         async move
         {
             loop
@@ -123,7 +122,7 @@ where
     );
 
     // monitor process outputs
-    let stdout_handle = tokio_spawner.spawn(
+    let stdout_handle = spawner.spawn(
         async move
         {
             let mut buf = String::default();
