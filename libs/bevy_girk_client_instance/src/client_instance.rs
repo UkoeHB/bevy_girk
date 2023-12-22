@@ -1,8 +1,6 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
-use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -15,7 +13,7 @@ use bevy_kot_utils::*;
 #[derive(Debug)]
 pub struct ClientInstance
 {
-    /// The client instance's game id.
+    /// The game id of the game the client instance is connected to.
     game_id: u64,
     /// Join handle for the client instance (used to detect status of the instance).
     instance_handle: enfync::PendingResult<bool>,
@@ -40,7 +38,7 @@ impl ClientInstance
         self.game_id
     }
 
-    /// Check if instance is running.
+    /// Check if the instance is running.
     pub fn is_running(&mut self) -> bool
     {
         self.try_get().is_none()

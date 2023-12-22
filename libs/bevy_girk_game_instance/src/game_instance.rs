@@ -55,7 +55,7 @@ impl GameInstance
         self.game_id
     }
 
-    /// Check if instance is running.
+    /// Check if the instance is running.
     pub fn is_running(&mut self) -> bool
     {
         self.try_get().is_none()

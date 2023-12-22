@@ -1,6 +1,6 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_game_fw::*;
+use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
@@ -16,7 +16,7 @@ use bevy_kot_utils::*;
 pub(crate) struct ClientRunnerState
 {
     /// Expected protocol ids for new connect tokens.
-    pub(crate) expected_protocol_id: u64,
+    pub(crate) protocol_id: u64,
     /// This game's id.
     pub(crate) game_id: u64,
     /// Sends reports to the instance's owner.
@@ -40,11 +40,11 @@ pub fn client_instance_setup(
 {
     // add client to app
     let game_id = start_info.game_id;
-    let (mut client_app, expected_protocol_id) = client_factory.new_game(token, start_info)?;
+    let (mut client_app, protocol_id) = client_factory.new_client(token, start_info)?;
 
     // make runner state
     let runner_state = ClientRunnerState{
-            expected_protocol_id,
+            protocol_id,
             game_id,
             report_sender,
             command_receiver,

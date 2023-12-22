@@ -1,5 +1,5 @@
 [package]
-name = "bevy_girk_game_instance"
+name = "bevy_girk_client_instance"
 version.workspace = true
 edition.workspace = true
 
@@ -18,8 +18,9 @@ serde_json     = { workspace = true }
 serde_with     = { workspace = true }
 tracing        = { workspace = true }
 
-bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
-bevy_girk_utils   = { path = "../bevy_girk_utils" }
+bevy_girk_game_fw       = { path = "../bevy_girk_game_fw" }
+bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
+bevy_girk_utils         = { path = "../bevy_girk_utils" }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 clap = { version = "4.4", default-features = false, features = [ "std", "derive" ] }

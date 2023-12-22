@@ -1,20 +1,18 @@
 //local shortcuts
 use crate::*;
+use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy::prelude::*;
 use bevy_kot_utils::*;
 use clap::Parser;
-use enfync::{AdoptOrDefault, Handle};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
 //standard shortcuts
-use std::io::{BufRead, BufReader, Write};
 use std::process::Stdio;
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// CLI parameters for launching a client instance in a child process.
 #[derive(Parser, Debug)]
 pub struct ClientInstanceCli
 {
@@ -67,7 +65,7 @@ impl ClientInstanceLauncherImpl for ClientInstanceLauncherProcess
             return ClientInstance::new(game_id, enfync::PendingResult::make_ready(false));
         };
 
-        let Ok(mut child_process) = tokio::process::Command::new(&self.path)
+        let Ok(child_process) = tokio::process::Command::new(&self.path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .args(["-T", token_ser.as_str()])
@@ -126,12 +124,12 @@ pub fn process_client_launcher(args: ClientInstanceCli, factory: ClientFactory)
     let (report_sender, report_receiver) = new_io_channel::<ClientInstanceReport>();
     let (command_sender, command_receiver) = new_io_channel::<ClientInstanceCommand>();
 
-    let Ok(app) = client_instance_setup(
+    let app = client_instance_setup(
             factory,
             args.token,
             args.start_info,
-            command_receiver,
             report_sender,
+            command_receiver,
         ).expect("failed setting up client instance");
 
     // run the app

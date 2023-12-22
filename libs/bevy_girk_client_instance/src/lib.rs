@@ -8,8 +8,6 @@ mod handle_command_incoming;
 mod setup;
 
 #[cfg(not(target_family = "wasm"))]
-mod client_instance_launcher_local;
-#[cfg(not(target_family = "wasm"))]
 mod client_instance_launcher_process;
 
 //API exports
@@ -21,7 +19,5 @@ pub use crate::client_instance_report::*;
 pub(crate) use crate::handle_command_incoming::*;
 pub use crate::setup::*;
 
-#[cfg(not(target_family = "wasm"))]
-pub use crate::client_instance_launcher_local::*;
 #[cfg(not(target_family = "wasm"))]
 pub use crate::client_instance_launcher_process::*;

@@ -1,5 +1,7 @@
 //local shortcuts
 use crate::*;
+use bevy_girk_game_instance::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy_kot_utils::*;
@@ -9,6 +11,7 @@ use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Trait for [`ClientInstanceLauncher`].
 pub trait ClientInstanceLauncherImpl: Debug + Send + Sync
 {
     fn launch(
@@ -22,6 +25,10 @@ pub trait ClientInstanceLauncherImpl: Debug + Send + Sync
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Launches client instances.
+///
+/// The launcher implementation is type-erased. This is useful if you want to plug-and-play different launchers without
+/// modifying the code that owns the launcher.
 #[derive(Debug)]
 pub struct ClientInstanceLauncher
 {
@@ -30,11 +37,13 @@ pub struct ClientInstanceLauncher
 
 impl ClientInstanceLauncher
 {
+    /// Make a new launcher.
     pub fn new<L: ClientInstanceLauncherImpl + 'static>(launcher: L) -> Self
     {
         Self{ launcher: Box::new(launcher) }
     }
 
+    /// Launch a client instance using the internal launcher implementation.
     pub fn launch(
         &self,
         token                   : ServerConnectToken,

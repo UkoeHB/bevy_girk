@@ -52,7 +52,7 @@ pub fn manage_child_process<I, O>(
     mut child_process  : tokio::process::Child,
     mut stdin_receiver : IoReceiver<I>,
     mut stdout_handler : impl FnMut(O) -> Option<bool> + Send + Sync + 'static,
-) -> (enfync::PendingResult<()>, enfync::PendingResult<bool>)
+) -> (enfync::PendingResult<bool>, enfync::PendingResult<bool>)
 where
     I: Debug + Serialize + Send + Sync + 'static,
     O: for<'de> Deserialize<'de> + Send + Sync + 'static
@@ -80,25 +80,25 @@ where
                         {
                             tracing::warn!(id, "failed serializing input, aborting");
                             let _ = child_process.kill().await;
-                            return;
+                            return false;
                         };
                         if let Err(err) = child_stdin_writer.write(input_ser.as_bytes()).await
                         {
                             tracing::warn!(id, ?err, "failed sending input, aborting");
                             let _ = child_process.kill().await;
-                            return;
+                            return false;
                         }
                         if let Err(err) = child_stdin_writer.write("\n".as_bytes()).await
                         {
                             tracing::warn!(id, ?err, "failed sending input, aborting");
                             let _ = child_process.kill().await;
-                            return;
+                            return false;
                         }
                         if let Err(err) = child_stdin_writer.flush().await
                         {
                             tracing::warn!(id, ?err, "failed sending input, aborting");
                             let _ = child_process.kill().await;
-                            return;
+                            return false;
                         }
                         tracing::trace!(id, ?input, "forwarded input to process");
                     }
@@ -107,7 +107,7 @@ where
                     _ = child_process.wait() =>
                     {
                         tracing::trace!(id, "process closed");
-                        return;
+                        return true;
                     }
 
                     // catch errors
@@ -115,7 +115,7 @@ where
                     {
                         tracing::warn!(id, "failed unexpectedly, aborting");
                         let _ = child_process.kill().await;
-                        return;
+                        return false;
                     }
                 }
             }

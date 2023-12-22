@@ -1,4 +1,5 @@
 //local shortcuts
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// A command that may be sent into a client instance.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ClientInstanceCommand
 {

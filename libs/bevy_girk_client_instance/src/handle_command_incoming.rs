@@ -1,5 +1,6 @@
 //local shortcuts
 use crate::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::app::AppExit;
@@ -13,17 +14,17 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 fn handle_command_abort(
-    runner_state : Res<GameRunnerState>,
+    runner_state : Res<ClientRunnerState>,
     mut app_exit : EventWriter<AppExit>,
 ){
-    // send game aborted report
+    // send client aborted report
     if let Err(_) = runner_state.report_sender.send(ClientInstanceReport::Aborted(runner_state.game_id))
     {
-        tracing::error!(runner_state.game_id, "failed sending game abort message");
-        panic!("failed sending game abort message");  //panic so the game instance result is 'error'
+        tracing::error!(runner_state.game_id, "failed sending client abort message");
+        panic!("failed sending client abort message");  //panic so the client instance result is 'error'
     }
 
-    // exit the game
+    // exit the client
     // WARNING: we assume sending AppExit guarantees the app will clean up all its resources and shut down; if that
     //          guarantee does not hold, we should panic instead
     app_exit.send(AppExit{});
@@ -56,7 +57,7 @@ fn handle_command(world: &mut World, command: ClientInstanceCommand)
 /// Returns `false` when aborted.
 pub(crate) fn handle_command_incoming(world: &mut World)
 {
-    // handle game instance commands
+    // handle client instance commands
     while let Some(command) = world.resource_mut::<ClientRunnerState>().command_receiver.try_recv()
     {
         // handle the command
