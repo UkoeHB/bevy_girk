@@ -1,6 +1,7 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
 use bevy_girk_client_fw::*;
+use bevy_girk_client_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
@@ -294,8 +295,9 @@ fn launch_game(
 
     // users 1, 2 make game clients
     // - we only make the cores here, no client skins
-    let (mut client_app1, _, _) = make_game_client_core(get_test_protocol_id(), connect1, start1.clone());
-    let (mut client_app2, _, _) = make_game_client_core(get_test_protocol_id(), connect2, start2.clone());
+    let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
+    let (mut client_app1, _) = client_factory.new_client(connect1, start1.clone()).unwrap();
+    let (mut client_app2, _) = client_factory.new_client(connect2, start2.clone()).unwrap();
 
 
     // tick clients until the game is fully initialized
@@ -408,7 +410,8 @@ fn integration_reconnect_gameclient_restart()
 
 
     // remake game client 1
-    let (mut client_app1, _, _) = make_game_client_core(get_test_protocol_id(), connect, start1);
+    let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
+    let (mut client_app1, _) = client_factory.new_client(connect, start1).unwrap();
 
 
     // tick clients until the game is fully initialized for the reconnected client
@@ -544,7 +547,8 @@ fn integration_reconnect_userclient_restart()
     assert_eq!(id, game_id);
 
     // remake game client 1
-    let (mut client_app1, _, _) = make_game_client_core(get_test_protocol_id(), connect1, start1);
+    let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
+    let (mut client_app1, _) = client_factory.new_client(connect1, start1).unwrap();
 
 
     // tick clients until the game is fully initialized for the reconnected client

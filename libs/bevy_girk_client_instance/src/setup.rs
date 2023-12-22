@@ -31,7 +31,7 @@ pub(crate) struct ClientRunnerState
 /// - Makes a new client app configured for use in a client instance.
 /// - When you run the app, it will continue updating until manually shut down.
 pub fn client_instance_setup(
-    client_factory   : ClientFactory,
+    client_factory   : &mut ClientFactory,
     token            : ServerConnectToken,
     start_info       : GameStartInfo,
     report_sender    : IoSender<ClientInstanceReport>,

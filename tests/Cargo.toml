@@ -23,6 +23,7 @@ url                = { workspace = true }
 
 bevy_girk_backend_public  = { path = "../libs/bevy_girk_backend_public" }
 bevy_girk_client_fw       = { path = "../libs/bevy_girk_client_fw" }
+bevy_girk_client_instance = { path = "../libs/bevy_girk_client_instance" }
 bevy_girk_game_fw         = { path = "../libs/bevy_girk_game_fw" }
 bevy_girk_game_hub_server = { path = "../libs/bevy_girk_game_hub_server" }
 bevy_girk_game_instance   = { path = "../libs/bevy_girk_game_instance" }

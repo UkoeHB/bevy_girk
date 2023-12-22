@@ -1,5 +1,6 @@
 //local shortcuts
 use bevy_girk_client_fw::*;
+use bevy_girk_client_instance::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_utils::*;
@@ -157,11 +158,9 @@ fn game_instance_launcher_demo()
 
         // make client core
         // - we only make the core here, no client skin
-        let (
-                client_app,
-                player_input_sender,
-                _player_id
-            ) = make_game_client_core(get_test_protocol_id(), connect_token, start_info);
+        let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
+        let (client_app, _) = client_factory.new_client(connect_token, start_info).unwrap();
+        let player_input_sender = client_factory.player_input.take();
 
         client_apps.push(client_app);
         if let Some(player_input_sender) = player_input_sender

@@ -1,6 +1,7 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
 use bevy_girk_client_fw::*;
+use bevy_girk_client_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
@@ -333,16 +334,13 @@ fn basic_server_integration()
 
     // users 1, 2 make game clients
     // - we only make the cores here, no client skins
-    let (
-            mut client_app1,
-            Some(player_input_sender1),
-            Some(player1_id)
-        ) = make_game_client_core(get_test_protocol_id(), connect1, start1) else { panic!(""); };
-    let (
-            mut client_app2,
-            Some(player_input_sender2),
-            Some(player2_id)
-        ) = make_game_client_core(get_test_protocol_id(), connect2, start2) else { panic!(""); };
+    let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
+    let (mut client_app1, _) = client_factory.new_client(connect1, start1).unwrap();
+    let player1_id = client_factory.player_id.take().unwrap();
+    let player_input_sender1 = client_factory.player_input.take().unwrap();
+    let (mut client_app2, _) = client_factory.new_client(connect2, start2).unwrap();
+    let player2_id = client_factory.player_id.take().unwrap();
+    let player_input_sender2 = client_factory.player_input.take().unwrap();
 
 
     // tick user clients until the game is fully initialized
