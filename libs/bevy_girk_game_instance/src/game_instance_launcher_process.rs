@@ -112,7 +112,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
 /// Launch a game inside a standalone process.
 ///
 /// Reads [`GameInstanceCommand`]s from `stdin` and writes [`GameInstanceReport`]s to `stdout`.
-pub fn process_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
+pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
 {
     // get game launch pack
     let game_id = args.launch_pack.game_id;

@@ -114,7 +114,7 @@ impl ClientInstanceLauncherImpl for ClientInstanceLauncherProcess
 /// Launch a client inside a standalone process.
 ///
 /// Reads [`ClientInstanceCommand`]s from `stdin` and writes [`ClientInstanceReport`]s to `stdout`.
-pub fn process_client_launcher(args: ClientInstanceCli, factory: &mut ClientFactory)
+pub fn inprocess_client_launcher(args: ClientInstanceCli, factory: &mut ClientFactory)
 {
     // get client launch pack
     let game_id = args.start_info.game_id;
