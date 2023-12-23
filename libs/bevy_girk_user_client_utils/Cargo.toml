@@ -1,0 +1,22 @@
+[package]
+name = "bevy_girk_user_client_utils"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+test    = false
+doctest = false
+
+[dependencies]
+bevy            = { version = "0.12", default-features = false }
+bevy_fn_plugin  = { workspace = true }
+bevy_kot_derive = { workspace = true }
+bevy_kot_ecs    = { workspace = true }
+bevy_kot_utils  = { workspace = true }
+enfync          = { workspace = true }
+tracing         = { workspace = true }
+
+bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
+bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }
+bevy_girk_game_instance   = { path = "../bevy_girk_game_instance" }
+bevy_girk_utils           = { path = "../bevy_girk_utils" }
