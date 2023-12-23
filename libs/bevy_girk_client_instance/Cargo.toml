@@ -11,6 +11,7 @@ doctest = false
 bevy           = { version = "0.12", default-features = false }
 bevy_kot_ecs   = { workspace = true }
 bevy_kot_utils = { workspace = true }
+bevy_renet     = { workspace = true }
 bevy_simplenet = { workspace = true }
 enfync         = { workspace = true }
 serde          = { workspace = true }

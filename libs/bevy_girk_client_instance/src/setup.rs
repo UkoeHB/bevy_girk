@@ -11,6 +11,15 @@ use bevy_kot_utils::*;
 
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn request_new_connect_token(runner: Res<ClientRunnerState>)
+{
+    let _ = runner.report_sender.send(ClientInstanceReport::RequestConnectToken);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Resource)]
 pub(crate) struct ClientRunnerState
@@ -53,7 +62,13 @@ pub fn client_instance_setup(
     // prepare app
     client_app
         .insert_resource(runner_state)
-        .add_systems(First, handle_command_incoming);
+        .add_systems(First, handle_command_incoming)
+        .add_systems(PreUpdate,
+            //todo: run this on a timer while disconnected
+            request_new_connect_token
+                .run_if(bevy_renet::client_just_disconnected())
+                .after(bevy_renet::RenetReceive)
+        );
 
     // return the app
     Ok(client_app)
