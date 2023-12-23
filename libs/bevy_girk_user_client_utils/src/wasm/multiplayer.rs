@@ -37,6 +37,7 @@ impl ClientMonitorImpl for ClientMonitorMultiplayerWasm
 
 //-------------------------------------------------------------------------------------------------------------------
 
+#[derive(Debug, Clone)]
 pub struct MultiPlayerLauncherConfigWasm<S>(std::marker::PhantomData<S>);
 
 //-------------------------------------------------------------------------------------------------------------------

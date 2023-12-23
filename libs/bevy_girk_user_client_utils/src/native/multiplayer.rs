@@ -10,6 +10,7 @@ use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::fmt::Debug;
+use std::sync::Arc;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -55,11 +56,11 @@ impl ClientMonitorImpl for ClientMonitorMultiplayerNative
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Config for launching a multiplayer client on native targets.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiPlayerLauncherConfigNative<S: HandleReqs>
 {
     /// Getter for task spawner.
-    pub spawner_fn: Box<dyn TaskSpawnerGetterFn<S>>,
+    pub spawner_fn: Arc<dyn TaskSpawnerGetterFn<S>>,
     /// Path to the client instance binary.
     pub client_instance_path: String,
 }

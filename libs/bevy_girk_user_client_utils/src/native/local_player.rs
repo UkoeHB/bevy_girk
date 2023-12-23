@@ -10,6 +10,7 @@ use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::fmt::Debug;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -66,11 +67,11 @@ impl ClientMonitorImpl for ClientMonitorLocalNative
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Config for launching a local single-player client on native targets.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LocalPlayerLauncherConfigNative<S: HandleReqs>
 {
     /// Getter for task spawner.
-    pub spawner_fn: Box<dyn TaskSpawnerGetterFn<S>>,
+    pub spawner_fn: Arc<dyn TaskSpawnerGetterFn<S>>,
     /// Path to the game instance binary.
     pub game_instance_path: String,
     /// Path to the client instance binary.

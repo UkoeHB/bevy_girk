@@ -50,6 +50,7 @@ impl<S> ClientMonitorImpl for ClientMonitorLocalWasm<S>
 
 //-------------------------------------------------------------------------------------------------------------------
 
+#[derive(Debug, Clone)]
 pub struct LocalPlayerLauncherConfigWasm<S>(std::marker::PhantomData<S>);
 
 //-------------------------------------------------------------------------------------------------------------------
