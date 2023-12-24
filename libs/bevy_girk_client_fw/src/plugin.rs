@@ -43,21 +43,6 @@ fn poststartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Manually check progress because iyes_progress does this check in the `Last` schedule...
-fn manually_check_progress<S: States>(next_state: S) -> impl FnMut(Res<ProgressCounter>, ResMut<NextState<S>>)
-{
-    move |progress, mut state|
-    {
-        let progress_complete = progress.progress_complete();
-        if progress_complete.done >= progress_complete.total {
-            state.set(next_state.clone());
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Client startup plugin.
 #[bevy_plugin]
 pub fn ClientFWStartupPlugin(app: &mut App)
@@ -134,6 +119,8 @@ pub fn ClientFWTickPlugin(app: &mut App)
     app.add_plugins(
             ProgressPlugin::new(ClientInitializationState::InProgress)
                 .continue_to(ClientInitializationState::Done)
+                // we check progress in PostUpdate so initialization progress can be collected and networked immediately
+                .check_progress_in(PostUpdate)
         );
 
     app.configure_sets(Update,
@@ -175,13 +162,13 @@ pub fn ClientFWTickPlugin(app: &mut App)
     // FWEND
     app.add_systems(PostUpdate,
             (
-                manually_check_progress::<ClientInitializationState>(ClientInitializationState::Done)
-                    .run_if(in_state(ClientInitializationState::InProgress)),
                 apply_state_transition::<ClientInitializationState>,
                 update_initialization_cache.run_if(in_state(ClientFWMode::Init)),
                 send_initialization_progress_report.run_if(in_state(ClientFWMode::Init)),
                 dispatch_client_packets,
-            ).chain().in_set(ClientFWTickSetPrivate::FWEnd)
+            ).chain()
+                .in_set(ClientFWTickSetPrivate::FWEnd)
+                .after(iyes_progress::CheckProgressSet)
         );
 
 

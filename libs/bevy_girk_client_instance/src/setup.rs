@@ -15,6 +15,7 @@ use bevy_kot_utils::*;
 
 fn request_new_connect_token(runner: Res<ClientRunnerState>)
 {
+    tracing::info!("requesting new connect token");
     let _ = runner.report_sender.send(ClientInstanceReport::RequestConnectToken);
 }
 
