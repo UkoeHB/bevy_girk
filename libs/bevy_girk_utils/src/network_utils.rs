@@ -65,10 +65,11 @@ impl From<SendOrdered> for EventType
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameServerSetupConfig
 {
-    pub protocol_id     : u64,
-    pub expire_seconds  : u64,
-    pub timeout_seconds : i32,
-    pub server_ip       : Ipv6Addr,
+    pub protocol_id         : u64,
+    pub expire_secs         : u64,
+    pub server_timeout_secs : i32,
+    pub client_timeout_secs : i32,
+    pub server_ip           : Ipv6Addr,
 }
 
 impl GameServerSetupConfig
@@ -80,8 +81,9 @@ impl GameServerSetupConfig
     {
         Self {
             protocol_id: 0u64,
-            expire_seconds: 10u64,
-            timeout_seconds: 5i32,
+            expire_secs: 10u64,
+            server_timeout_secs: 5i32,
+            client_timeout_secs: 15i32,
             server_ip: Ipv6Addr::LOCALHOST,
         }
     }
@@ -128,16 +130,17 @@ pub fn new_connect_token_native(
     client_id    : u64,
 ) -> Result<ServerConnectToken, ()>
 {
-    let token =  ConnectToken::generate(
+    let mut token =  ConnectToken::generate(
         current_time,
         meta.server_config.protocol_id,
-        meta.server_config.expire_seconds,
+        meta.server_config.expire_secs,
         client_id,
-        meta.server_config.timeout_seconds,
+        meta.server_config.server_timeout_secs,
         meta.server_addresses.clone(),
         None,
         &meta.auth_key,
     ).map_err(|_|())?;
+    token.timeout_seconds = meta.server_config.client_timeout_secs;
 
     Ok(ServerConnectToken::Native{ bytes: connect_token_to_bytes(&token)? })
 }

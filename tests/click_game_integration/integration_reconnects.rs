@@ -97,10 +97,11 @@ fn make_click_game_test_configs(game_ticks_per_sec: Ticks, game_num_ticks: Ticks
 
     // server setup config
     let server_setup_config = GameServerSetupConfig{
-            protocol_id     : test_protocol_id,
-            expire_seconds  : 10u64,
-            timeout_seconds : 1i32,  //very short for this test
-            server_ip       : Ipv6Addr::LOCALHOST,
+            protocol_id         : test_protocol_id,
+            expire_secs         : 10u64,
+            server_timeout_secs : 1i32,  //very short for this test
+            client_timeout_secs : 15i32,
+            server_ip           : Ipv6Addr::LOCALHOST,
         };
 
     // game framework config
