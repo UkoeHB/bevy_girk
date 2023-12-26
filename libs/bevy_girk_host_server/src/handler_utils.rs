@@ -221,19 +221,19 @@ pub(crate) fn try_connect_user_to_game(
     user_server         : &HostUserServer,
 ) -> bool
 {
-    // get the user's environment
-    let Some(user_env) = users_cache.get_user_env(user_id)
-    else { tracing::trace!(user_id, "failed connecting user, user is unknown"); return false; };
-
     // check if the user is already connected to a game
     if let Some(UserState::InGame(_)) = users_cache.get_user_state(user_id)
     { tracing::warn!(user_id, "trying to connect a user, but user is already in-game"); return true; };
+
+    // get the user's environment
+    let Some(user_env) = users_cache.get_user_env(user_id)
+    else { tracing::trace!(user_id, "failed connecting user, user is unknown"); return false; };
 
     // get start info
     let Some((game_id, connect, start)) = ongoing_games_cache.get_user_start_info(user_id, user_env)
     else { tracing::trace!(user_id, "trying to connect a user, user is not in a game"); return false; };
 
-    // send game connect info to user
+    // send game start info to user
     if let Err(_) = user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect, start: start.clone() })
     { tracing::error!(user_id, "failed sending game start notification"); }
 
