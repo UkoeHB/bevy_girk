@@ -67,11 +67,10 @@ fn game_instance_factory_demo()
 
     // server setup config
     let server_setup_config = GameServerSetupConfig{
-            protocol_id         : get_test_protocol_id(),
-            expire_secs         : 10u64,
-            server_timeout_secs : 5i32,
-            client_timeout_secs : 15i32,
-            server_ip           : Ipv6Addr::LOCALHOST,
+            protocol_id  : get_test_protocol_id(),
+            expire_secs  : 10u64,
+            timeout_secs : 5i32,
+            server_ip    : Ipv6Addr::LOCALHOST,
         };
 
     // game framework config

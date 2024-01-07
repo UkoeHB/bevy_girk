@@ -65,11 +65,16 @@ impl From<SendOrdered> for EventType
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameServerSetupConfig
 {
-    pub protocol_id         : u64,
-    pub expire_secs         : u64,
-    pub server_timeout_secs : i32,
-    pub client_timeout_secs : i32,
-    pub server_ip           : Ipv6Addr,
+    /// Protocol id for server/client compatibility.
+    pub protocol_id: u64,
+    /// How long connect tokens should live before expiring.
+    pub expire_secs: u64,
+    /// Internal connection timeout for clients and servers.
+    pub timeout_secs: i32,
+    /// The server's IP address.
+    ///
+    /// The server port will be auto-selected.
+    pub server_ip: Ipv6Addr,
 }
 
 impl GameServerSetupConfig
@@ -82,8 +87,7 @@ impl GameServerSetupConfig
         Self {
             protocol_id: 0u64,
             expire_secs: 10u64,
-            server_timeout_secs: 5i32,
-            client_timeout_secs: 15i32,
+            timeout_secs: 5i32,
             server_ip: Ipv6Addr::LOCALHOST,
         }
     }
@@ -130,17 +134,16 @@ pub fn new_connect_token_native(
     client_id    : u64,
 ) -> Result<ServerConnectToken, ()>
 {
-    let mut token =  ConnectToken::generate(
+    let token =  ConnectToken::generate(
         current_time,
         meta.server_config.protocol_id,
         meta.server_config.expire_secs,
         client_id,
-        meta.server_config.server_timeout_secs,
+        meta.server_config.timeout_secs,
         meta.server_addresses.clone(),
         None,
         &meta.auth_key,
     ).map_err(|_|())?;
-    token.timeout_seconds = meta.server_config.client_timeout_secs;
 
     Ok(ServerConnectToken::Native{ bytes: connect_token_to_bytes(&token)? })
 }
