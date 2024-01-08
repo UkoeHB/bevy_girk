@@ -135,7 +135,7 @@ where
                     Ok(_) =>
                     {
                         let Ok(output) = serde_json::de::from_str::<O>(&buf)
-                        else { tracing::warn!(id, "failed deserializing process output"); return false; };
+                        else { tracing::warn!(id, ?buf, "failed deserializing process output"); return false; };
 
                         if let Some(result) = (stdout_handler)(output) { return result; }
                     }
