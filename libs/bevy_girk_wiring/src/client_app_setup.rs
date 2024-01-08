@@ -141,8 +141,11 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //message receiving
         .add_systems(PreUpdate,
             (
+                // reinitialize when disconnected and not at game end
+                // - at game end the server will shut down, we don't want to reinitialize in that case
                 reinitialize_client
-                    .run_if(bevy_renet::client_just_disconnected()),
+                    .run_if(bevy_renet::client_just_disconnected())
+                    .run_if(not(in_state(ClientFWMode::End))),
                 receive_server_messages
                     .run_if(bevy_renet::client_connected())
             )
