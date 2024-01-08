@@ -35,9 +35,9 @@ pub enum AimedMsg
 pub struct GameMessage
 {
     /// Message
-    pub message : AimedMsg,
+    pub message: AimedMsg,
     /// Number of ticks elapsed in the game framework.
-    pub ticks   : Ticks,
+    pub ticks: Ticks,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

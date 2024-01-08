@@ -7,11 +7,13 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_repair::*;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
 
 //standard shortcuts
 use std::net::SocketAddr;
+use std::time::Duration;
 use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -85,7 +87,7 @@ pub fn prepare_game_app_framework(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Set up `bevy_replicon` in a game app.
-pub fn prepare_game_app_replication(game_app: &mut App)
+pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration)
 {
     // depends on game framework
 
@@ -97,8 +99,14 @@ pub fn prepare_game_app_replication(game_app: &mut App)
             ReplicationPlugins
                 .build()
                 .disable::<ClientPlugin>()
-                .set( ServerPlugin::new(TickPolicy::EveryFrame) )
+                .set( ServerPlugin{
+                    tick_policy: TickPolicy::EveryFrame,
+                    update_timeout,
+                })
         )
+        //enable replication repair for reconnects
+        //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
+        .add_plugins(RepliconRepairPluginServer)
         //prepare message channels
         .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
@@ -122,6 +130,7 @@ pub fn prepare_game_app_replication(game_app: &mut App)
                 .before(bevy_replicon::prelude::ServerSet::Send)
         )
         //log server events and errors
+        //- note that these will be logged out of order, since we need to collect both receive and send events and errors
         .add_systems(Last, (log_server_events, log_transport_errors).chain());
 }
 
@@ -206,7 +215,7 @@ pub fn prepare_game_app_backend(
 ) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
     prepare_game_app_framework(game_app, game_fw_config, game_fw_initializer);
-    prepare_game_app_replication(game_app);
+    prepare_game_app_replication(game_app, Duration::from_secs((game_server_config.timeout_secs * 2).min(1i32) as u64));
     let (native_meta, wasm_meta) = prepare_game_app_network(game_app, game_server_config, native_count, wasm_count);
 
     (native_meta, wasm_meta)

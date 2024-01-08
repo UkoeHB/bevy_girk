@@ -126,7 +126,7 @@ fn raw_localhost_network_demo(num_players: usize)
     // prepare game server app
     let mut game_server_app = App::new();
     prepare_game_app_framework(&mut game_server_app, game_fw_config, game_fw_initializer);
-    prepare_game_app_replication(&mut game_server_app);
+    prepare_game_app_replication(&mut game_server_app, std::time::Duration::from_secs(10));
     prepare_game_app_core(&mut game_server_app, game_initializer);
 
 

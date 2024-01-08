@@ -128,6 +128,7 @@ pub fn GameTickPlugin(app: &mut App)
                 notify_game_mode_all,
                 set_game_end_flag,
             )
+                .chain()
         );
 }
 

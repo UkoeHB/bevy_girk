@@ -8,9 +8,11 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_repair::*;
 use iyes_progress::*;
 
 //standard shortcuts
+
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -92,6 +94,9 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .add_plugins(ReplicationPlugins
             .build()
             .disable::<ServerPlugin>())
+        //enable replication repair for reconnects
+        //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
+        .add_plugins(RepliconRepairPluginClient{ cleanup_prespawns: true })
         //prepare message channels
         .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
@@ -133,6 +138,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
         //log transport errors
+        //- note that these will be logged out of order, since we need to collect both receive and send errors
         .add_systems(Last, log_transport_errors)
         ;
 }

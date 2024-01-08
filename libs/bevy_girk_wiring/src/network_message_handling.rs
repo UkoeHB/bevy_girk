@@ -6,7 +6,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_renet::renet::{ClientId, RenetClient, RenetServer, transport::NetcodeClientTransport};
-use bevy_replicon::network_event::{EventChannel, EventType};
+use bevy_replicon::network_event::{ClientEventChannel, EventType, ServerEventChannel};
 
 //standard shortcuts
 use std::marker::PhantomData;
@@ -37,9 +37,9 @@ pub(crate) struct EventConfig<T, P: SendPolicyConfig>
 pub(crate) fn send_server_messages(
     server_output_receiver : Res<Receiver<GamePacket>>,
     mut server             : ResMut<RenetServer>,
-    unreliable_channel     : Res<EventChannel<EventConfig<GamePacket, SendUnreliable>>>,
-    unordered_channel      : Res<EventChannel<EventConfig<GamePacket, SendUnordered>>>,
-    ordered_channel        : Res<EventChannel<EventConfig<GamePacket, SendOrdered>>>,
+    unreliable_channel     : Res<ServerEventChannel<EventConfig<GamePacket, SendUnreliable>>>,
+    unordered_channel      : Res<ServerEventChannel<EventConfig<GamePacket, SendUnordered>>>,
+    ordered_channel        : Res<ServerEventChannel<EventConfig<GamePacket, SendOrdered>>>,
 ){
     while let Some(game_packet) = server_output_receiver.try_recv()
     {
@@ -63,9 +63,9 @@ pub(crate) fn receive_server_messages(
     mut client          : ResMut<RenetClient>,
     client_transport    : Res<NetcodeClientTransport>,
     client_input_sender : Res<Sender<GamePacket>>,
-    unreliable_channel  : Res<EventChannel<EventConfig<GamePacket, SendUnreliable>>>,
-    unordered_channel   : Res<EventChannel<EventConfig<GamePacket, SendUnordered>>>,
-    ordered_channel     : Res<EventChannel<EventConfig<GamePacket, SendOrdered>>>,
+    unreliable_channel  : Res<ServerEventChannel<EventConfig<GamePacket, SendUnreliable>>>,
+    unordered_channel   : Res<ServerEventChannel<EventConfig<GamePacket, SendUnordered>>>,
+    ordered_channel     : Res<ServerEventChannel<EventConfig<GamePacket, SendOrdered>>>,
 ){
     // receive ordered messages first since they are probably oldest
     let client_id = client_transport.client_id() as ClientIdType;
@@ -93,9 +93,9 @@ pub(crate) fn receive_server_messages(
 pub(crate) fn send_client_messages(
     client_output_receiver : Res<Receiver<ClientPacket>>,
     mut client             : ResMut<RenetClient>,
-    unreliable_channel     : Res<EventChannel<EventConfig<ClientPacket, SendUnreliable>>>,
-    unordered_channel      : Res<EventChannel<EventConfig<ClientPacket, SendUnordered>>>,
-    ordered_channel        : Res<EventChannel<EventConfig<ClientPacket, SendOrdered>>>,
+    unreliable_channel     : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnreliable>>>,
+    unordered_channel      : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnordered>>>,
+    ordered_channel        : Res<ClientEventChannel<EventConfig<ClientPacket, SendOrdered>>>,
 ){
     while let Some(client_packet) = client_output_receiver.try_recv()
     {
@@ -116,9 +116,9 @@ pub(crate) fn send_client_messages(
 pub(crate) fn receive_client_messages(
     mut server          : ResMut<RenetServer>,
     server_input_sender : Res<Sender<ClientPacket>>,
-    unreliable_channel  : Res<EventChannel<EventConfig<ClientPacket, SendUnreliable>>>,
-    unordered_channel   : Res<EventChannel<EventConfig<ClientPacket, SendUnordered>>>,
-    ordered_channel     : Res<EventChannel<EventConfig<ClientPacket, SendOrdered>>>,
+    unreliable_channel  : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnreliable>>>,
+    unordered_channel   : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnordered>>>,
+    ordered_channel     : Res<ClientEventChannel<EventConfig<ClientPacket, SendOrdered>>>,
     registered_clients  : Res<ClientEntityMap>
 ){
     for client_id in server.clients_id()

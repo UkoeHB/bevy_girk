@@ -152,7 +152,9 @@ fn make_test_game_hub_server(
 
 fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 {
-    Readiness::new(game_init_progress.single().0).is_ready()
+    let progress = game_init_progress.single().0;
+    tracing::debug!(progress, "game init progress");
+    Readiness::new(progress).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -185,7 +187,8 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     }
 
     // check that we have left the init phase as expected
-    std::thread::sleep(Duration::from_millis(50));  //wait for server to finalize initialization
+    tracing::debug!("waiting for server to initialize clients");
+    std::thread::sleep(Duration::from_millis(150));  //wait for server to finalize initialization
 
     for client in game_clients.iter_mut()
     {
@@ -375,8 +378,8 @@ fn integration_reconnect_gameclient_restart()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
 
     // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(10);
-    let game_num_ticks     = Ticks(15);
+    let game_ticks_per_sec = Ticks(20);
+    let game_num_ticks     = Ticks(30);
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),
@@ -387,7 +390,7 @@ fn integration_reconnect_gameclient_restart()
     let user1_id = 0u128;
     let user2_id = 1u128;
     let (_, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
-    let (_, user2)        = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
+    let (_, user2) = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
 
 
     // launch game
@@ -440,8 +443,8 @@ fn integration_reconnect_gameclient_reconnect()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
 
     // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(10);
-    let game_num_ticks     = Ticks(15);
+    let game_ticks_per_sec = Ticks(20);
+    let game_num_ticks     = Ticks(30);
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),
@@ -481,7 +484,6 @@ fn integration_reconnect_gameclient_reconnect()
     // reconnect game client app
     let connect_pack = RenetClientConnectPack::new(get_test_protocol_id(), connect).unwrap();
     client_app1.insert_resource(connect_pack);
-    setup_renet_client(&mut client_app1.world).unwrap();
 
 
     // tick clients until the game is fully initialized for the reconnected client
@@ -509,8 +511,8 @@ fn integration_reconnect_userclient_restart()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
 
     // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(10);
-    let game_num_ticks     = Ticks(15);
+    let game_ticks_per_sec = Ticks(20);
+    let game_num_ticks     = Ticks(30);
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),
