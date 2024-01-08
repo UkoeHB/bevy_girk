@@ -62,7 +62,7 @@ pub(crate) fn handle_user_incoming(world: &mut World)
         {
             HostUserServerEvent::Report(report)      => handle_user_connection_report(world, user_id, report),
             HostUserServerEvent::Msg(msg)            => handle_user_message(world, user_id, msg),
-            HostUserServerEvent::Request(req, token) => handle_user_request(world, token, req),
+            HostUserServerEvent::Request(token, req) => handle_user_request(world, token, req),
         }
     }
 }
