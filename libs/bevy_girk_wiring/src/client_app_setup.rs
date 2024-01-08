@@ -35,6 +35,38 @@ fn track_connection_state(client: Res<bevy_renet::renet::RenetClient>) -> Progre
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn track_replication_initialized(
+    In(just_connected) : In<bool>,
+    mut initialized    : Local<bool>,
+    client             : Res<bevy_renet::renet::RenetClient>,
+    tick               : Res<RepliconTick>
+) -> Progress
+{
+    // reset initialized
+    if just_connected
+    || client.is_disconnected()
+    || client.is_connecting()
+    {
+        *initialized = false;
+    }
+
+    // set initialized
+    if client.is_connected()
+    && tick.is_changed()
+    {
+        *initialized = true;
+    }
+
+    match *initialized
+    {
+        false => Progress{ done: 0, total: 1 },
+        true  => Progress{ done: 1, total: 1 },
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFWCommand>>)
 {
     if let Err(_) = client_fw_command_sender.send(ClientFWCommand::ReInitialize)
@@ -122,13 +154,26 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .configure_sets(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
         //track connection status
         .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
+        //track whether the first replication message post-connect has been received
+        //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
+        //        when a client connects (for reconnects we assume the user did not despawn that entity, or spawned
+        //        some other entity/entities)
+        .add_systems(Update,
+            (
+                bevy_renet::client_just_connected()
+                    .pipe(track_replication_initialized)
+                    .track_progress()
+            )
+                .in_set(ClientFWLoadingSet)
+        )
         //message sending
         .add_systems(PostUpdate,
             //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
             //      better to drop those messages, but need to do a full analysis to establish a precise framework
             //      for handling reconnects and resynchronization
             //      - one problem here is the client sends ClientInitProgress messages while loading, and dropping
-            //        those may cause problems (resend them periodically?)
+            //        those may cause problems (resend them periodically?) (waiting for replication init solves this,
+            //        the client won't be fully initialized until after connected)
             //note that bevy_replicon events also internally pile up while waiting, but since we add a layer between
             //  our events and replicon here, and both systems currently use client_connected(), there should not be
             //  any race conditions where messages can hang as replicon events

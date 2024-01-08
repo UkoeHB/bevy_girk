@@ -3,6 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -46,11 +47,16 @@ pub(crate) fn setup_game_fw_state(world: &mut World)
         entity_commands.insert(ClientStateFull{ client_state, readiness: Readiness::default() });
     }
 
-    world.insert_resource(ClientEntityMap::new(client_entity_map));
+    world.insert_resource(crate::ClientEntityMap::new(client_entity_map));
     world.insert_resource(GameMessageBuffer::default());
 
     // add misc resources
     setup_misc_resources(world);
+
+    // spawn empty replicated entity to ensure replication initializes in the first world tick
+    // - This way clients can reliably check for the first replication message as part of initialization progress
+    //   even if the game does not replicate entities at startup.
+    world.spawn(Replication);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
