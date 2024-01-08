@@ -76,8 +76,6 @@ pub struct LocalPlayerLauncherConfigNative<S: HandleReqs>
     pub game_instance_path: String,
     /// Path to the client instance binary.
     pub client_instance_path: String,
-    /// Configuration for the client instance.
-    pub client_instance_config: ClientInstanceConfig,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -122,7 +120,7 @@ pub(crate) fn launch_local_player_client_native<S: HandleReqs>(
             let mut client_instance = client_launcher.launch(
                     token,
                     start_info,
-                    config.client_instance_config,
+                    ClientInstanceConfig{ reconnect_interval_secs: 100000u32 }, //we don't reconnect for localplayer
                     client_command_receiver,
                     client_report_sender
                 );
