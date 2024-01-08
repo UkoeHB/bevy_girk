@@ -21,6 +21,8 @@ pub struct ClientInstanceCli
     token: ServerConnectToken,
     #[arg(short = 'S', value_parser = parse_json::<GameStartInfo>)]
     start_info: GameStartInfo,
+    #[arg(short = 'C', value_parser = parse_json::<ClientInstanceConfig>)]
+    config: ClientInstanceConfig,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -49,6 +51,7 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherIm
         &self,
         token            : ServerConnectToken,
         start_info       : GameStartInfo,
+        config           : ClientInstanceConfig,
         command_receiver : IoReceiver<ClientInstanceCommand>,
         report_sender    : IoSender<ClientInstanceReport>,
     ) -> ClientInstance
@@ -67,12 +70,19 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> ClientInstanceLauncherIm
             tracing::warn!(game_id, "failed serializing client start info for client instance process");
             return ClientInstance::new(game_id, enfync::PendingResult::make_ready(false));
         };
+        let Ok(config_ser) = serde_json::to_string(&config)
+        else
+        {
+            tracing::warn!(game_id, "failed serializing client instance config for client instance process");
+            return ClientInstance::new(game_id, enfync::PendingResult::make_ready(false));
+        };
 
         let Ok(child_process) = tokio::process::Command::new(&self.path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .args(["-T", token_ser.as_str()])
             .args(["-S", start_info_ser.as_str()])
+            .args(["-C", config_ser.as_str()])
             .spawn()
         else
         {
@@ -132,6 +142,7 @@ pub fn inprocess_client_launcher(args: ClientInstanceCli, factory: &mut ClientFa
             factory,
             args.token,
             args.start_info,
+            args.config,
             report_sender,
             command_receiver,
         ).expect("failed setting up client instance");

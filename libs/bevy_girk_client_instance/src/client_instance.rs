@@ -1,9 +1,22 @@
 //local shortcuts
 
 //third-party shortcuts
+use serde::{Deserialize, Serialize};
 
 //standard shortcuts
 
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Configuration details for client instances.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientInstanceConfig
+{
+    /// Defines the interval for re-requesting connect tokens after a disconnect.
+    ///
+    /// This is needed in case of bugs or network issues that cause an older connect token request to fail.
+    pub reconnect_interval_secs: u32,
+}
 
 //-------------------------------------------------------------------------------------------------------------------
 

@@ -192,8 +192,8 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
 
 /// Set up a renet client and enable renet reconnects.
 ///
-/// Note that this method simply waits for a new connect pack to appear, then sets up a renet client. For requesting
-/// a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
+/// Note that this method simply waits for a new connect pack to appear, then sets up a renet client.
+/// For requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
 {
     client_app.insert_resource(connect_pack)

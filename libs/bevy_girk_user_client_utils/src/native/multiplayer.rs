@@ -63,6 +63,8 @@ pub struct MultiPlayerLauncherConfigNative<S: HandleReqs>
     pub spawner_fn: Arc<dyn TaskSpawnerGetterFn<S>>,
     /// Path to the client instance binary.
     pub client_instance_path: String,
+    /// Configuration for the client instance.
+    pub client_instance_config: ClientInstanceConfig,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -89,6 +91,7 @@ pub fn launch_multiplayer_client_native<S: HandleReqs>(
             let mut client_instance = client_launcher.launch(
                     token,
                     start_info,
+                    config.client_instance_config,
                     command_receiver,
                     client_report_sender
                 );

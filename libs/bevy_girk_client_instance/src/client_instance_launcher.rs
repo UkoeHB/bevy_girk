@@ -18,6 +18,7 @@ pub trait ClientInstanceLauncherImpl: Debug + Send + Sync
         &self,
         token                   : ServerConnectToken,
         start_info              : GameStartInfo,
+        config                  : ClientInstanceConfig,
         client_command_receiver : IoReceiver<ClientInstanceCommand>,
         client_report_sender    : IoSender<ClientInstanceReport>,
     ) -> ClientInstance;
@@ -48,11 +49,12 @@ impl ClientInstanceLauncher
         &self,
         token                   : ServerConnectToken,
         start_info              : GameStartInfo,
+        config                  : ClientInstanceConfig,
         client_command_receiver : IoReceiver<ClientInstanceCommand>,
         client_report_sender    : IoSender<ClientInstanceReport>,
     ) -> ClientInstance
     {
-        self.launcher.launch(token, start_info, client_command_receiver, client_report_sender)
+        self.launcher.launch(token, start_info, config, client_command_receiver, client_report_sender)
     }
 }
 
