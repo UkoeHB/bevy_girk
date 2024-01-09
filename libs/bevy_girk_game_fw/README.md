@@ -7,7 +7,7 @@ PRECONDITION: the following must be initialized by the user
 - `Res<Receiver<ClientPacket>>`
 
 PRECONDITION: the following must be initialized by the game core that uses this game framework
-- `Res<ClientMessageHandler>`
+- `Res<ClientRequestHandler>`
 
 INTERFACE: for game framework manager
 - the client message channels should be connected in some way to the corresponding channels in the client framework

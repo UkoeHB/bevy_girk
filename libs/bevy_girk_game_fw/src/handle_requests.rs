@@ -36,7 +36,7 @@ fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_handle_client_request(handler: &ClientMessageHandler, world: &mut World, client_packet: &ClientPacket) -> bool
+fn try_handle_client_request(handler: &ClientRequestHandler, world: &mut World, client_packet: &ClientPacket) -> bool
 {
     handler.try_call(world, client_packet)
 }
@@ -48,7 +48,7 @@ fn try_handle_client_request(handler: &ClientMessageHandler, world: &mut World, 
 pub(crate) fn handle_requests(world: &mut World)
 {
     let client_packets     = world.remove_resource::<Receiver<ClientPacket>>().unwrap();
-    let client_msg_handler = world.remove_resource::<ClientMessageHandler>().unwrap();
+    let client_msg_handler = world.remove_resource::<ClientRequestHandler>().unwrap();
 
     while let Some(client_packet) = client_packets.try_recv()
     {

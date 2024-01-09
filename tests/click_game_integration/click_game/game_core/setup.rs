@@ -62,7 +62,7 @@ pub(crate) fn setup_game_state(world: &mut World)
 /// Initializes the game input handler.
 pub(crate) fn setup_game_input_handler(mut commands: Commands)
 {
-    commands.insert_resource::<ClientMessageHandler>(ClientMessageHandler::new(try_handle_game_core_input));
+    commands.insert_resource::<ClientRequestHandler>(ClientRequestHandler::new(try_handle_game_core_input));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

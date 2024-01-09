@@ -84,7 +84,7 @@ fn handle_client_input_gameover(world: &mut World, req: GameRequest, id: ClientI
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Handle a message sent to the game from a client.
-/// Note: this function is meant to be injected to a [`ClientMessageHandler`].
+/// Note: this function is meant to be injected to a [`ClientRequestHandler`].
 pub(crate) fn try_handle_game_core_input(world: &mut World, client_packet: &ClientPacket) -> bool
 {
     let Some(request) = deserialize_client_request(client_packet) else { return false; };

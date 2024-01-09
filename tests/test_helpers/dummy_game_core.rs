@@ -46,7 +46,7 @@ fn try_end_dummy_game(
 pub fn DummyGameCorePlugin(app: &mut App)
 {
     // core request handler
-    app.insert_resource(ClientMessageHandler::new( | _: &mut World, _: &ClientPacket | -> bool { false } ));
+    app.insert_resource(ClientRequestHandler::new( | _: &mut World, _: &ClientPacket | -> bool { false } ));
 
     // startup check
     app.add_systems(PreStartup, prestartup_check);

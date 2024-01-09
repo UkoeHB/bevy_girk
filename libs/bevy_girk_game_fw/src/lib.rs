@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 //module tree
-mod client_message_handler;
+mod client_request_handler;
 mod client_state;
 mod game_end_flag;
 mod game_fw_config;
@@ -22,7 +22,7 @@ mod types_common;
 mod types_game_fw;
 
 //API exports
-pub use crate::client_message_handler::*;
+pub use crate::client_request_handler::*;
 pub use crate::client_state::*;
 pub use crate::game_end_flag::*;
 pub use crate::game_fw_config::*;

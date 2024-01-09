@@ -26,7 +26,8 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de>>(client_p
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Wraps an injected function for handling client messages.
+/// Wraps an injected function for handling client requests.
+///
 /// Example:
 /**
 ```no_run
@@ -43,16 +44,16 @@ fn handler(world: &mut World, client_packet: ClientPacket) -> bool
 ```
 */
 #[derive(Resource)]
-pub struct ClientMessageHandler
+pub struct ClientRequestHandler
 {
     handler: Box<dyn Fn(&mut World, &ClientPacket) -> bool + Sync + Send>
 }
 
-impl ClientMessageHandler
+impl ClientRequestHandler
 {
-    pub fn new(handler: impl Fn(&mut World, &ClientPacket) -> bool + Sync + Send + 'static) -> ClientMessageHandler
+    pub fn new(handler: impl Fn(&mut World, &ClientPacket) -> bool + Sync + Send + 'static) -> ClientRequestHandler
     {
-        ClientMessageHandler{ handler: Box::new(handler) }
+        ClientRequestHandler{ handler: Box::new(handler) }
     }
 
     pub fn try_call(&self, world: &mut World, client_packet: &ClientPacket) -> bool

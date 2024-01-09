@@ -15,14 +15,10 @@ use bevy_kot_utils::*;
 /// Validate resources that should exist before game startup.
 fn prestartup_check(world: &World)
 {
-    if !world.contains_resource::<GameFwConfig>()
-        { panic!("GameFwConfig is missing on startup!"); }
-    if !world.contains_resource::<GameFwInitializer>()
-        { panic!("GameFwInitializer is missing on startup!"); }
-    if !world.contains_resource::<Receiver<ClientPacket>>()
-        { panic!("Receiver<ClientPacket> is missing on startup!"); }
-    if !world.contains_resource::<Sender<GamePacket>>()
-        { panic!("Sender<GamePacket> is missing on startup!"); }
+    if !world.contains_resource::<GameFwConfig>()           { panic!("GameFwConfig is missing on startup!"); }
+    if !world.contains_resource::<GameFwInitializer>()      { panic!("GameFwInitializer is missing on startup!"); }
+    if !world.contains_resource::<Receiver<ClientPacket>>() { panic!("Receiver<ClientPacket> is missing on startup!"); }
+    if !world.contains_resource::<Sender<GamePacket>>()     { panic!("Sender<GamePacket> is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -31,8 +27,7 @@ fn prestartup_check(world: &World)
 /// Validate resources that should exist before game begins.
 fn poststartup_check(world: &World)
 {
-    if !world.contains_resource::<ClientMessageHandler>()
-        { panic!("ClientMessageHandler is missing on startup!"); }
+    if !world.contains_resource::<ClientRequestHandler>() { panic!("ClientRequestHandler is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
