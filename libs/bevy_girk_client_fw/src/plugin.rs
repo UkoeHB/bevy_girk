@@ -17,14 +17,14 @@ use iyes_progress::prelude::*;
 /// Validate resources that should exist before client startup.
 fn prestartup_check(world: &World)
 {
-    if !world.contains_resource::<ClientFWConfig>()
-        { panic!("ClientFWConfig is missing on startup!"); }
+    if !world.contains_resource::<ClientFwConfig>()
+        { panic!("ClientFwConfig is missing on startup!"); }
     if !world.contains_resource::<Receiver<GamePacket>>()
         { panic!("Receiver<GamePacket> is missing on startup!"); }
     if !world.contains_resource::<Sender<ClientPacket>>()
         { panic!("Sender<ClientPacket> is missing on startup!"); }
-    if !world.contains_resource::<Receiver<ClientFWCommand>>()
-        { panic!("Receiver<ClientFWCommand> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<ClientFwCommand>>()
+        { panic!("Receiver<ClientFwCommand> is missing on startup!"); }
 
     if !world.contains_resource::<Time>()
         { panic!("bevy::Time is missing on startup!"); }
@@ -45,10 +45,10 @@ fn poststartup_check(world: &World)
 
 /// Client startup plugin.
 #[bevy_plugin]
-pub fn ClientFWStartupPlugin(app: &mut App)
+pub fn ClientFwStartupPlugin(app: &mut App)
 {
     app.add_state::<ClientInitializationState>()
-        .add_state::<ClientFWMode>()
+        .add_state::<ClientFwMode>()
         .add_systems(PreStartup,
             (
                 prestartup_check,
@@ -72,18 +72,18 @@ pub fn ClientFWStartupPlugin(app: &mut App)
 ///
 /// This set is ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct ClientFWSet;
+pub struct ClientFwSet;
 
 /// Private client fw sets, these sandwich the public sets.
 ///
 /// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ClientFWTickSetPrivate
+pub enum ClientFwTickSetPrivate
 {
     /// In schedule `PreUpdate`.
-    FWStart,
+    FwStart,
     /// In schedule `PostUpdate`.
-    FWEnd
+    FwEnd
 }
 
 /// Public client fw sets.
@@ -92,7 +92,7 @@ pub enum ClientFWTickSetPrivate
 ///
 /// These sets are ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ClientFWTickSet
+pub enum ClientFwTickSet
 {
     Admin,
     Start,
@@ -108,13 +108,13 @@ pub enum ClientFWTickSet
 ///
 /// This set is modal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct ClientFWLoadingSet;
+pub struct ClientFwLoadingSet;
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client tick plugin.
 #[bevy_plugin]
-pub fn ClientFWTickPlugin(app: &mut App)
+pub fn ClientFwTickPlugin(app: &mut App)
 {
     app.add_plugins(
             ProgressPlugin::new(ClientInitializationState::InProgress)
@@ -125,18 +125,18 @@ pub fn ClientFWTickPlugin(app: &mut App)
 
     app.configure_sets(Update,
             (
-                ClientFWTickSet::Admin,
-                ClientFWTickSet::Start,
-                ClientFWTickSet::PreLogic,
-                ClientFWTickSet::Logic,
-                ClientFWTickSet::PostLogic,
-                ClientFWTickSet::End,
-            ).chain().in_set(ClientFWSet)
+                ClientFwTickSet::Admin,
+                ClientFwTickSet::Start,
+                ClientFwTickSet::PreLogic,
+                ClientFwTickSet::Logic,
+                ClientFwTickSet::PostLogic,
+                ClientFwTickSet::End,
+            ).chain().in_set(ClientFwSet)
         );
     app.configure_sets(Update,
-            ClientFWLoadingSet
+            ClientFwLoadingSet
                 .run_if(in_state(ClientInitializationState::InProgress))
-                .in_set(ClientFWSet)
+                .in_set(ClientFwSet)
         );
 
     // FWSTART
@@ -146,8 +146,8 @@ pub fn ClientFWTickPlugin(app: &mut App)
                 handle_commands,
                 handle_game_incoming,
                 apply_state_transition::<ClientInitializationState>,  //the client may have been commanded to reinitialize
-                apply_state_transition::<ClientFWMode>,
-            ).chain().in_set(ClientFWTickSetPrivate::FWStart)
+                apply_state_transition::<ClientFwMode>,
+            ).chain().in_set(ClientFwTickSetPrivate::FwStart)
         );
 
     // START
@@ -164,11 +164,11 @@ pub fn ClientFWTickPlugin(app: &mut App)
     app.add_systems(PostUpdate,
             (
                 apply_state_transition::<ClientInitializationState>,
-                update_initialization_cache.run_if(in_state(ClientFWMode::Init)),
-                send_initialization_progress_report.run_if(in_state(ClientFWMode::Init)),
+                update_initialization_cache.run_if(in_state(ClientFwMode::Init)),
+                send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
                 dispatch_client_packets,
             ).chain()
-                .in_set(ClientFWTickSetPrivate::FWEnd)
+                .in_set(ClientFwTickSetPrivate::FwEnd)
                 .after(iyes_progress::CheckProgressSet)
         );
 
@@ -186,10 +186,10 @@ pub fn ClientFWTickPlugin(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 #[bevy_plugin]
-pub fn ClientFWPlugin(app: &mut App)
+pub fn ClientFwPlugin(app: &mut App)
 {
-    app.add_plugins(ClientFWStartupPlugin)
-        .add_plugins(ClientFWTickPlugin);
+    app.add_plugins(ClientFwStartupPlugin)
+        .add_plugins(ClientFwTickPlugin);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -40,7 +40,7 @@ impl GameFactoryImpl for DummyGameFactory
         // prepare message channels
         let (client_packet_sender, client_packet_receiver)      = new_channel::<ClientPacket>();
         let (game_packet_sender, game_packet_receiver)          = new_channel::<GamePacket>();
-        let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFWCommand>();
+        let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFwCommand>();
 
         // make the client ready
         client_packet_sender.send(
@@ -48,7 +48,7 @@ impl GameFactoryImpl for DummyGameFactory
                         client_id   : 0 as ClientIdType,
                         send_policy : SendOrdered.into(),
                         message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                                message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
                             }))
                     }
             ).unwrap();
@@ -58,13 +58,13 @@ impl GameFactoryImpl for DummyGameFactory
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
             //setup game framework
-            .insert_resource(GameFWConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
+            .insert_resource(GameFwConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
             .insert_resource(client_packet_receiver)
             .insert_resource(game_packet_sender)
             //setup client framework
             .insert_resource(
-                ClientFWConfig::new( config.ticks_per_sec, 0 as ClientIdType )
+                ClientFwConfig::new( config.ticks_per_sec, 0 as ClientIdType )
             )
             .insert_resource(game_packet_receiver)
             .insert_resource(client_packet_sender)
@@ -72,15 +72,15 @@ impl GameFactoryImpl for DummyGameFactory
             //setup game core
             .insert_resource(DummyGameDurationConfig{ max_ticks: config.game_duration_ticks })
             //add game framework
-            .add_plugins(GameFWPlugin)
+            .add_plugins(GameFwPlugin)
             //add client framework
-            .add_plugins(ClientFWPlugin)
+            .add_plugins(ClientFwPlugin)
             //add game
             .add_plugins(DummyGameCorePlugin)
             //add client
             .add_plugins(DummyClientCorePlugin)
             //configure execution flow
-            .configure_sets(Update, (GameFWSet, ClientFWSet).chain());
+            .configure_sets(Update, (GameFwSet, ClientFwSet).chain());
 
         // prepare dummy token meta
         let native_meta = Some(ConnectMetaNative::dummy());

@@ -26,8 +26,8 @@ fn try_handle_game_fw_message(world: &mut World, game_packet: &GamePacket) -> bo
 
     match msg
     {
-        GameFWMsg::CurrentGameFWMode(mode) => syscall(world, mode, handle_current_game_fw_mode),
-        GameFWMsg::PingResponse(ping_rsp)  => syscall(world, (ticks, ping_rsp), handle_ping_response),
+        GameFwMsg::CurrentGameFwMode(mode) => syscall(world, mode, handle_current_game_fw_mode),
+        GameFwMsg::PingResponse(ping_rsp)  => syscall(world, (ticks, ping_rsp), handle_ping_response),
     }
 
     true
@@ -49,7 +49,7 @@ pub(crate) fn handle_game_incoming(world: &mut World)
 {
     let game_packets     = world.remove_resource::<Receiver<GamePacket>>().unwrap();
     let game_msg_handler = world.remove_resource::<GameMessageHandler>().unwrap();
-    let this_client_id   = world.resource::<ClientFWConfig>().client_id();
+    let this_client_id   = world.resource::<ClientFwConfig>().client_id();
 
     while let Some(game_packet) = game_packets.try_recv()
     {

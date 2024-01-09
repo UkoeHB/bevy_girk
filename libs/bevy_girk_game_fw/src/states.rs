@@ -11,7 +11,7 @@ use serde::{Serialize, Deserialize};
 
 /// Game framework mode
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
-pub enum GameFWMode
+pub enum GameFwMode
 {
     #[default]
     Init,

@@ -31,7 +31,7 @@ fn prestartup_check(world: &World)
 
 fn try_end_dummy_game(
     duration_config : Res<DummyGameDurationConfig>,
-    game_fw_ticks   : Res<GameFWTicksElapsed>,
+    game_fw_ticks   : Res<GameFwTicksElapsed>,
     mut end_flag    : ResMut<GameEndFlag>
 ){
     if duration_config.max_ticks > game_fw_ticks.elapsed.ticks() { return; }

@@ -45,7 +45,7 @@ impl GameMessageBuffer
 
     /// Adds a game framework message to the buffer.
     pub fn add_fw_msg(&mut self,
-        message            : GameFWMsg,
+        message            : GameFwMsg,
         access_constraints : Vec<InfoAccessConstraint>,
         send_policy        : impl Into<EventType>
     ){
@@ -72,7 +72,7 @@ impl GameMessageBuffer
         self.buffer.push_back(
                 PendingGameMessage{
                         message: Bytes::from(
-                            ser_msg(&GameMessage{ ticks: self.ticks, message: AimedMsg::<GameFWMsg, _>::Core(message) })
+                            ser_msg(&GameMessage{ ticks: self.ticks, message: AimedMsg::<GameFwMsg, _>::Core(message) })
                         ),
                         access_constraints,
                         send_policy: send_policy.into()

@@ -104,7 +104,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: Ticks, game_num_ticks: Ticks
         };
 
     // game framework config
-    let game_fw_config = GameFWConfig::new(game_ticks_per_sec, max_init_ticks, Ticks(0));
+    let game_fw_config = GameFwConfig::new(game_ticks_per_sec, max_init_ticks, Ticks(0));
 
     // game duration config
     let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_num_ticks);

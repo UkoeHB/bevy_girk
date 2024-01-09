@@ -63,8 +63,8 @@ fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupCo
 /// Set up a game app with the `bevy_girk` game framework.
 pub fn prepare_game_app_framework(
     game_app            : &mut App,
-    game_fw_config      : GameFWConfig,
-    game_fw_initializer : GameFWInitializer,
+    game_fw_config      : GameFwConfig,
+    game_fw_initializer : GameFwInitializer,
 ){
     // prepare message channels
     let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
@@ -73,7 +73,7 @@ pub fn prepare_game_app_framework(
     // prepare server app
     game_app
         //setup components
-        .add_plugins(GameFWPlugin)
+        .add_plugins(GameFwPlugin)
         //game framework
         .insert_resource(game_fw_config)
         .insert_resource(game_fw_initializer)
@@ -118,14 +118,14 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
             receive_client_messages
                 .run_if(resource_exists::<RenetServer>())
                 .after(bevy_replicon::prelude::ServerSet::Receive)
-                .before(GameFWTickSetPrivate::FWStart)
+                .before(GameFwTickSetPrivate::FwStart)
         )
         // <- client logic is in Update
         //message sending
         .add_systems(PostUpdate,
             send_server_messages
                 .run_if(resource_exists::<RenetServer>())
-                .after(GameFWTickSetPrivate::FWEnd)
+                .after(GameFwTickSetPrivate::FwEnd)
                 .before(bevy_replicon::prelude::ServerSet::Send)
         )
         //log server events and errors
@@ -206,8 +206,8 @@ pub fn prepare_game_app_network(
 //todo: 'backend' is wrong term here?
 pub fn prepare_game_app_backend(
     game_app            : &mut App,
-    game_fw_config      : GameFWConfig,
-    game_fw_initializer : GameFWInitializer,
+    game_fw_config      : GameFwConfig,
+    game_fw_initializer : GameFwInitializer,
     game_server_config  : GameServerSetupConfig,
     native_count        : usize,
     wasm_count          : usize,

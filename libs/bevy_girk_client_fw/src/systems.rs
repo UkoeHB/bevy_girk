@@ -47,7 +47,7 @@ pub(crate) fn send_initialization_progress_report(
 
     // sent progress report
     client_message_buffer.add_fw_msg(
-            GameFWRequest::ClientInitProgress(initialization_progress_cache.progress().into()),
+            GameFwRequest::ClientInitProgress(initialization_progress_cache.progress().into()),
             SendOrdered
         );
 }
@@ -57,11 +57,11 @@ pub(crate) fn send_initialization_progress_report(
 /// Change client framework mode to 'init'.
 pub(crate) fn reinitialize_client_fw(
     mut client_initialization_state : ResMut<NextState<ClientInitializationState>>,
-    mut client_fw_mode              : ResMut<NextState<ClientFWMode>>
+    mut client_fw_mode              : ResMut<NextState<ClientFwMode>>
 ){
     tracing::info!("reinitializing client framework");
     client_initialization_state.set(ClientInitializationState::InProgress);
-    client_fw_mode.set(ClientFWMode::Init);
+    client_fw_mode.set(ClientFwMode::Init);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ pub(crate) fn reinitialize_client_fw(
 /// Request the current game framework mode.
 pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessageBuffer>)
 {
-    client_message_buffer.add_fw_msg(GameFWRequest::GameFWModeRequest, SendUnordered);
+    client_message_buffer.add_fw_msg(GameFwRequest::GameFwModeRequest, SendUnordered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessa
 pub(crate) fn dispatch_client_packets(
     mut client_message_buffer : ResMut<ClientMessageBuffer>,
     client_packet_sender      : Res<Sender<ClientPacket>>,
-    client_config             : Res<ClientFWConfig>
+    client_config             : Res<ClientFwConfig>
 ){
     for pending_client_message in client_message_buffer.drain()
     {

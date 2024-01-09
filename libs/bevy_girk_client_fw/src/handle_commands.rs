@@ -12,12 +12,12 @@ use bevy_kot_utils::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_client_fw_command(world: &mut World, client_command: &ClientFWCommand)
+fn handle_client_fw_command(world: &mut World, client_command: &ClientFwCommand)
 {
     match client_command
     {
-        ClientFWCommand::ReInitialize => syscall(world, (), handle_reinitialize_client_fw_command),
-        ClientFWCommand::None         => ()
+        ClientFwCommand::ReInitialize => syscall(world, (), handle_reinitialize_client_fw_command),
+        ClientFwCommand::None         => ()
     }
 }
 
@@ -27,7 +27,7 @@ fn handle_client_fw_command(world: &mut World, client_command: &ClientFWCommand)
 /// Handle client controller inputs.
 pub(crate) fn handle_commands(world: &mut World)
 {
-    let Some(client_fw_commands) = world.remove_resource::<Receiver<ClientFWCommand>>() else { return; };
+    let Some(client_fw_commands) = world.remove_resource::<Receiver<ClientFwCommand>>() else { return; };
 
     while let Some(command) = client_fw_commands.try_recv()
     {

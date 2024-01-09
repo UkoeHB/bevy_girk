@@ -22,10 +22,10 @@ pub struct PingResponse
 
 /// Messages that can be sent out of the game framework.
 #[derive(Debug, Serialize, Deserialize)]
-pub enum GameFWMsg
+pub enum GameFwMsg
 {
     /// The current game framework mode.
-    CurrentGameFWMode(GameFWMode),
+    CurrentGameFwMode(GameFwMode),
     /// Ping response to a ping request.
     PingResponse(PingResponse),
 }

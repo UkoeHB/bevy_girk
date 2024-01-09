@@ -12,7 +12,7 @@ use bevy::prelude::*;
 /// Initializer for client state entities.
 /// This resource is removed during app startup.
 #[derive(Resource, Default)]
-pub struct GameFWInitializer
+pub struct GameFwInitializer
 {
     pub clients: Vec<ClientState>
 }

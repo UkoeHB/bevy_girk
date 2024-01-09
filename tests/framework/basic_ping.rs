@@ -29,7 +29,7 @@ fn basic_ping()
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
                     message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                                message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
                         }))
                 }
         ).unwrap();
@@ -40,7 +40,7 @@ fn basic_ping()
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
                     message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                        message: AimedMsg::<_, ()>::Fw(GameFWRequest::PingRequest(
+                        message: AimedMsg::<_, ()>::Fw(GameFwRequest::PingRequest(
                             PingRequest{
                                     timestamp_ns: 0u64
                                 })
@@ -54,7 +54,7 @@ fn basic_ping()
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
-        .insert_resource(GameFWConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
         .insert_resource(client_packet_receiver)
         .insert_resource(game_packet_sender)
         //setup client framework
@@ -62,7 +62,7 @@ fn basic_ping()
         //setup game core
         .insert_resource(DummyGameDurationConfig{ max_ticks: Ticks(1) })
         //add game framework
-        .add_plugins(GameFWPlugin)
+        .add_plugins(GameFwPlugin)
         //add game
         .add_plugins(DummyGameCorePlugin)
         .run();
@@ -80,7 +80,7 @@ fn basic_ping()
         let AimedMsg::Fw(msg) = message.message else { panic!("did not receive fw message") };
 
         // try to extract ping response
-        let GameFWMsg::PingResponse(_) = msg else { continue; };
+        let GameFwMsg::PingResponse(_) = msg else { continue; };
 
         // success
         found_ping_response = true;

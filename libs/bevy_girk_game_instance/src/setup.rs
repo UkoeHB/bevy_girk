@@ -13,11 +13,11 @@ use bevy_kot_utils::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Depends on Res<GameFWConfig>.
+/// Depends on Res<GameFwConfig>.
 fn set_game_app_runner(app: &mut App)
 {
     // get tick rate
-    let ticks_per_sec = app.world.resource::<GameFWConfig>().ticks_per_sec();
+    let ticks_per_sec = app.world.resource::<GameFwConfig>().ticks_per_sec();
 
     // add runner
     app.add_plugins(bevy::app::ScheduleRunnerPlugin::run_loop(tps_to_duration(ticks_per_sec.0)));
@@ -58,7 +58,7 @@ pub(crate) struct GameRunnerState
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up a game app for a game instance.
-/// - Makes a new game app configured for use in a game instance. Depends on `GameFWConfig`.
+/// - Makes a new game app configured for use in a game instance. Depends on `GameFwConfig`.
 /// - When you run the app, it will continue updating until a game over report appears.
 pub fn game_instance_setup(
     game_factory     : GameFactory,

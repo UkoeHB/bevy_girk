@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// Game framework config
 #[derive(Resource, Debug, Copy, Clone, Serialize, Deserialize)]
-pub struct GameFWConfig
+pub struct GameFwConfig
 {
     /// Tick rate of the game.
     ticks_per_sec: Ticks,
@@ -22,17 +22,17 @@ pub struct GameFWConfig
     max_end_ticks: Ticks,
 }
 
-impl GameFWConfig
+impl GameFwConfig
 {
     /// New game framework config
     pub fn new(
         ticks_per_sec  : Ticks,
         max_init_ticks : Ticks,
         max_end_ticks  : Ticks,
-    ) -> GameFWConfig 
+    ) -> GameFwConfig 
     {
-        if ticks_per_sec == Ticks(0) { panic!("GameFWConfig: tick rate must be > 0!"); }
-        GameFWConfig{
+        if ticks_per_sec == Ticks(0) { panic!("GameFwConfig: tick rate must be > 0!"); }
+        GameFwConfig{
                 ticks_per_sec,
                 max_init_ticks,
                 max_end_ticks,

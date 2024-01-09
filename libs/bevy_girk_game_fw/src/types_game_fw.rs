@@ -13,16 +13,16 @@ use serde::{Serialize, Deserialize};
 
 /// The number of ticks that have occurred since the game began.
 #[derive(Resource, Default)]
-pub struct GameFWTicksElapsed
+pub struct GameFwTicksElapsed
 {
     pub elapsed: TicksElapsed
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// The game fw tick where `GameFWMode::End` was entered.
+/// The game fw tick where `GameFwMode::End` was entered.
 #[derive(Resource, Default)]
-pub struct GameFWEndTick(pub Option<Ticks>);
+pub struct GameFwEndTick(pub Option<Ticks>);
 
 //-------------------------------------------------------------------------------------------------------------------
 

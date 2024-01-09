@@ -61,7 +61,7 @@ fn raw_localhost_network_demo(num_players: usize)
     let game_play_ticks = Ticks(200);
 
     // game framework config
-    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
+    let game_fw_config = GameFwConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
 
     // game context
     let game_initializer = test_utils::prepare_game_initializer(
@@ -80,7 +80,7 @@ fn raw_localhost_network_demo(num_players: usize)
         let mut client_app = App::new();
 
         // set up client framework
-        let client_fw_config = ClientFWConfig::new(
+        let client_fw_config = ClientFwConfig::new(
                 ticks_per_sec,
                 client_id as ClientIdType,
             );
@@ -105,7 +105,7 @@ fn raw_localhost_network_demo(num_players: usize)
     }
 
     // make watcher client to demo non-player client with no replication
-    let client_fw_config = ClientFWConfig::new(
+    let client_fw_config = ClientFwConfig::new(
             ticks_per_sec,
             num_players as ClientIdType,
         );
@@ -141,7 +141,7 @@ fn raw_localhost_network_demo(num_players: usize)
         game_server_app.update();
 
         // expect that we have not left the init phase
-        assert_eq!(*game_server_app.world.resource::<State<GameFWMode>>(), GameFWMode::Init);
+        assert_eq!(*game_server_app.world.resource::<State<GameFwMode>>(), GameFwMode::Init);
 
         // update clients
         let mut num_inits = 0;
@@ -165,7 +165,7 @@ fn raw_localhost_network_demo(num_players: usize)
     std::thread::sleep(std::time::Duration::from_millis(15));
     game_server_app.update();  //one update to collect client inputs notifying completion
     game_server_app.update();  //one update to update the mode
-    assert_eq!(*game_server_app.world.resource::<State<GameFWMode>>(), GameFWMode::Game);
+    assert_eq!(*game_server_app.world.resource::<State<GameFwMode>>(), GameFwMode::Game);
 
     assert!(syscall(&mut game_server_app.world, (), game_is_initialized));
     for client in client_apps.iter_mut()
@@ -181,7 +181,7 @@ fn raw_localhost_network_demo(num_players: usize)
     }
 
     // tick until game over
-    while *game_server_app.world.resource::<State<GameFWMode>>() != GameFWMode::End
+    while *game_server_app.world.resource::<State<GameFwMode>>() != GameFwMode::End
     {
         game_server_app.update();
 

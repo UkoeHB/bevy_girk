@@ -19,7 +19,7 @@ use std::vec::Vec;
 
 struct GameStartupHelper
 {
-    fw_init      : GameFWInitializer,
+    fw_init      : GameFwInitializer,
     click_init   : ClickGameInitializer,
     clients      : Vec<(u128, ClientIdType)>,
     native_count : usize,
@@ -100,7 +100,7 @@ fn prepare_game_startup(
     let game_context = ClickGameContext::new(gen_rand128(), game_duration_config);
 
     Ok(GameStartupHelper{
-        fw_init    : GameFWInitializer{ clients: client_states },
+        fw_init    : GameFwInitializer{ clients: client_states },
         click_init : ClickGameInitializer{ game_context, players, watchers },
         clients,
         native_count,
@@ -168,7 +168,7 @@ fn prepare_client_start_pack(
 ) -> Result<ClickClientStartPack, ()>
 {
     // set up client framework
-    let client_fw_config = ClientFWConfig::new(ticks_per_sec, client_id);
+    let client_fw_config = ClientFwConfig::new(ticks_per_sec, client_id);
 
     // set up client config
     let click_client_initializer = click_client_initializer(game_initializer, client_id)?;
@@ -188,7 +188,7 @@ fn get_game_start_infos(
 {
     // extract data
     let game_initializer = app.world.resource::<ClickGameInitializer>();
-    let ticks_per_sec = app.world.resource::<GameFWConfig>().ticks_per_sec();
+    let ticks_per_sec = app.world.resource::<GameFwConfig>().ticks_per_sec();
 
     // make start infos for each client
     let mut start_infos = Vec::<GameStartInfo>::new();
@@ -220,7 +220,7 @@ fn get_game_start_infos(
 pub struct ClickGameFactoryConfig
 {
     pub server_setup_config  : GameServerSetupConfig,
-    pub game_fw_config       : GameFWConfig,
+    pub game_fw_config       : GameFwConfig,
     pub game_duration_config : GameDurationConfig,
 }
 
@@ -259,7 +259,7 @@ pub enum ClickClientInitializer
 pub struct ClickClientStartPack
 {
     /// Client framework config.
-    pub client_fw_config: ClientFWConfig,
+    pub client_fw_config: ClientFwConfig,
     /// Client initializer.
     pub click_client_initializer: ClickClientInitializer,
 }

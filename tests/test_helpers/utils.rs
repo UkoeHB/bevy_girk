@@ -22,7 +22,7 @@ pub fn add_game_over_flag(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn add_client(client_id: ClientIdType, game_fw_initializer: &mut GameFWInitializer)
+pub fn add_client(client_id: ClientIdType, game_fw_initializer: &mut GameFwInitializer)
 {
     // make client state
     let dummy_client_state =
@@ -40,16 +40,16 @@ pub fn add_client(client_id: ClientIdType, game_fw_initializer: &mut GameFWIniti
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn append_client(game_fw_initializer: &mut GameFWInitializer)
+pub fn append_client(game_fw_initializer: &mut GameFwInitializer)
 {
     add_client(game_fw_initializer.clients.len() as ClientIdType, game_fw_initializer);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn prepare_player_client_contexts(num_players: usize) -> GameFWInitializer
+pub fn prepare_player_client_contexts(num_players: usize) -> GameFwInitializer
 {
-    let mut game_fw_initializer = GameFWInitializer::default();
+    let mut game_fw_initializer = GameFwInitializer::default();
 
     for client_id in 0..num_players
     {
@@ -75,7 +75,7 @@ pub fn AddMockMessageChannelsPlugin(app: &mut App)
                         client_id   : client_id as ClientIdType,
                         send_policy : SendOrdered.into(),
                         message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                                message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
                             }))
                     }
             ).unwrap();
@@ -94,7 +94,7 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) + Send + 'static
 {
     move | mut app: App |
     {
-        app.add_systems(OnEnter(GameFWMode::End), add_game_over_flag);
+        app.add_systems(OnEnter(GameFwMode::End), add_game_over_flag);
 
         for _ in 0..num_ticks
         {

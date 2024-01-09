@@ -68,7 +68,7 @@ pub enum GameSet
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Game tick plugin. Depends on [GameFWPlugin] and [GameStartupPlugin].
+/// Game tick plugin. Depends on [GameFwPlugin] and [GameStartupPlugin].
 /// Configures system sets and adds basic administrative systems.
 #[bevy_plugin]
 pub fn GameTickPlugin(app: &mut App)
@@ -76,28 +76,28 @@ pub fn GameTickPlugin(app: &mut App)
     // GAME Tick systems (after initialization).
     app.configure_sets(Update,
             GameSet::PostInit
-                .run_if(not(in_state(GameFWMode::Init)))
+                .run_if(not(in_state(GameFwMode::Init)))
         );
 
     // GAME Prep systems.
     app.configure_sets(Update,
                 GameSet::Prep
-                    .run_if(in_state(GameFWMode::Game))
+                    .run_if(in_state(GameFwMode::Game))
                     .run_if(in_state(GameMode::Prep))
             );
 
     // GAME Play systems.
     app.configure_sets(Update,
                 GameSet::Play
-                    .run_if(in_state(GameFWMode::Game))
+                    .run_if(in_state(GameFwMode::Game))
                     .run_if(in_state(GameMode::Play))
             );
 
     // GAME GameOver systems.
-    //todo: this will only run in the short delay between entering 'game over' and the GameFWMode moving to 'End'
+    //todo: this will only run in the short delay between entering 'game over' and the GameFwMode moving to 'End'
     app.configure_sets(Update,
                 GameSet::GameOver
-                    .run_if(in_state(GameFWMode::Game))
+                    .run_if(in_state(GameFwMode::Game))
                     .run_if(in_state(GameMode::GameOver))
             );
 
@@ -113,7 +113,7 @@ pub fn GameTickPlugin(app: &mut App)
                 advance_prep_tick.in_set(GameSet::Prep),
                 advance_play_tick.in_set(GameSet::Play),
                 advance_game_over_tick.in_set(GameSet::GameOver),
-            ).chain().in_set(GameFWTickSet::Admin)
+            ).chain().in_set(GameFwTickSet::Admin)
         );
 
 

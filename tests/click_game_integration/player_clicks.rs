@@ -42,7 +42,7 @@ fn player_clicks()
     // prepare message channels
     let (client_packet_sender, client_packet_receiver)        = new_channel::<ClientPacket>();
     let (game_packet_sender, game_packet_receiver)            = new_channel::<GamePacket>();
-    let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFWCommand>();
+    let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFwCommand>();
     let (player_input_sender, player_input_reader)            = new_channel::<PlayerInput>();
 
     // make the client ready
@@ -51,7 +51,7 @@ fn player_clicks()
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
                     message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                            message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                            message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
                         }))
                 }
         ).unwrap();
@@ -74,25 +74,25 @@ fn player_clicks()
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
         .set_runner(make_test_runner(8))
-        .add_plugins(GameFWPlugin)
-        .add_plugins(ClientFWPlugin)
+        .add_plugins(GameFwPlugin)
+        .add_plugins(ClientFwPlugin)
         .add_plugins(GamePlugins)
         .add_plugins(ClientPlugins.build().disable::<GameReplicationPlugin>())
         .configure_sets(PreUpdate,
             (
-                GameFWTickSetPrivate::FWStart,
-                ClientFWTickSetPrivate::FWStart
+                GameFwTickSetPrivate::FwStart,
+                ClientFwTickSetPrivate::FwStart
             ).chain()
         )
-        .configure_sets(Update, (GameFWSet, ClientFWSet).chain())
+        .configure_sets(Update, (GameFwSet, ClientFwSet).chain())
         .configure_sets(PostUpdate,
             (
-                GameFWTickSetPrivate::FWEnd,
-                ClientFWTickSetPrivate::FWEnd,
+                GameFwTickSetPrivate::FwEnd,
+                ClientFwTickSetPrivate::FwEnd,
             ).chain()
         )
         //game framework
@@ -102,7 +102,7 @@ fn player_clicks()
         .insert_resource(game_packet_receiver)
         .insert_resource(client_packet_sender)
         .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFWConfig::new( ticks_per_sec, 0 as ClientIdType ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0 as ClientIdType ))
         //game
         .insert_resource(game_initializer)
         //client core

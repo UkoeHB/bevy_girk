@@ -30,7 +30,7 @@ pub struct GameMessage<T>
     /// Number of ticks elapsed in the game framework.
     pub ticks: Ticks,
     /// Message
-    pub message: AimedMsg<GameFWMsg, T>,
+    pub message: AimedMsg<GameFwMsg, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ pub struct GameMessage<T>
 pub struct ClientMessage<T>
 {
     /// Message
-    pub message: AimedMsg<GameFWRequest, T>,
+    pub message: AimedMsg<GameFwRequest, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

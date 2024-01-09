@@ -44,47 +44,47 @@ fn init_mode_is_over(
 
 /// Updates the game framework mode.
 pub(crate) fn update_game_fw_mode(
-    game_fw_config     : Res<GameFWConfig>,
-    game_ticks         : Res<GameFWTicksElapsed>,
+    game_fw_config     : Res<GameFwConfig>,
+    game_ticks         : Res<GameFwTicksElapsed>,
     client_readiness   : Query<&Readiness, With<ClientId>>,
     game_end_flag      : Res<GameEndFlag>,
-    current_game_mode  : Res<State<GameFWMode>>,
-    mut next_game_mode : ResMut<NextState<GameFWMode>>
+    current_game_mode  : Res<State<GameFwMode>>,
+    mut next_game_mode : ResMut<NextState<GameFwMode>>
 ){
     // 1. -> End mode
-    // a. early exit if we are already in GameFWMode::End
-    if *current_game_mode == GameFWMode::End { return; }
+    // a. early exit if we are already in GameFwMode::End
+    if *current_game_mode == GameFwMode::End { return; }
 
     // b. check mode -> End transition condition
     if game_end_flag.is_set()
     {
-        let next_mode = GameFWMode::End;
+        let next_mode = GameFwMode::End;
         next_game_mode.set(next_mode);
         tracing::info!(?next_mode, "updated game framework mode");
         return;
     }
 
     // 2. -> Game mode
-    // a. early exit if we are already in GameFWMode::Game
-    if *current_game_mode == GameFWMode::Game { return; }
+    // a. early exit if we are already in GameFwMode::Game
+    if *current_game_mode == GameFwMode::Game { return; }
 
     // b. check mode -> Game transition condition
     if init_mode_is_over(game_fw_config.max_init_ticks(), game_ticks.elapsed.ticks(), &client_readiness)
     {
-        let next_mode = GameFWMode::Game;
+        let next_mode = GameFwMode::Game;
         next_game_mode.set(next_mode);
         tracing::info!(?next_mode, "updated game framework mode");
         return;
     }
 
     // 3. -> Init mode
-    if *current_game_mode != GameFWMode::Init { panic!("Unexpected current game mode (should be GameFWMode::Init)!"); }
+    if *current_game_mode != GameFwMode::Init { panic!("Unexpected current game mode (should be GameFwMode::Init)!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increments the number of game framework ticks elapsed.
-pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFWTicksElapsed>)
+pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFwTicksElapsed>)
 {
     game_ticks.elapsed.advance();
 }
@@ -92,7 +92,7 @@ pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFWTicksElapsed>)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Resets the game message buffer for a new tick.
-pub(crate) fn reset_game_message_buffer(mut buffer: ResMut<GameMessageBuffer>, game_ticks: Res<GameFWTicksElapsed>)
+pub(crate) fn reset_game_message_buffer(mut buffer: ResMut<GameMessageBuffer>, game_ticks: Res<GameFwTicksElapsed>)
 {
     buffer.reset(game_ticks.elapsed.ticks());
 }
@@ -153,11 +153,11 @@ pub(crate) fn dispatch_messages_to_client(
 /// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
     In(client_id)           : In<ClientIdType>,
-    current_game_mode       : Res<State<GameFWMode>>,
+    current_game_mode       : Res<State<GameFwMode>>,
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
     game_message_buffer.add_fw_msg(
-            GameFWMsg::CurrentGameFWMode(**current_game_mode),
+            GameFwMsg::CurrentGameFwMode(**current_game_mode),
             vec![InfoAccessConstraint::Targets(vec![client_id])],
             SendOrdered
         );
@@ -167,11 +167,11 @@ pub(crate) fn notify_game_fw_mode_single(
 
 /// Notify all clients of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_all(
-    current_game_mode       : Res<State<GameFWMode>>,
+    current_game_mode       : Res<State<GameFwMode>>,
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
     game_message_buffer.add_fw_msg(
-            GameFWMsg::CurrentGameFWMode(**current_game_mode),
+            GameFwMsg::CurrentGameFwMode(**current_game_mode),
             vec![],
             SendOrdered
         );
@@ -180,7 +180,7 @@ pub(crate) fn notify_game_fw_mode_all(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Starts the 'end mode' countdown, which will end in closing the app.
-pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_end_tick: ResMut<GameFWEndTick>)
+pub(crate) fn start_end_countdown(game_ticks: Res<GameFwTicksElapsed>, mut game_end_tick: ResMut<GameFwEndTick>)
 {
     game_end_tick.0 = Some(game_ticks.elapsed.ticks());
 }
@@ -189,18 +189,18 @@ pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_
 
 /// Exits the app if all game end ticks have elapsed.
 ///
-/// If the max game end ticks equals zero, then the app will be exited in the same tick that `GameFWMode::End` is set.
+/// If the max game end ticks equals zero, then the app will be exited in the same tick that `GameFwMode::End` is set.
 //todo: consider exiting early if all clients have acked the game end state
 pub(crate) fn try_exit_app(
-    current_game_mode : Res<State<GameFWMode>>,
-    game_ticks        : Res<GameFWTicksElapsed>,
-    game_end_tick     : Res<GameFWEndTick>,
-    game_fw_config    : Res<GameFWConfig>,
+    current_game_mode : Res<State<GameFwMode>>,
+    game_ticks        : Res<GameFwTicksElapsed>,
+    game_end_tick     : Res<GameFwEndTick>,
+    game_fw_config    : Res<GameFwConfig>,
     mut app_exit      : EventWriter<AppExit>,
 ){
     // sanity check
-    if *current_game_mode != GameFWMode::End
-    { tracing::error!("tried to terminate game app but not in GameFWMode::End"); return; }
+    if *current_game_mode != GameFwMode::End
+    { tracing::error!("tried to terminate game app but not in GameFwMode::End"); return; }
 
     // get end tick
     let Some(end_tick) = game_end_tick.0

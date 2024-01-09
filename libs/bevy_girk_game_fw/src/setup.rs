@@ -15,8 +15,8 @@ use std::collections::HashMap;
 fn setup_misc_resources(world: &mut World)
 {
     world.insert_resource(GameEndFlag::default());
-    world.insert_resource(GameFWTicksElapsed::default());
-    world.insert_resource(GameFWEndTick::default());
+    world.insert_resource(GameFwTicksElapsed::default());
+    world.insert_resource(GameFwEndTick::default());
     world.spawn(GameInitProgressEntity::default());
 }
 
@@ -28,7 +28,7 @@ fn setup_misc_resources(world: &mut World)
 pub(crate) fn setup_game_fw_state(world: &mut World)
 {
     // extract initializer
-    let mut game_fw_initializer = world.remove_resource::<GameFWInitializer>().expect("initializer missing");
+    let mut game_fw_initializer = world.remove_resource::<GameFwInitializer>().expect("initializer missing");
 
     // initialize clients
     // - client entity map

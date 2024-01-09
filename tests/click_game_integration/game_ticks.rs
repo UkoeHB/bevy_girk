@@ -48,7 +48,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         .set_runner(make_test_runner(num_prep_ticks + num_game_ticks + 3))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
-        .insert_resource(GameFWConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
         .insert_resource(
@@ -58,11 +58,11 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
                     )
             )
         //add game framework
-        .add_plugins(GameFWPlugin)
+        .add_plugins(GameFwPlugin)
         //add game
         .add_plugins(GamePlugins)
         //configure execution flow
-        .configure_sets(Update, (GameFWSet,).chain())
+        .configure_sets(Update, (GameFwSet,).chain())
         //testing
         .insert_resource( TestContext{ num_prep_ticks, num_game_ticks } )
         .add_systems(OnEnter(GameMode::GameOver), test_game_tick_state)

@@ -66,9 +66,9 @@ fn track_replication_initialized(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFWCommand>>)
+fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFwCommand>>)
 {
-    if let Err(_) = client_fw_command_sender.send(ClientFWCommand::ReInitialize)
+    if let Err(_) = client_fw_command_sender.send(ClientFwCommand::ReInitialize)
     { tracing::error!("failed commanding client framework to reinitialize"); }
 }
 
@@ -90,17 +90,17 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
 ///
 /// REQUIREMENTS:
 /// - `bevy::time::TimePlugin`.
-pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFWConfig) -> Sender<ClientFWCommand>
+pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFwConfig) -> Sender<ClientFwCommand>
 {
     // prepare message channels
     let (game_packet_sender, game_packet_receiver)             = new_channel::<GamePacket>();
     let (client_packet_sender, client_packet_receiver)         = new_channel::<ClientPacket>();
-    let (client_fw_command_sender, client_fw_command_receiver) = new_channel::<ClientFWCommand>();
+    let (client_fw_command_sender, client_fw_command_receiver) = new_channel::<ClientFwCommand>();
 
     // prepare client app framework
     client_app
         //setup components
-        .add_plugins(ClientFWPlugin)
+        .add_plugins(ClientFwPlugin)
         //client framework
         .insert_resource(client_fw_config)
         .insert_resource(game_packet_sender)
@@ -115,7 +115,7 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Set up `bevy_replicon` in a client app.
-pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFWCommand>)
+pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFwCommand>)
 {
     // depends on client framework
 
@@ -144,18 +144,18 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 reinitialize_client
                     .run_if(bevy_renet::client_just_disconnected())
-                    .run_if(not(in_state(ClientFWMode::End))),
+                    .run_if(not(in_state(ClientFwMode::End))),
                 receive_server_messages
                     .run_if(bevy_renet::client_connected())
             )
                 .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
-                .before(ClientFWTickSetPrivate::FWStart),
+                .before(ClientFwTickSetPrivate::FwStart),
         )
         //client logic
-        .configure_sets(Update, ClientFWSet.before(iyes_progress::prelude::AssetsTrackProgress))
+        .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
         //track connection status
-        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFWLoadingSet))
+        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFwLoadingSet))
         //track whether the first replication message post-connect has been received
         //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
         //        when a client connects (for reconnects we assume the user did not despawn that entity, or spawned
@@ -166,7 +166,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                     .pipe(track_replication_initialized)
                     .track_progress()
             )
-                .in_set(ClientFWLoadingSet)
+                .in_set(ClientFwLoadingSet)
         )
         //message sending
         .add_systems(PostUpdate,
@@ -181,7 +181,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             //  any race conditions where messages can hang as replicon events
             send_client_messages
                 .run_if(bevy_renet::client_connected())
-                .after(ClientFWTickSetPrivate::FWEnd)
+                .after(ClientFwTickSetPrivate::FwEnd)
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
         //log transport errors
@@ -218,7 +218,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
 //todo: 'backend' is wrong term here?
 pub fn prepare_client_app_backend(
     client_app       : &mut App,
-    client_fw_config : ClientFWConfig,
+    client_fw_config : ClientFwConfig,
     connect_pack     : RenetClientConnectPack,
 ){
     let client_fw_command_sender = prepare_client_app_framework(client_app, client_fw_config);

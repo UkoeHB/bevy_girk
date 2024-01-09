@@ -91,7 +91,7 @@ fn game_instance_launcher_demo()
         };
 
     // game framework config
-    let game_fw_config = GameFWConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
+    let game_fw_config = GameFwConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
 
     // game duration config
     let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_play_ticks);
