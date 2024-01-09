@@ -34,7 +34,7 @@ pub(crate) fn handle_ping_request(
     In((client_id, request)) : In<(ClientIdType, PingRequest)>,
     mut game_message_buffer  : ResMut<GameMessageBuffer>
 ){
-    game_message_buffer.add_fw_msg(
+    game_message_buffer.push_fw(
             GameFwMsg::PingResponse(PingResponse{ request }),
             vec![InfoAccessConstraint::Targets(vec![client_id])],
             SendUnordered

@@ -44,7 +44,7 @@ impl GameMessageBuffer
     }
 
     /// Adds a game framework message to the buffer.
-    pub fn add_fw_msg(&mut self,
+    pub fn push_fw(&mut self,
         message            : GameFwMsg,
         access_constraints : Vec<InfoAccessConstraint>,
         send_policy        : impl Into<EventType>
@@ -63,7 +63,7 @@ impl GameMessageBuffer
 
     /// Adds a user-defined game message to the buffer.
     //todo: parameterize the buffer on T for robustness (or set the expected type id when constructing the buffer)
-    pub fn add_core_msg<T: Serialize + Debug>(&mut self,
+    pub fn push<T: Serialize + Debug>(&mut self,
         message            : T,
         access_constraints : Vec<InfoAccessConstraint>,
         send_policy        : impl Into<EventType>,

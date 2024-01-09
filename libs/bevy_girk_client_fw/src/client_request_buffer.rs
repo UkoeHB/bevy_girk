@@ -16,7 +16,7 @@ use std::fmt::Debug;
 
 /// A request that will be sent from the client to the server.
 //todo: PendingClientRequest
-pub struct PendingClientMessage
+pub struct PendingClientRequest
 {
     pub request     : Bytes,
     pub send_policy : EventType,
@@ -29,7 +29,7 @@ pub struct PendingClientMessage
 #[derive(Resource, Default)]
 pub struct ClientRequestBuffer
 {
-    buffer: VecDeque<PendingClientMessage>
+    buffer: VecDeque<PendingClientRequest>
 }
 
 impl ClientRequestBuffer
@@ -41,11 +41,11 @@ impl ClientRequestBuffer
     }
 
     /// Adds a client framework request to the buffer.
-    pub fn add_fw_msg(&mut self, message: ClientFwRequest, send_policy: impl Into<EventType>)
+    pub fn push_fw(&mut self, message: ClientFwRequest, send_policy: impl Into<EventType>)
     {
         tracing::trace!(?message, "buffering fw message");
         self.buffer.push_back(
-                PendingClientMessage{
+                PendingClientRequest{
                         request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<_, ()>::Fw(message) })),
                         send_policy : send_policy.into()
                     }
@@ -54,18 +54,19 @@ impl ClientRequestBuffer
 
     /// Adds a user-defined client request to the buffer.
     //todo: parameterize the buffer on T for robustness (or set the expected type id when constructing the buffer)
-    pub fn add_core_msg<T: Serialize + Debug>(&mut self, message: T, send_policy: impl Into<EventType>)
+    pub fn push<T: Serialize + Debug>(&mut self, message: T, send_policy: impl Into<EventType>)
     {
         tracing::trace!(?message, "buffering core message");
         self.buffer.push_back(
-            PendingClientMessage{
+            PendingClientRequest{
                     request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<ClientFwRequest, _>::Core(message) })),
                     send_policy : send_policy.into()
                 }
         );
     }
 
-    pub fn drain(&mut self) -> Drain<'_, PendingClientMessage>
+    /// Drain all pending client requests.
+    pub fn drain(&mut self) -> Drain<'_, PendingClientRequest>
     {
         self.buffer.drain(..)
     }

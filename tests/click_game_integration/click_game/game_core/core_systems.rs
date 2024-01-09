@@ -77,8 +77,8 @@ pub(crate) fn notify_game_mode_single(
     current_game_mode       : Res<State<GameMode>>,
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
-    game_message_buffer.add_core_msg(
-            &GameMsg::CurrentGameMode(**current_game_mode),
+    game_message_buffer.push(
+            GameMsg::CurrentGameMode(**current_game_mode),
             vec![InfoAccessConstraint::Targets(vec![client_id])],
             SendOrdered
         );
@@ -91,8 +91,8 @@ pub(crate) fn notify_game_mode_all(
     current_game_mode       : Res<State<GameMode>>,
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
-    game_message_buffer.add_core_msg(
-            &GameMsg::CurrentGameMode(**current_game_mode),
+    game_message_buffer.push(
+            GameMsg::CurrentGameMode(**current_game_mode),
             vec![],
             SendOrdered
         );

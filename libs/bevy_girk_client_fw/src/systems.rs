@@ -46,7 +46,7 @@ pub(crate) fn send_initialization_progress_report(
     if !initialization_progress_cache.progress_changed_last_update() { return; }
 
     // sent progress report
-    client_message_buffer.add_fw_msg(
+    client_message_buffer.push_fw(
             ClientFwRequest::SetInitProgress(initialization_progress_cache.progress().into()),
             SendOrdered
         );
@@ -69,7 +69,7 @@ pub(crate) fn reinitialize_client_fw(
 /// Request the current game framework mode.
 pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientRequestBuffer>)
 {
-    client_message_buffer.add_fw_msg(ClientFwRequest::GetGameFwMode, SendUnordered);
+    client_message_buffer.push_fw(ClientFwRequest::GetGameFwMode, SendUnordered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

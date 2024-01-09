@@ -16,8 +16,8 @@ pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientIdType, GameRequest, RejectionReason)>,
     mut game_message_buffer          : ResMut<GameMessageBuffer>
 ){
-    game_message_buffer.add_core_msg(
-            &GameMsg::RequestRejected{reason, request},
+    game_message_buffer.push(
+            GameMsg::RequestRejected{reason, request},
             vec![InfoAccessConstraint::Targets(vec![client_id])],
             SendUnordered
         );
