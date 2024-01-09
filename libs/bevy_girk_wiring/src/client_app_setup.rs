@@ -8,7 +8,6 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
-use bevy_replicon_repair::*;
 use iyes_progress::*;
 
 //standard shortcuts
@@ -128,7 +127,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             .disable::<ServerPlugin>())
         //enable replication repair for reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
-        .add_plugins(RepliconRepairPluginClient{ cleanup_prespawns: true })
+        .add_plugins(bevy_replicon_repair::ClientPlugin{ cleanup_prespawns: true })
         //prepare message channels
         .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)

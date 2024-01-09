@@ -7,7 +7,6 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
-use bevy_replicon_repair::*;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
 
@@ -106,7 +105,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
         )
         //enable replication repair for reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
-        .add_plugins(RepliconRepairPluginServer)
+        .add_plugins(bevy_replicon_repair::ServerPlugin)
         //prepare message channels
         .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
         .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
