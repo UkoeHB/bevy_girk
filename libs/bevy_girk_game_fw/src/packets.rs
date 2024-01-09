@@ -29,18 +29,18 @@ pub struct GameMessage<T>
 {
     /// Number of ticks elapsed in the game framework.
     pub ticks: Ticks,
-    /// Message
-    pub message: AimedMsg<GameFwMsg, T>,
+    /// The message.
+    pub msg: AimedMsg<GameFwMsg, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A client message consumed by the game server.
+/// A client request consumed by the game server.
 #[derive(Serialize, Deserialize)]
-pub struct ClientMessage<T>
+pub struct ClientRequest<T>
 {
-    /// Message
-    pub message: AimedMsg<ClientFwRequest, T>,
+    /// The request.
+    pub req: AimedMsg<ClientFwRequest, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ pub struct GamePacket
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A serialized message to send from a client to the game.
+/// A serialized request to send from a client to the game.
 #[derive(Debug)]
 pub struct ClientPacket
 {
@@ -67,8 +67,8 @@ pub struct ClientPacket
     pub client_id: ClientIdType,
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
-    /// The message.
-    pub message: Bytes,
+    /// The request.
+    pub request: Bytes,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

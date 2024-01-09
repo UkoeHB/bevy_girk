@@ -1,6 +1,5 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -32,12 +31,11 @@ pub(crate) fn handle_set_client_init_progress(
 /// Send back ping response.
 pub(crate) fn handle_ping_request(
     In((client_id, request)) : In<(ClientIdType, PingRequest)>,
-    mut game_message_buffer  : ResMut<GameMessageBuffer>
+    buffer                   : Res<GameMessageBuffer>
 ){
-    game_message_buffer.push_fw(
+    buffer.fw_send(
             GameFwMsg::PingResponse(PingResponse{ request }),
-            vec![InfoAccessConstraint::Targets(vec![client_id])],
-            SendUnordered
+            vec![InfoAccessConstraint::Targets(vec![client_id])]
         );
 }
 

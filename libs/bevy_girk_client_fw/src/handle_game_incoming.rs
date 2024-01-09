@@ -19,7 +19,7 @@ fn try_handle_game_fw_message(world: &mut World, game_packet: &GamePacket) -> bo
     // note: we expect this to fail very cheaply if the game message is AimedMsg::Core
     let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
     else { tracing::trace!("failed to deserialize game fw message"); return false; };
-    let AimedMsg::Fw(msg) = message.message else { return false; };
+    let AimedMsg::Fw(msg) = message.msg else { return false; };
 
     tracing::trace!(?msg, "received game fw message");
     let ticks = message.ticks;

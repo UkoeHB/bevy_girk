@@ -99,9 +99,9 @@ pub(crate) fn send_client_messages(
     {
         match client_packet.send_policy
         {
-            EventType::Unreliable => client.send_message(*unreliable_channel, client_packet.message),
-            EventType::Unordered  => client.send_message(*unordered_channel, client_packet.message),
-            EventType::Ordered    => client.send_message(*ordered_channel, client_packet.message)
+            EventType::Unreliable => client.send_message(*unreliable_channel, client_packet.request),
+            EventType::Unordered  => client.send_message(*unordered_channel, client_packet.request),
+            EventType::Ordered    => client.send_message(*ordered_channel, client_packet.request)
         }
     }
 }
@@ -134,7 +134,7 @@ pub(crate) fn receive_client_messages(
                 (Into::<u8>::into(*unreliable_channel), EventType::Unreliable),
             ].iter()
         {
-            while let Some(message) = server.receive_message(client_id, channel_id)
+            while let Some(request) = server.receive_message(client_id, channel_id)
             {
                 // if too many messages were received this tick, ignore the remaining messages
                 messages_count += 1;
@@ -146,7 +146,7 @@ pub(crate) fn receive_client_messages(
 
                 // send packet into server
                 server_input_sender
-                    .send( ClientPacket{ client_id: client_id.raw() as ClientIdType, send_policy, message } )
+                    .send( ClientPacket{ client_id: client_id.raw() as ClientIdType, send_policy, request } )
                     .expect("server input receiver is missing");
             }
         }

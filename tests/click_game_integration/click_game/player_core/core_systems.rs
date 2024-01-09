@@ -2,7 +2,6 @@
 
 //local shortcuts
 use bevy_girk_client_fw::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -22,16 +21,16 @@ pub(crate) fn get_current_client_core_mode(current_client_core_mode: Res<State<C
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Request the current game mode.
-pub(crate) fn request_game_mode(mut buffer: ResMut<ClientRequestBuffer>)
+pub(crate) fn request_game_mode(buffer: Res<ClientRequestBuffer>)
 {
-    buffer.push(GameRequest::GameModeRequest, SendUnordered);
+    buffer.request(GameRequest::GameModeRequest);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn send_game_request(In(msg): In<GameRequest>, mut buffer: ResMut<ClientRequestBuffer>)
+pub(crate) fn send_game_request(In(msg): In<GameRequest>, buffer: Res<ClientRequestBuffer>)
 {
-    buffer.push(msg, SendOrdered);
+    buffer.request(msg);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

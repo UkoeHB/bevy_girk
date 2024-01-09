@@ -66,3 +66,11 @@ pub(crate) fn setup_game_input_handler(mut commands: Commands)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+
+/// Initializes the game message buffer.
+pub(crate) fn setup_game_message_buffer(mut commands: Commands)
+{
+    commands.insert_resource(GameMessageBuffer::new::<GameMsg>());
+}
+
+//-------------------------------------------------------------------------------------------------------------------

@@ -16,9 +16,9 @@ use bevy_kot_utils::*;
 fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket) -> bool
 {
     // note: we expect this to fail very cheaply if the client message is AimedMsg::Core
-    let Some(message) = deser_msg::<ClientMessage::<()>>(&client_packet.message[..])
+    let Some(req) = deser_msg::<ClientRequest::<()>>(&client_packet.request[..])
     else { tracing::trace!("failed to deserialize game framework request"); return false; };
-    let AimedMsg::Fw(request) = message.message else { return false; };
+    let AimedMsg::Fw(request) = req.req else { return false; };
 
     tracing::trace!(?request, "received game fw request");
     let client_id = client_packet.client_id;

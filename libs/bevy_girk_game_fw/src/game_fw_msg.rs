@@ -1,7 +1,9 @@
 //local shortcuts
 use crate::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_replicon::prelude::EventType;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -28,6 +30,18 @@ pub enum GameFwMsg
     CurrentGameFwMode(GameFwMode),
     /// Ping response to a ping request.
     PingResponse(PingResponse),
+}
+
+impl IntoEventType for GameFwMsg
+{
+    fn into_event_type(&self) -> EventType
+    {
+        match self
+        {
+            Self::CurrentGameFwMode(_) => SendOrdered.into(),
+            Self::PingResponse(_)      => SendUnordered.into(),
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

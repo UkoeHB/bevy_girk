@@ -48,7 +48,6 @@ pub(crate) fn setup_game_fw_state(world: &mut World)
     }
 
     world.insert_resource(crate::ClientEntityMap::new(client_entity_map));
-    world.insert_resource(GameMessageBuffer::default());
 
     // add misc resources
     setup_misc_resources(world);

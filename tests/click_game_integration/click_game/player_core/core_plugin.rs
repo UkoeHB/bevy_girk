@@ -87,6 +87,7 @@ pub fn ClientCoreStartupPlugin(app: &mut App)
             (
                 setup_player_state,
                 setup_game_output_handler,
+                setup_client_request_buffer,
             )
         );
 }

@@ -11,6 +11,7 @@ PRECONDITION: the following must be initialized by the client framework manager
 
 PRECONDITION: the following must be initialized by the client core that uses this client framework
 - `Res<GameMessageHandler>`
+- `Res<ClientRequestBuffer>`
 
 INTERFACE: for client framework manager
 - the `ClientFwCommand` channel may be used to control the client framework

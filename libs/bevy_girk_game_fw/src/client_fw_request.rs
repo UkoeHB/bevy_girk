@@ -1,6 +1,8 @@
 //local shortcuts
+use bevy_girk_utils::*;
 
 //third-party shortcuts
+use bevy_replicon::prelude::EventType;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -18,8 +20,6 @@ pub struct PingRequest
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Requests that can be sent to the game framework.
-//ClientFwRequest
-//todo: impl Into<SendPolicy>
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ClientFwRequest
 {
@@ -29,6 +29,19 @@ pub enum ClientFwRequest
     GetPing(PingRequest),
     /// Request the current game framework mode.
     GetGameFwMode,
+}
+
+impl IntoEventType for ClientFwRequest
+{
+    fn into_event_type(&self) -> EventType
+    {
+        match self
+        {
+            Self::SetInitProgress(_) => SendOrdered.into(),
+            Self::GetPing(_)         => SendUnordered.into(),
+            Self::GetGameFwMode      => SendUnordered.into(),
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

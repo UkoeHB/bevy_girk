@@ -116,6 +116,7 @@ fn raw_localhost_network_demo(num_players: usize)
     watcher_client_app
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(DummyClientCorePlugin)
+        .insert_resource(ClientRequestBuffer::new::<GameRequest>())
         .add_plugins(GameReplicationPlugin);
     client_apps.push(watcher_client_app);
 

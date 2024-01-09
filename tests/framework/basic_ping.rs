@@ -28,8 +28,8 @@ fn basic_ping()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
         ).unwrap();
@@ -39,8 +39,8 @@ fn basic_ping()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                        message: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                        req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
                             PingRequest{
                                     timestamp_ns: 0u64
                                 })
@@ -57,6 +57,7 @@ fn basic_ping()
         .insert_resource(GameFwConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
         .insert_resource(client_packet_receiver)
         .insert_resource(game_packet_sender)
+        .insert_resource(GameMessageBuffer::new::<()>())
         //setup client framework
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
@@ -77,7 +78,7 @@ fn basic_ping()
         // deserialize ping response
         let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
         else { panic!("failed to deserialize game fw message"); };
-        let AimedMsg::Fw(msg) = message.message else { panic!("did not receive fw message") };
+        let AimedMsg::Fw(msg) = message.msg else { panic!("did not receive fw message") };
 
         // try to extract ping response
         let GameFwMsg::PingResponse(_) = msg else { continue; };

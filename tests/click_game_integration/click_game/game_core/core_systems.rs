@@ -73,14 +73,13 @@ pub(crate) fn get_current_game_mode(current_game_mode: Res<State<GameMode>>) -> 
 
 /// Notify a single client of the current game mode.
 pub(crate) fn notify_game_mode_single(
-    In(client_id)           : In<ClientIdType>,
-    current_game_mode       : Res<State<GameMode>>,
-    mut game_message_buffer : ResMut<GameMessageBuffer>
+    In(client_id)     : In<ClientIdType>,
+    buffer            : Res<GameMessageBuffer>,
+    current_game_mode : Res<State<GameMode>>,
 ){
-    game_message_buffer.push(
+    buffer.send(
             GameMsg::CurrentGameMode(**current_game_mode),
-            vec![InfoAccessConstraint::Targets(vec![client_id])],
-            SendOrdered
+            vec![InfoAccessConstraint::Targets(vec![client_id])]
         );
 }
 
@@ -88,13 +87,12 @@ pub(crate) fn notify_game_mode_single(
 
 /// Notify all clients of the current game mode.
 pub(crate) fn notify_game_mode_all(
-    current_game_mode       : Res<State<GameMode>>,
-    mut game_message_buffer : ResMut<GameMessageBuffer>
+    buffer            : Res<GameMessageBuffer>,
+    current_game_mode : Res<State<GameMode>>,
 ){
-    game_message_buffer.push(
+    buffer.send(
             GameMsg::CurrentGameMode(**current_game_mode),
-            vec![],
-            SendOrdered
+            vec![]
         );
 }
 

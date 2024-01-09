@@ -59,6 +59,24 @@ impl From<SendOrdered> for EventType
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Helper trait for converting a message type into its send policy.
+///
+/// Especially useful for enum-type messages where different variants have different send policies.
+pub trait IntoEventType
+{
+    fn into_event_type(&self) -> EventType;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Default implementation for tests.
+impl IntoEventType for ()
+{
+    fn into_event_type(&self) -> EventType { EventType::Unreliable }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Configuration details for setting up a renet server.
 /// - Used to set up renet servers for clients on native targets.
 //todo: include setup configs for wasm and in-memory transports (each one optional?)

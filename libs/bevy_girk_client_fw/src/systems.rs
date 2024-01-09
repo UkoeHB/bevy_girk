@@ -1,7 +1,6 @@
 //local shortcuts
 use crate::*;
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -40,16 +39,13 @@ pub(crate) fn update_initialization_cache(
 /// Send client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
     initialization_progress_cache : Res<InitializationProgressCache>,
-    mut client_message_buffer     : ResMut<ClientRequestBuffer>
+    buffer                        : Res<ClientRequestBuffer>
 ){
     // don't send if no intialization progress has been made since last frame
     if !initialization_progress_cache.progress_changed_last_update() { return; }
 
     // sent progress report
-    client_message_buffer.push_fw(
-            ClientFwRequest::SetInitProgress(initialization_progress_cache.progress().into()),
-            SendOrdered
-        );
+    buffer.fw_request(ClientFwRequest::SetInitProgress(initialization_progress_cache.progress().into()));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -67,26 +63,26 @@ pub(crate) fn reinitialize_client_fw(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Request the current game framework mode.
-pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientRequestBuffer>)
+pub(crate) fn request_game_fw_mode(buffer: Res<ClientRequestBuffer>)
 {
-    client_message_buffer.push_fw(ClientFwRequest::GetGameFwMode, SendUnordered);
+    buffer.fw_request(ClientFwRequest::GetGameFwMode);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Take client messages, dispatch to game.
 pub(crate) fn dispatch_client_packets(
-    mut client_message_buffer : ResMut<ClientRequestBuffer>,
-    client_packet_sender      : Res<Sender<ClientPacket>>,
-    client_config             : Res<ClientFwConfig>
+    mut buffer           : ResMut<ClientRequestBuffer>,
+    client_packet_sender : Res<Sender<ClientPacket>>,
+    client_config        : Res<ClientFwConfig>
 ){
-    for pending_client_message in client_message_buffer.drain()
+    while let Some(pending_client_message) = buffer.next()
     {
         client_packet_sender.send(
                 ClientPacket{
                         client_id   : client_config.client_id(),
                         send_policy : pending_client_message.send_policy,
-                        message     : pending_client_message.request,
+                        request     : pending_client_message.request,
                     }
             ).expect("client fw packet dispatch sender should always succeed");
     }

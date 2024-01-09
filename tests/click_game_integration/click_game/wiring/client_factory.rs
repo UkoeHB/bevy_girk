@@ -75,6 +75,7 @@ impl ClientFactoryImpl for ClickClientFactory
             {
                 client_app
                     .add_plugins(DummyClientCorePlugin)
+                    .insert_resource(ClientRequestBuffer::new::<GameRequest>())
                     .add_plugins(GameReplicationPlugin);
             }
         }

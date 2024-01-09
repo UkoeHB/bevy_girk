@@ -1,6 +1,5 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -127,11 +126,11 @@ pub(crate) fn refresh_game_init_progress(
 /// Note: The `GamePacket` receiver may drop messages sent to disconnected clients.
 //todo: refactor to use bevy_replicon rooms
 pub(crate) fn dispatch_messages_to_client(
-    mut game_message_buffer : ResMut<GameMessageBuffer>,
-    game_message_sender     : Res<Sender<GamePacket>>,
-    client_query            : Query<(&ClientId, &InfoAccessRights)>
+    mut buffer          : ResMut<GameMessageBuffer>,
+    game_message_sender : Res<Sender<GamePacket>>,
+    client_query        : Query<(&ClientId, &InfoAccessRights)>
 ){
-    for pending_game_message in game_message_buffer.drain()
+    while let Some(pending_game_message) = buffer.next()
     {
         for (client_id, access_rights) in &client_query
         {
@@ -152,14 +151,13 @@ pub(crate) fn dispatch_messages_to_client(
 
 /// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
-    In(client_id)           : In<ClientIdType>,
-    current_game_mode       : Res<State<GameFwMode>>,
-    mut game_message_buffer : ResMut<GameMessageBuffer>
+    In(client_id)     : In<ClientIdType>,
+    buffer            : Res<GameMessageBuffer>,
+    current_game_mode : Res<State<GameFwMode>>,
 ){
-    game_message_buffer.push_fw(
+    buffer.fw_send(
             GameFwMsg::CurrentGameFwMode(**current_game_mode),
-            vec![InfoAccessConstraint::Targets(vec![client_id])],
-            SendOrdered
+            vec![InfoAccessConstraint::Targets(vec![client_id])]
         );
 }
 
@@ -167,13 +165,12 @@ pub(crate) fn notify_game_fw_mode_single(
 
 /// Notify all clients of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_all(
-    current_game_mode       : Res<State<GameFwMode>>,
-    mut game_message_buffer : ResMut<GameMessageBuffer>
+    buffer            : Res<GameMessageBuffer>,
+    current_game_mode : Res<State<GameFwMode>>,
 ){
-    game_message_buffer.push_fw(
+    buffer.fw_send(
             GameFwMsg::CurrentGameFwMode(**current_game_mode),
-            vec![],
-            SendOrdered
+            vec![]
         );
 }
 

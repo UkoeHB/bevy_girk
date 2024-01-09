@@ -31,7 +31,8 @@ fn prestartup_check(world: &World)
 /// Validate resources that should exist after client startup.
 fn poststartup_check(world: &World)
 {
-    if !world.contains_resource::<GameMessageHandler>() { panic!("GameMessageHandler is missing on startup!"); }
+    if !world.contains_resource::<GameMessageHandler>()  { panic!("GameMessageHandler is missing on startup!"); }
+    if !world.contains_resource::<ClientRequestBuffer>() { panic!("ClientRequestBuffer is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -15,9 +15,9 @@ use std::fmt::Debug;
 //todo: validate send policy
 pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de>>(client_packet: &ClientPacket) -> Option<T>
 {
-    let Some(message) = deser_msg::<ClientMessage::<T>>(&client_packet.message[..])
+    let Some(req) = deser_msg::<ClientRequest::<T>>(&client_packet.request[..])
     else { tracing::trace!("failed to deserialize client request"); return None; };
-    let AimedMsg::Core(request) = message.message
+    let AimedMsg::Core(request) = req.req
     else { tracing::trace!("failed to deserialize client request"); return None; };
 
     tracing::trace!(?request, "received client request");

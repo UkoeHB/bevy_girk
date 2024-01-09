@@ -50,8 +50,8 @@ fn player_clicks()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                            message: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                            req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
         ).unwrap();

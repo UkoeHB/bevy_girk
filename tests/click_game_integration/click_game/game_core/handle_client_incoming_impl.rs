@@ -1,6 +1,5 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -14,12 +13,11 @@ use bevy_kot_ecs::*;
 
 pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientIdType, GameRequest, RejectionReason)>,
-    mut game_message_buffer          : ResMut<GameMessageBuffer>
+    buffer                           : Res<GameMessageBuffer>
 ){
-    game_message_buffer.push(
+    buffer.send(
             GameMsg::RequestRejected{reason, request},
             vec![InfoAccessConstraint::Targets(vec![client_id])],
-            SendUnordered
         );
 }
 

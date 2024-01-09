@@ -17,7 +17,7 @@ pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de>>(game_packe
 {
     let Some(message) = deser_msg::<GameMessage::<T>>(&game_packet.message[..])
     else { tracing::trace!("failed to deserialize game message"); return None; };
-    let AimedMsg::Core(msg) = message.message
+    let AimedMsg::Core(msg) = message.msg
     else { tracing::trace!("failed to deserialize game message"); return None; };
 
     tracing::trace!(?msg, "received game message");

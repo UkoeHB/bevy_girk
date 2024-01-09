@@ -47,8 +47,8 @@ impl GameFactoryImpl for DummyGameFactory
                 ClientPacket{
                         client_id   : 0 as ClientIdType,
                         send_policy : SendOrdered.into(),
-                        message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                        request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                             }))
                     }
             ).unwrap();
@@ -62,6 +62,7 @@ impl GameFactoryImpl for DummyGameFactory
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
             .insert_resource(client_packet_receiver)
             .insert_resource(game_packet_sender)
+            .insert_resource(GameMessageBuffer::new::<()>())
             //setup client framework
             .insert_resource(
                 ClientFwConfig::new( config.ticks_per_sec, 0 as ClientIdType )
@@ -69,6 +70,7 @@ impl GameFactoryImpl for DummyGameFactory
             .insert_resource(game_packet_receiver)
             .insert_resource(client_packet_sender)
             .insert_resource(client_fw_comand_reader)
+            .insert_resource(ClientRequestBuffer::new::<()>())
             //setup game core
             .insert_resource(DummyGameDurationConfig{ max_ticks: config.game_duration_ticks })
             //add game framework

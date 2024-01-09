@@ -28,6 +28,7 @@ fn prestartup_check(world: &World)
 fn poststartup_check(world: &World)
 {
     if !world.contains_resource::<ClientRequestHandler>() { panic!("ClientRequestHandler is missing on startup!"); }
+    if !world.contains_resource::<GameMessageBuffer>()    { panic!("GameMessageBuffer is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
