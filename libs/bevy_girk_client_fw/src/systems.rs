@@ -14,7 +14,7 @@ use iyes_progress::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Resets the game message buffer for a new tick.
-pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientMessageBuffer>)
+pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientRequestBuffer>)
 {
     buffer.reset();
 }
@@ -40,7 +40,7 @@ pub(crate) fn update_initialization_cache(
 /// Send client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
     initialization_progress_cache : Res<InitializationProgressCache>,
-    mut client_message_buffer     : ResMut<ClientMessageBuffer>
+    mut client_message_buffer     : ResMut<ClientRequestBuffer>
 ){
     // don't send if no intialization progress has been made since last frame
     if !initialization_progress_cache.progress_changed_last_update() { return; }
@@ -67,7 +67,7 @@ pub(crate) fn reinitialize_client_fw(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Request the current game framework mode.
-pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessageBuffer>)
+pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientRequestBuffer>)
 {
     client_message_buffer.add_fw_msg(ClientFwRequest::GetGameFwMode, SendUnordered);
 }
@@ -76,7 +76,7 @@ pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessa
 
 /// Take client messages, dispatch to game.
 pub(crate) fn dispatch_client_packets(
-    mut client_message_buffer : ResMut<ClientMessageBuffer>,
+    mut client_message_buffer : ResMut<ClientRequestBuffer>,
     client_packet_sender      : Res<Sender<ClientPacket>>,
     client_config             : Res<ClientFwConfig>
 ){

@@ -22,16 +22,16 @@ pub(crate) fn get_current_client_core_mode(current_client_core_mode: Res<State<C
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Request the current game mode.
-pub(crate) fn request_game_mode(mut client_message_buffer: ResMut<ClientMessageBuffer>)
+pub(crate) fn request_game_mode(mut buffer: ResMut<ClientRequestBuffer>)
 {
-    client_message_buffer.add_core_msg(&GameRequest::GameModeRequest, SendUnordered);
+    buffer.add_core_msg(&GameRequest::GameModeRequest, SendUnordered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn send_game_request(In(msg): In<GameRequest>, mut client_message_buffer: ResMut<ClientMessageBuffer>)
+pub(crate) fn send_game_request(In(msg): In<GameRequest>, mut buffer: ResMut<ClientRequestBuffer>)
 {
-    client_message_buffer.add_core_msg(&msg, SendOrdered);
+    buffer.add_core_msg(&msg, SendOrdered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

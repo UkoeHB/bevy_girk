@@ -27,12 +27,12 @@ pub struct PendingClientMessage
 /// A queue of requests waiting to be dispatched to the game.
 //todo: adding messages requires synchronization between adders
 #[derive(Resource, Default)]
-pub struct ClientMessageBuffer
+pub struct ClientRequestBuffer
 {
     buffer: VecDeque<PendingClientMessage>
 }
 
-impl ClientMessageBuffer
+impl ClientRequestBuffer
 {
     /// Resets the buffer for a new tick.
     pub fn reset(&mut self)
