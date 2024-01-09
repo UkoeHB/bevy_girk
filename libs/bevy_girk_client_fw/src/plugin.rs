@@ -17,17 +17,12 @@ use iyes_progress::prelude::*;
 /// Validate resources that should exist before client startup.
 fn prestartup_check(world: &World)
 {
-    if !world.contains_resource::<ClientFwConfig>()
-        { panic!("ClientFwConfig is missing on startup!"); }
-    if !world.contains_resource::<Receiver<GamePacket>>()
-        { panic!("Receiver<GamePacket> is missing on startup!"); }
-    if !world.contains_resource::<Sender<ClientPacket>>()
-        { panic!("Sender<ClientPacket> is missing on startup!"); }
-    if !world.contains_resource::<Receiver<ClientFwCommand>>()
-        { panic!("Receiver<ClientFwCommand> is missing on startup!"); }
+    if !world.contains_resource::<ClientFwConfig>()            { panic!("ClientFwConfig is missing on startup!"); }
+    if !world.contains_resource::<Receiver<GamePacket>>()      { panic!("Receiver<GamePacket> is missing on startup!"); }
+    if !world.contains_resource::<Sender<ClientPacket>>()      { panic!("Sender<ClientPacket> is missing on startup!"); }
+    if !world.contains_resource::<Receiver<ClientFwCommand>>() { panic!("Receiver<ClientFwCommand> is missing on startup!"); }
 
-    if !world.contains_resource::<Time>()
-        { panic!("bevy::Time is missing on startup!"); }
+    if !world.contains_resource::<Time>() { panic!("bevy::Time is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -36,8 +31,7 @@ fn prestartup_check(world: &World)
 /// Validate resources that should exist after client startup.
 fn poststartup_check(world: &World)
 {
-    if !world.contains_resource::<GameMessageHandler>()
-        { panic!("GameMessageHandler is missing on startup!"); }
+    if !world.contains_resource::<GameMessageHandler>() { panic!("GameMessageHandler is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

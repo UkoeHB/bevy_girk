@@ -32,7 +32,7 @@ fn basic_fw_initialization()
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
                     message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                            message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
+                            message: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
         ).unwrap();

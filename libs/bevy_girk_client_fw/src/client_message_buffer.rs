@@ -41,7 +41,7 @@ impl ClientMessageBuffer
     }
 
     /// Adds a client framework request to the buffer.
-    pub fn add_fw_msg(&mut self, message: GameFwRequest, send_policy: impl Into<EventType>)
+    pub fn add_fw_msg(&mut self, message: ClientFwRequest, send_policy: impl Into<EventType>)
     {
         tracing::trace!(?message, "buffering fw message");
         self.buffer.push_back(
@@ -59,7 +59,7 @@ impl ClientMessageBuffer
         tracing::trace!(?message, "buffering core message");
         self.buffer.push_back(
             PendingClientMessage{
-                    request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<GameFwRequest, _>::Core(message) })),
+                    request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<ClientFwRequest, _>::Core(message) })),
                     send_policy : send_policy.into()
                 }
         );

@@ -75,7 +75,7 @@ pub fn AddMockMessageChannelsPlugin(app: &mut App)
                         client_id   : client_id as ClientIdType,
                         send_policy : SendOrdered.into(),
                         message     : bytes::Bytes::from(ser_msg(&ClientMessage{
-                                message: AimedMsg::<_, ()>::Fw(GameFwRequest::ClientInitProgress(1.0))
+                                message: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                             }))
                     }
             ).unwrap();

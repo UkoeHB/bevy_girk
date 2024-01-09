@@ -12,7 +12,7 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Mark a client as ready.
-pub(crate) fn handle_client_init_progress_request(
+pub(crate) fn handle_set_client_init_progress(
     In((client_id, init_progress)) : In<(ClientIdType, f32)>,
     client_entity_map              : Res<ClientEntityMap>,
     mut client_readiness           : Query<&mut Readiness, With<ClientId>>

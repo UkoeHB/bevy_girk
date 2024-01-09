@@ -25,9 +25,9 @@ fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket)
 
     match request
     {
-        GameFwRequest::ClientInitProgress(prog) => syscall(world, (client_id, prog), handle_client_init_progress_request),
-        GameFwRequest::PingRequest(req)         => syscall(world, (client_id, req),  handle_ping_request),
-        GameFwRequest::GameFwModeRequest        => syscall(world, client_id,         handle_game_fw_mode_request),
+        ClientFwRequest::SetInitProgress(prog) => syscall(world, (client_id, prog), handle_set_client_init_progress),
+        ClientFwRequest::GetPing(req)          => syscall(world, (client_id, req),  handle_ping_request),
+        ClientFwRequest::GetGameFwMode         => syscall(world, client_id,         handle_game_fw_mode_request),
     }
 
     true

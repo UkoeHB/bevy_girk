@@ -21,17 +21,14 @@ pub struct PingRequest
 //ClientFwRequest
 //todo: impl Into<SendPolicy>
 #[derive(Debug, Serialize, Deserialize)]
-pub enum GameFwRequest
+pub enum ClientFwRequest
 {
     /// Notify game framework of the client's initialization progress.
-    //SetInitProgress
-    ClientInitProgress(f32),
+    SetInitProgress(f32),
     /// Request a ping response.
-    //GetPing
-    PingRequest(PingRequest),
+    GetPing(PingRequest),
     /// Request the current game framework mode.
-    //GetGameFwMode
-    GameFwModeRequest,
+    GetGameFwMode,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

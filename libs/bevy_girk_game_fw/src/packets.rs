@@ -40,7 +40,7 @@ pub struct GameMessage<T>
 pub struct ClientMessage<T>
 {
     /// Message
-    pub message: AimedMsg<GameFwRequest, T>,
+    pub message: AimedMsg<ClientFwRequest, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

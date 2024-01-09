@@ -47,7 +47,7 @@ pub(crate) fn send_initialization_progress_report(
 
     // sent progress report
     client_message_buffer.add_fw_msg(
-            GameFwRequest::ClientInitProgress(initialization_progress_cache.progress().into()),
+            ClientFwRequest::SetInitProgress(initialization_progress_cache.progress().into()),
             SendOrdered
         );
 }
@@ -69,7 +69,7 @@ pub(crate) fn reinitialize_client_fw(
 /// Request the current game framework mode.
 pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessageBuffer>)
 {
-    client_message_buffer.add_fw_msg(GameFwRequest::GameFwModeRequest, SendUnordered);
+    client_message_buffer.add_fw_msg(ClientFwRequest::GetGameFwMode, SendUnordered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
