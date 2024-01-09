@@ -42,9 +42,9 @@ fn basic_game_and_client()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : ClientMessage{
-                            message: AimedMsg::Fw{ bytes: ser_msg(&GameFWRequest::ClientInitProgress(1.0)) }
-                        }
+                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
+                            message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                        }))
                 }
         ).unwrap();
 
@@ -53,14 +53,12 @@ fn basic_game_and_client()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     :
-                        ClientMessage{
-                                message: AimedMsg::Fw{ bytes: ser_msg(&GameFWRequest::PingRequest(
-                                                PingRequest{
-                                                        timestamp_ns: 0u64
-                                                    }
-                                            )) }
-                            }
+                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
+                            message: AimedMsg::<_, ()>::Fw(GameFWRequest::PingRequest(
+                                PingRequest{
+                                        timestamp_ns: 0u64
+                                    })
+                        )}))
                 }
         ).unwrap();
 

@@ -14,6 +14,7 @@ bevy_replicon        = { workspace = true }
 bevy_replicon_repair = { workspace = true }
 bevy_simplenet       = { workspace = true }
 
+bytes              = { workspace = true }
 enfync             = { workspace = true }
 ezsockets          = { workspace = true }
 serde              = { workspace = true }

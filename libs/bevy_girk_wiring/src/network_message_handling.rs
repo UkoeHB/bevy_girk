@@ -44,14 +44,13 @@ pub(crate) fn send_server_messages(
     while let Some(game_packet) = server_output_receiver.try_recv()
     {
         // send message directly to client
-        let client_id      = ClientId::from_raw(game_packet.client_id as u64);
-        let serialized_msg = ser_msg(&game_packet.message);
+        let client_id = ClientId::from_raw(game_packet.client_id as u64);
 
         match game_packet.send_policy
         {
-            EventType::Unreliable => server.send_message(client_id, *unreliable_channel, serialized_msg),
-            EventType::Unordered  => server.send_message(client_id, *unordered_channel, serialized_msg),
-            EventType::Ordered    => server.send_message(client_id, *ordered_channel, serialized_msg)
+            EventType::Unreliable => server.send_message(client_id, *unreliable_channel, game_packet.message),
+            EventType::Unordered  => server.send_message(client_id, *unordered_channel, game_packet.message),
+            EventType::Ordered    => server.send_message(client_id, *ordered_channel, game_packet.message)
         }
     }
 }
@@ -79,9 +78,8 @@ pub(crate) fn receive_server_messages(
     {
         while let Some(message) = client.receive_message(channel_id)
         {
-            let message = deser_msg::<GameMessage>(&message).expect("the server sent an invalid message");
-
-            client_input_sender.send( GamePacket{ client_id, send_policy, message } )
+            client_input_sender
+                .send( GamePacket{ client_id, send_policy, message } )
                 .expect("client input receiver is missing");
         }
     }
@@ -99,13 +97,11 @@ pub(crate) fn send_client_messages(
 ){
     while let Some(client_packet) = client_output_receiver.try_recv()
     {
-        let serialized_msg = ser_msg(&client_packet.message);
-
         match client_packet.send_policy
         {
-            EventType::Unreliable => client.send_message(*unreliable_channel, serialized_msg),
-            EventType::Unordered  => client.send_message(*unordered_channel, serialized_msg),
-            EventType::Ordered    => client.send_message(*ordered_channel, serialized_msg)
+            EventType::Unreliable => client.send_message(*unreliable_channel, client_packet.message),
+            EventType::Unordered  => client.send_message(*unordered_channel, client_packet.message),
+            EventType::Ordered    => client.send_message(*ordered_channel, client_packet.message)
         }
     }
 }
@@ -124,8 +120,9 @@ pub(crate) fn receive_client_messages(
     for client_id in server.clients_id()
     {
         // ignore unregistered client ids
+        // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
         let Some(_) = registered_clients.get_entity(client_id.raw() as ClientIdType)
-        else { tracing::warn!("ignoring renet server client with unknown id"); continue; };
+        else { tracing::error!("ignoring renet server client with unknown id"); continue; };
 
         // receive ordered messages first since they are probably oldest
         let mut messages_count = 0;
@@ -147,9 +144,7 @@ pub(crate) fn receive_client_messages(
                     continue;
                 }
 
-                // deserialize message and send packet into server
-                let Some(message) = deser_msg::<ClientMessage>(&message)
-                else { tracing::trace!(?client_id, "client message failed to deserialize"); continue; };
+                // send packet into server
                 server_input_sender
                     .send( ClientPacket{ client_id: client_id.raw() as ClientIdType, send_policy, message } )
                     .expect("server input receiver is missing");

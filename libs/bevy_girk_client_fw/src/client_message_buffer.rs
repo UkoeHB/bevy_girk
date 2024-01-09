@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::network_event::EventType;
+use bytes::Bytes;
 use serde::Serialize;
 
 //standard shortcuts
@@ -13,16 +14,17 @@ use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A message that will be sent from the client to the server.
+/// A request that will be sent from the client to the server.
+//todo: PendingClientRequest
 pub struct PendingClientMessage
 {
-    pub message     : AimedMsg,
-    pub send_policy : EventType
+    pub request     : Bytes,
+    pub send_policy : EventType,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A queue of messages waiting to be dispatched to the game.
+/// A queue of requests waiting to be dispatched to the game.
 //todo: adding messages requires synchronization between adders
 #[derive(Resource, Default)]
 pub struct ClientMessageBuffer
@@ -32,23 +34,32 @@ pub struct ClientMessageBuffer
 
 impl ClientMessageBuffer
 {
-    pub fn add_fw_msg<T: Serialize + Debug>(&mut self, message: &T, send_policy: impl Into<EventType>)
+    /// Resets the buffer for a new tick.
+    pub fn reset(&mut self)
+    {
+        self.buffer.clear();
+    }
+
+    /// Adds a client framework request to the buffer.
+    pub fn add_fw_msg(&mut self, message: GameFWRequest, send_policy: impl Into<EventType>)
     {
         tracing::trace!(?message, "buffering fw message");
         self.buffer.push_back(
                 PendingClientMessage{
-                        message     : AimedMsg::Fw{ bytes: ser_msg(message) },
+                        request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<_, ()>::Fw(message) })),
                         send_policy : send_policy.into()
                     }
             );
     }
 
-    pub fn add_core_msg<T: Serialize + Debug>(&mut self, message: &T, send_policy: impl Into<EventType>)
+    /// Adds a user-defined client request to the buffer.
+    //todo: parameterize the buffer on T for robustness (or set the expected type id when constructing the buffer)
+    pub fn add_core_msg<T: Serialize + Debug>(&mut self, message: T, send_policy: impl Into<EventType>)
     {
         tracing::trace!(?message, "buffering core message");
         self.buffer.push_back(
             PendingClientMessage{
-                    message     : AimedMsg::Core{ bytes: ser_msg(message) },
+                    request     : Bytes::from(ser_msg(&ClientMessage{ message: AimedMsg::<GameFWRequest, _>::Core(message) })),
                     send_policy : send_policy.into()
                 }
         );

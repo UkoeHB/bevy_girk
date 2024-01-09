@@ -27,7 +27,7 @@ fn clients_are_ready(client_readiness: &Query<&Readiness, With<ClientId>>) -> bo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Check if init mode is over.
+/// Checks if init mode is over.
 fn init_mode_is_over(
     max_init_ticks   : Ticks,
     game_ticks       : Ticks,
@@ -42,7 +42,7 @@ fn init_mode_is_over(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Update the game framework mode.
+/// Updates the game framework mode.
 pub(crate) fn update_game_fw_mode(
     game_fw_config     : Res<GameFWConfig>,
     game_ticks         : Res<GameFWTicksElapsed>,
@@ -83,7 +83,7 @@ pub(crate) fn update_game_fw_mode(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Increment the number of game framework ticks elapsed.
+/// Increments the number of game framework ticks elapsed.
 pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFWTicksElapsed>)
 {
     game_ticks.elapsed.advance();
@@ -91,7 +91,15 @@ pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFWTicksElapsed>)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set total initialization progress of the game.
+/// Resets the game message buffer for a new tick.
+pub(crate) fn reset_game_message_buffer(mut buffer: ResMut<GameMessageBuffer>, game_ticks: Res<GameFWTicksElapsed>)
+{
+    buffer.reset(game_ticks.elapsed.ticks());
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Sets total initialization progress of the game.
 pub(crate) fn refresh_game_init_progress(
     change_query      : Query<(), (With<ClientId>, Changed<Readiness>)>,
     readiness_query   : Query<&Readiness, With<ClientId>>,
@@ -114,17 +122,15 @@ pub(crate) fn refresh_game_init_progress(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Take client messages, filter by information access rights, dispatch to clients.
-/// Note: the `GamePacket` receiver may drop messages sent to disconnected clients.
+/// Takes client messages, filters by information access rights, dispatches to clients.
+///
+/// Note: The `GamePacket` receiver may drop messages sent to disconnected clients.
 //todo: refactor to use bevy_replicon rooms
 pub(crate) fn dispatch_messages_to_client(
     mut game_message_buffer : ResMut<GameMessageBuffer>,
-    game_ticks              : Res<GameFWTicksElapsed>,
     game_message_sender     : Res<Sender<GamePacket>>,
     client_query            : Query<(&ClientId, &InfoAccessRights)>
 ){
-    let ticks = game_ticks.elapsed.ticks();
-
     for pending_game_message in game_message_buffer.drain()
     {
         for (client_id, access_rights) in &client_query
@@ -135,7 +141,7 @@ pub(crate) fn dispatch_messages_to_client(
                     GamePacket{
                             client_id   : client_id.id(),
                             send_policy : pending_game_message.send_policy,
-                            message     : GameMessage{ message: pending_game_message.message.clone(), ticks }
+                            message     : pending_game_message.message.clone()
                         }
                 ).expect("game fw message dispatch sender should always succeed");
         }
@@ -144,14 +150,14 @@ pub(crate) fn dispatch_messages_to_client(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Notify a single client of the current game framework mode.
+/// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
     In(client_id)           : In<ClientIdType>,
     current_game_mode       : Res<State<GameFWMode>>,
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
     game_message_buffer.add_fw_msg(
-            &GameFWMsg::CurrentGameFWMode(**current_game_mode),
+            GameFWMsg::CurrentGameFWMode(**current_game_mode),
             vec![InfoAccessConstraint::Targets(vec![client_id])],
             SendOrdered
         );
@@ -165,7 +171,7 @@ pub(crate) fn notify_game_fw_mode_all(
     mut game_message_buffer : ResMut<GameMessageBuffer>
 ){
     game_message_buffer.add_fw_msg(
-            &GameFWMsg::CurrentGameFWMode(**current_game_mode),
+            GameFWMsg::CurrentGameFWMode(**current_game_mode),
             vec![],
             SendOrdered
         );
@@ -173,6 +179,7 @@ pub(crate) fn notify_game_fw_mode_all(
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Starts the 'end mode' countdown, which will end in closing the app.
 pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_end_tick: ResMut<GameFWEndTick>)
 {
     game_end_tick.0 = Some(game_ticks.elapsed.ticks());
@@ -180,7 +187,7 @@ pub(crate) fn start_end_countdown(game_ticks: Res<GameFWTicksElapsed>, mut game_
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Exit the app if all game end ticks have elapsed.
+/// Exits the app if all game end ticks have elapsed.
 ///
 /// If the max game end ticks equals zero, then the app will be exited in the same tick that `GameFWMode::End` is set.
 //todo: consider exiting early if all clients have acked the game end state

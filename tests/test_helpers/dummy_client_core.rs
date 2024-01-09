@@ -14,7 +14,7 @@ use bevy_fn_plugin::*;
 #[bevy_plugin]
 pub fn DummyClientCorePlugin(app: &mut App)
 {
-    app.insert_resource(GameMessageHandler::new( | _: &mut World, _: Vec<u8>, _: Ticks | -> bool { false } ));
+    app.insert_resource(GameMessageHandler::new( | _: &mut World, _: &GamePacket | -> bool { false } ));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

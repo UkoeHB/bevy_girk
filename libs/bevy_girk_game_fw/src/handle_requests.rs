@@ -13,12 +13,16 @@ use bevy_kot_utils::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_handle_game_fw_request(world: &mut World, ser_message: Vec<u8>, client_id: ClientIdType) -> bool
+fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket) -> bool
 {
-    let Some(request) = deser_msg::<GameFWRequest>(&ser_message[..])
+    // note: we expect this to fail very cheaply if the client message is AimedMsg::Core
+    let Some(message) = deser_msg::<ClientMessage::<()>>(&client_packet.message[..])
     else { tracing::trace!("failed to deserialize game framework request"); return false; };
+    let AimedMsg::Fw(request) = message.message else { return false; };
 
     tracing::trace!(?request, "received game fw request");
+    let client_id = client_packet.client_id;
+
     match request
     {
         GameFWRequest::ClientInitProgress(prog) => syscall(world, (client_id, prog), handle_client_init_progress_request),
@@ -32,21 +36,15 @@ fn try_handle_game_fw_request(world: &mut World, ser_message: Vec<u8>, client_id
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_handle_game_request(
-    world       : &mut World,
-    ser_message : Vec<u8>,
-    client_id   : ClientIdType,
-    handler     : &ClientMessageHandler
-) -> bool
+fn try_handle_client_request(handler: &ClientMessageHandler, world: &mut World, client_packet: &ClientPacket) -> bool
 {
-    tracing::trace!("received client message");  //todo: use generic and deserialize client message here, then log it
-    handler.try_call(world, ser_message, client_id)
+    handler.try_call(world, client_packet)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle game framework requests.
+/// Handles client requests.
 pub(crate) fn handle_requests(world: &mut World)
 {
     let client_packets     = world.remove_resource::<Receiver<ClientPacket>>().unwrap();
@@ -54,18 +52,10 @@ pub(crate) fn handle_requests(world: &mut World)
 
     while let Some(client_packet) = client_packets.try_recv()
     {
-        // handle the packet's message
-        let client_id = client_packet.client_id;
-        let result =
-            match client_packet.message.message
-            {
-                // try to handle with framework request handler
-                AimedMsg::Fw{ bytes } => try_handle_game_fw_request(world, bytes, client_id),
-                // try to handle with core request handler
-                AimedMsg::Core{ bytes } => try_handle_game_request(world, bytes, client_id, &client_msg_handler),
-            };
+        if try_handle_client_fw_request(world, &client_packet) { continue; }
+        if try_handle_client_request(&client_msg_handler, world, &client_packet) { continue; }
 
-        if !result { tracing::trace!(client_packet.client_id, "failed to handle client packet"); }
+        tracing::trace!(?client_packet, "failed to handle client packet");
     }
 
     world.insert_resource(client_packets);

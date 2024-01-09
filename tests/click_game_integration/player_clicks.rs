@@ -50,9 +50,9 @@ fn player_clicks()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : ClientMessage{
-                            message: AimedMsg::Fw{ bytes: ser_msg(&GameFWRequest::ClientInitProgress(1.0)) }
-                        }
+                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
+                            message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                        }))
                 }
         ).unwrap();
 

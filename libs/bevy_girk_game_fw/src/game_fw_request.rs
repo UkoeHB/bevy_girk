@@ -11,21 +11,26 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PingRequest
 {
-    /// timestamp of requester
+    /// Timestamp of requester.
     pub timestamp_ns: u64
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Requests that can be sent to the game framework.
+//ClientFwRequest
+//todo: impl Into<SendPolicy>
 #[derive(Debug, Serialize, Deserialize)]
 pub enum GameFWRequest
 {
     /// Notify game framework of the client's initialization progress.
+    //SetInitProgress
     ClientInitProgress(f32),
     /// Request a ping response.
+    //GetPing
     PingRequest(PingRequest),
     /// Request the current game framework mode.
+    //GetGameFwMode
     GameFWModeRequest,
 }
 

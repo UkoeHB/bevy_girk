@@ -28,9 +28,9 @@ fn basic_ping()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     : ClientMessage{
-                            message: AimedMsg::Fw{ bytes: ser_msg(&GameFWRequest::ClientInitProgress(1.0)) }
-                        }
+                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
+                                message: AimedMsg::<_, ()>::Fw(GameFWRequest::ClientInitProgress(1.0))
+                        }))
                 }
         ).unwrap();
 
@@ -39,14 +39,12 @@ fn basic_ping()
             ClientPacket{
                     client_id   : 0 as ClientIdType,
                     send_policy : SendOrdered.into(),
-                    message     :
-                        ClientMessage{
-                                message: AimedMsg::Fw{ bytes: ser_msg(&GameFWRequest::PingRequest(
-                                                PingRequest{
-                                                        timestamp_ns: 0u64
-                                                    }
-                                            )) }
-                            }
+                    message     : bytes::Bytes::from(ser_msg(&ClientMessage{
+                        message: AimedMsg::<_, ()>::Fw(GameFWRequest::PingRequest(
+                            PingRequest{
+                                    timestamp_ns: 0u64
+                                })
+                    )}))
                 }
         ).unwrap();
 
@@ -74,23 +72,21 @@ fn basic_ping()
 
     let mut found_ping_response: bool = false;
 
-    while let Some(response) = game_packet_receiver.try_recv()
+    while let Some(game_packet) = game_packet_receiver.try_recv()
     {
         // deserialize ping response
-        let AimedMsg::Fw{ bytes: serialized_message } = &response.message.message
-        else { panic!("Message was not aimed at the framework!"); };
-        let Some(deserialized_message) = deser_msg::<GameFWMsg>(&serialized_message[..])
-        else { panic!("Deserializing game framework message failed!"); };
+        let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
+        else { panic!("failed to deserialize game fw message"); };
+        let AimedMsg::Fw(msg) = message.message else { panic!("did not receive fw message") };
 
         // try to extract ping response
-        let GameFWMsg::PingResponse(_) = deserialized_message else { continue; };
+        let GameFWMsg::PingResponse(_) = msg else { continue; };
 
         // success
         found_ping_response = true;
     }
 
-    if !found_ping_response
-        { panic!("Did not find a ping response!"); }
+    if !found_ping_response { panic!("Did not find a ping response!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

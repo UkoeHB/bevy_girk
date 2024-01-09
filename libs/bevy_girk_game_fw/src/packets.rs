@@ -3,8 +3,8 @@ use crate::*;
 
 //third-party shortcuts
 use bevy_replicon::network_event::EventType;
+use bytes::Bytes;
 use serde::{Serialize, Deserialize};
-use serde_with::{Bytes, serde_as};
 
 //standard shortcuts
 
@@ -12,42 +12,35 @@ use serde_with::{Bytes, serde_as};
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A message aimed at a particular deserializer.
-#[serde_as]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum AimedMsg
+#[derive(Serialize, Deserialize)]
+pub enum AimedMsg<F, T>
 {
     // Server/client framework
-    Fw{
-        #[serde_as(as = "Bytes")]
-        bytes: Vec<u8>
-    },
+    Fw(F),
     // Server/client core
-    Core{
-        #[serde_as(as = "Bytes")]
-        bytes: Vec<u8>
-    },
+    Core(T),
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A game message consumed by a client/clients.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GameMessage
+#[derive(Serialize, Deserialize)]
+pub struct GameMessage<T>
 {
-    /// Message
-    pub message: AimedMsg,
     /// Number of ticks elapsed in the game framework.
     pub ticks: Ticks,
+    /// Message
+    pub message: AimedMsg<GameFWMsg, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A client message consumed by the game server.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ClientMessage
+#[derive(Serialize, Deserialize)]
+pub struct ClientMessage<T>
 {
     /// Message
-    pub message: AimedMsg,
+    pub message: AimedMsg<GameFWRequest, T>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -61,7 +54,7 @@ pub struct GamePacket
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
     /// The message.
-    pub message: GameMessage,
+    pub message: Bytes,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -75,7 +68,7 @@ pub struct ClientPacket
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
     /// The message.
-    pub message: ClientMessage,
+    pub message: Bytes,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

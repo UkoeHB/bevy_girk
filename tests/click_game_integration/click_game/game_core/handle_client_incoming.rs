@@ -1,6 +1,5 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -86,10 +85,10 @@ fn handle_client_input_gameover(world: &mut World, req: GameRequest, id: ClientI
 
 /// Handle a message sent to the game from a client.
 /// Note: this function is meant to be injected to a [`ClientMessageHandler`].
-pub(crate) fn try_handle_game_core_input(world: &mut World, serialized_message: Vec<u8>, client_id: ClientIdType) -> bool
+pub(crate) fn try_handle_game_core_input(world: &mut World, client_packet: &ClientPacket) -> bool
 {
-    let Some(request) = deser_msg::<GameRequest>(&serialized_message[..])
-    else { tracing::trace!("failed deserializing client message"); return false; };
+    let Some(request) = deserialize_client_request(client_packet) else { return false; };
+    let client_id = client_packet.client_id;
 
     match syscall(world, (), get_current_game_mode)
     {

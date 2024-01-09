@@ -142,6 +142,7 @@ pub fn GameFWTickPlugin(app: &mut App)
             (
                 // elapse the previous tick
                 advance_game_fw_tick,
+                reset_game_message_buffer,
                 // determine which game framework mode the previous tick was in and set it
                 update_game_fw_mode,
                 apply_state_transition::<GameFWMode>,

@@ -13,6 +13,14 @@ use iyes_progress::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Resets the game message buffer for a new tick.
+pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientMessageBuffer>)
+{
+    buffer.reset();
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Update client's intialization cache.
 ///
 /// Note: the ProgressCounter is removed when it reaches 100%, but we may still need the initialization cache.
@@ -39,7 +47,7 @@ pub(crate) fn send_initialization_progress_report(
 
     // sent progress report
     client_message_buffer.add_fw_msg(
-            &GameFWRequest::ClientInitProgress(initialization_progress_cache.progress().into()),
+            GameFWRequest::ClientInitProgress(initialization_progress_cache.progress().into()),
             SendOrdered
         );
 }
@@ -61,7 +69,7 @@ pub(crate) fn reinitialize_client_fw(
 /// Request the current game framework mode.
 pub(crate) fn request_game_fw_mode(mut client_message_buffer: ResMut<ClientMessageBuffer>)
 {
-    client_message_buffer.add_fw_msg(&GameFWRequest::GameFWModeRequest, SendUnordered);
+    client_message_buffer.add_fw_msg(GameFWRequest::GameFWModeRequest, SendUnordered);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -78,7 +86,7 @@ pub(crate) fn dispatch_client_packets(
                 ClientPacket{
                         client_id   : client_config.client_id(),
                         send_policy : pending_client_message.send_policy,
-                        message     : ClientMessage{ message: pending_client_message.message }
+                        message     : pending_client_message.request,
                     }
             ).expect("client fw packet dispatch sender should always succeed");
     }

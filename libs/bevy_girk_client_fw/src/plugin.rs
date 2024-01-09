@@ -142,6 +142,7 @@ pub fn ClientFWTickPlugin(app: &mut App)
     // FWSTART
     app.add_systems(PreUpdate,
             (
+                reset_client_request_buffer,
                 handle_commands,
                 handle_game_incoming,
                 apply_state_transition::<ClientInitializationState>,  //the client may have been commanded to reinitialize
