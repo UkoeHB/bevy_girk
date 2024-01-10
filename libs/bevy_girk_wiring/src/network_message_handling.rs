@@ -34,7 +34,7 @@ pub(crate) struct EventConfig<T, P: SendPolicyConfig>
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Server -> Client
-pub(crate) fn send_server_messages(
+pub(crate) fn send_server_packets(
     server_output_receiver : Res<Receiver<GamePacket>>,
     mut server             : ResMut<RenetServer>,
     unreliable_channel     : Res<ServerEventChannel<EventConfig<GamePacket, SendUnreliable>>>,
@@ -58,7 +58,7 @@ pub(crate) fn send_server_messages(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client <- Server
-pub(crate) fn receive_server_messages(
+pub(crate) fn receive_server_packets(
     mut client          : ResMut<RenetClient>,
     client_transport    : Res<NetcodeClientTransport>,
     client_input_sender : Res<Sender<GamePacket>>,
@@ -87,8 +87,18 @@ pub(crate) fn receive_server_messages(
 
 //-------------------------------------------------------------------------------------------------------------------
 
+pub(crate) fn clear_client_packets(client_output_receiver: Res<Receiver<ClientPacket>>)
+{
+    while let Some(_client_packet) = client_output_receiver.try_recv()
+    {
+        tracing::warn!("dropping client packet while disconnected");
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Client -> Server
-pub(crate) fn send_client_messages(
+pub(crate) fn send_client_packets(
     client_output_receiver : Res<Receiver<ClientPacket>>,
     mut client             : ResMut<RenetClient>,
     unreliable_channel     : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnreliable>>>,
@@ -109,7 +119,7 @@ pub(crate) fn send_client_messages(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Server <- Client
-pub(crate) fn receive_client_messages(
+pub(crate) fn receive_client_packets(
     mut server          : ResMut<RenetServer>,
     server_input_sender : Res<Sender<ClientPacket>>,
     unreliable_channel  : Res<ClientEventChannel<EventConfig<ClientPacket, SendUnreliable>>>,

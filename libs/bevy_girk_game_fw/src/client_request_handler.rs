@@ -20,7 +20,7 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de>>(client_p
     let AimedMsg::Core(request) = req.req
     else { tracing::trace!("failed to deserialize client request"); return None; };
 
-    tracing::trace!(?request, "received client request");
+    tracing::trace!(?client_packet.send_policy, ?request, "received client request");
     Some(request)
 }
 

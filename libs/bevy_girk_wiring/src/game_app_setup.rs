@@ -115,7 +115,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
         .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
         //message receiving
         .add_systems(PreUpdate,
-            receive_client_messages
+            receive_client_packets
                 .run_if(resource_exists::<RenetServer>())
                 .after(bevy_replicon::prelude::ServerSet::Receive)
                 .before(GameFwTickSetPrivate::FwStart)
@@ -123,7 +123,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
         // <- client logic is in Update
         //message sending
         .add_systems(PostUpdate,
-            send_server_messages
+            send_server_packets
                 .run_if(resource_exists::<RenetServer>())
                 .after(GameFwTickSetPrivate::FwEnd)
                 .before(bevy_replicon::prelude::ServerSet::Send)

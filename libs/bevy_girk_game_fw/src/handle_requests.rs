@@ -17,10 +17,10 @@ fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket)
 {
     // note: we expect this to fail very cheaply if the client message is AimedMsg::Core
     let Some(req) = deser_msg::<ClientRequest::<()>>(&client_packet.request[..])
-    else { tracing::trace!("failed to deserialize game framework request"); return false; };
+    else { tracing::trace!("failed to deserialize client framework request"); return false; };
     let AimedMsg::Fw(request) = req.req else { return false; };
 
-    tracing::trace!(?request, "received game fw request");
+    tracing::trace!(?client_packet.send_policy, ?request, "received client fw request");
     let client_id = client_packet.client_id;
 
     match request
