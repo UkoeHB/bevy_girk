@@ -14,6 +14,7 @@ bevy_kot_utils = { workspace = true }
 bevy_fn_plugin = { workspace = true }
 bevy_renet     = { workspace = true }
 bevy_replicon  = { workspace = true }
+bytes          = { workspace = true }
 enfync         = { workspace = true }
 serde          = { workspace = true }
 serde_json     = { workspace = true }

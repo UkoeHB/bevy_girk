@@ -6,11 +6,9 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_renet::renet::{RenetClient, RenetServer};
 use bevy_replicon::network_event::EventType;
-use bevy_replicon::prelude::{FromClient, LastChangeTick, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients};
-use bytes::Bytes;
+use bevy_replicon::prelude::{FromClient, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients};
 
 //standard shortcuts
-use std::io::Cursor;
 use std::marker::PhantomData;
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -70,22 +68,17 @@ pub(crate) fn send_server_packets(
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
-    last_change_tick   : Res<LastChangeTick>,
 ){
-    let mut header = [0; std::mem::size_of::<RepliconTick>()];
-    bincode::serialize_into(&mut header[..], &**last_change_tick).expect("serializing change tick failed");
-
     for game_packet in game_packets.drain()
     {
         let SendMode::Direct(client_id) = game_packet.mode else { panic!("invalid game packet send mode"); };
-        //todo: avoid allocating here
-        let tick_message = Bytes::from([&header, &game_packet.event.message[..]].concat());
 
+        // note: the replicon change tick is prepended to the game packet message (overloading to reduce allocations)
         match game_packet.event.send_policy
         {
-            EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, tick_message),
-            EventType::Unordered  => server.send_message(client_id, unordered_channel.id, tick_message),
-            EventType::Ordered    => server.send_message(client_id, ordered_channel.id, tick_message)
+            EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, game_packet.event.message),
+            EventType::Unordered  => server.send_message(client_id, unordered_channel.id, game_packet.event.message),
+            EventType::Ordered    => server.send_message(client_id, ordered_channel.id, game_packet.event.message)
         }
     }
 }
@@ -112,14 +105,15 @@ pub(crate) fn receive_server_packets(
     {
         while let Some(mut message) = client.receive_message(channel_id)
         {
-            let mut cursor = Cursor::new(&message[..]);
-            let change_tick = bincode::deserialize_from(&mut cursor).expect("failed deserializing change tick");
-            let _ = message.split_to(cursor.position() as usize);
-
+            // extract the layered-in replicon change tick
+            let change_tick = deser_bytes_partial::<RepliconTick>(&mut message).expect("failed deserializing change tick");
             let packet = GamePacket{ send_policy, message };
 
-            if change_tick <= *replicon_tick { game_packets.send(packet); }
-            else                             { event_queue.insert(change_tick, packet); }
+            match change_tick <= *replicon_tick
+            {
+                true  => game_packets.send(packet),
+                false => event_queue.insert(change_tick, packet),
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
+use bevy_replicon::prelude::RepliconTick;
 use bevy_replicon::network_event::EventType;
 use bytes::Bytes;
 use serde::Serialize;
@@ -33,6 +34,7 @@ pub struct GameMessageBuffer
     user_message_id : TypeId,
     sender          : Sender<PendingGameMessage>,
     receiver        : Receiver<PendingGameMessage>,
+    change_tick     : RepliconTick,
     ticks           : Ticks,
 }
 
@@ -46,20 +48,19 @@ impl GameMessageBuffer
             user_message_id: TypeId::of::<T>(),
             sender,
             receiver,
-            ticks: Ticks::default(),
+            change_tick : RepliconTick::default(),
+            ticks       : Ticks::default(),
         }
     }
 
     /// Resets the buffer for a new tick.
-    pub fn reset(&mut self, elapsed_ticks: Ticks)
+    pub fn reset(&mut self, change_tick: RepliconTick, elapsed_ticks: Ticks)
     {
+        self.change_tick = change_tick;
         self.ticks = elapsed_ticks;
 
         let mut count = 0;
-        while let Some(_) = self.next()
-        {
-            count += 1;
-        }
+        while let Some(_) = self.next() { count += 1; }
         if count != 0 { tracing::warn!(count, "buffer not empty on reset"); }
     }
 
@@ -69,8 +70,12 @@ impl GameMessageBuffer
         tracing::trace!(?message, "buffering fw message");
 
         let send_policy = message.into_event_type();
-        let message = Bytes::from(ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }));
-        self.sender.send(PendingGameMessage{message, access_constraints, send_policy}).expect("failed buffering fw message");
+        let message = Bytes::from(ser_msg(&(
+                self.change_tick,
+                GameMessage{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }
+            )));
+        self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
+            .expect("failed buffering fw message");
     }
 
     /// Adds a user-defined game message to the buffer.
@@ -86,8 +91,11 @@ impl GameMessageBuffer
         tracing::trace!(?message, "buffering core message");
 
         let send_policy = message.into_event_type();
-        let message = Bytes::from(ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }));
-        self.sender.send(PendingGameMessage{message, access_constraints, send_policy})
+        let message = Bytes::from(ser_msg(&(
+                self.change_tick,
+                GameMessage{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }
+            )));
+        self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
             .expect("failed buffering user message");
     }
 

@@ -92,6 +92,7 @@ fn basic_game_and_client()
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
+        .init_resource::<LastChangeTick>()
         //setup game framework
         .insert_resource(GameFwConfig::new(ticks_per_sec, Ticks(1), Ticks(0) ))
         .insert_resource(prepare_player_client_contexts(num_players))

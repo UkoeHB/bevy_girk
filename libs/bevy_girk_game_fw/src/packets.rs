@@ -53,6 +53,8 @@ pub struct GamePacket
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
     /// The message.
+    /// - On the server this equals: `(replicon change tick, message)`.
+    /// - On the client this equals: `message`.
     pub message: Bytes,
 }
 

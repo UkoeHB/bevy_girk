@@ -58,6 +58,7 @@ fn test_game_setup(num_players: usize)
     App::new()
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
+        .init_resource::<bevy_replicon::prelude::LastChangeTick>()
         //setup app
         .set_runner(make_test_runner(2))
         .add_plugins(AddMockMessageChannelsPlugin)

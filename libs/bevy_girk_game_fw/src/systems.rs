@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy::app::AppExit;
-use bevy_replicon::prelude::{ToClients, SendMode};
+use bevy_replicon::prelude::{LastChangeTick, SendMode, ToClients};
 
 //standard shortcuts
 
@@ -91,9 +91,12 @@ pub(crate) fn advance_game_fw_tick(mut game_ticks: ResMut<GameFwTicksElapsed>)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Resets the game message buffer for a new tick.
-pub(crate) fn reset_game_message_buffer(mut buffer: ResMut<GameMessageBuffer>, game_ticks: Res<GameFwTicksElapsed>)
-{
-    buffer.reset(game_ticks.elapsed.ticks());
+pub(crate) fn reset_game_message_buffer(
+    mut buffer       : ResMut<GameMessageBuffer>,
+    last_change_tick : Res<LastChangeTick>,
+    game_ticks       : Res<GameFwTicksElapsed>,
+){
+    buffer.reset(**last_change_tick, game_ticks.elapsed.ticks());
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -134,8 +137,8 @@ pub(crate) fn dispatch_messages_to_client(
     {
         for (client_id, access_rights) in &client_query
         {
-            if !access_rights.can_access(&pending_game_message.access_constraints)
-                { continue; }
+            if !access_rights.can_access(&pending_game_message.access_constraints) { continue; }
+
             game_packets.send(ToClients{
                     mode  : SendMode::Direct(renet::ClientId::from_raw(client_id.id() as u64)),
                     event : GamePacket{

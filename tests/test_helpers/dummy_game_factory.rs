@@ -60,6 +60,7 @@ impl GameFactoryImpl for DummyGameFactory
         app
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
+            .init_resource::<bevy_replicon::prelude::LastChangeTick>()
             //setup game framework
             .insert_resource(GameFwConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))

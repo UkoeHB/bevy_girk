@@ -51,6 +51,7 @@ fn basic_ping()
     app
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
+        .init_resource::<bevy_replicon::prelude::LastChangeTick>()
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
