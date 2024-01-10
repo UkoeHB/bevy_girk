@@ -81,9 +81,13 @@ fn handle_client_input_gameover(world: &mut World, req: GameRequest, id: ClientI
 
 /// Handle a message sent to the game from a client.
 /// Note: this function is meant to be injected to a [`ClientRequestHandler`].
-pub(crate) fn try_handle_game_core_input(world: &mut World, client_id: ClientIdType, client_packet: &ClientPacket) -> bool
+pub(crate) fn try_handle_game_core_input(
+    world         : &mut World,
+    client_id     : ClientIdType,
+    client_packet : &ClientPacket
+) -> Result<(), Option<ClientFwRequest>>
 {
-    let Some(request) = deserialize_client_request(client_id, client_packet) else { return false; };
+    let request = deserialize_client_request(client_id, client_packet)?;
 
     match syscall(world, (), get_current_game_mode)
     {
@@ -93,7 +97,7 @@ pub(crate) fn try_handle_game_core_input(world: &mut World, client_id: ClientIdT
         GameMode::GameOver => handle_client_input_gameover(world, request, client_id),
     }
 
-    return true;
+    Ok(())
 }
 
 //-------------------------------------------------------------------------------------------------------------------

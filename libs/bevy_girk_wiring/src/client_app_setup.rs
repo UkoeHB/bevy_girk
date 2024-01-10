@@ -75,9 +75,25 @@ fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFwCommand>>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn log_transport_errors(mut transport_errors: EventReader<renet::transport::NetcodeTransportError>)
+fn log_just_connected()
 {
-    for error in transport_errors.read()
+   tracing::info!("client connected");
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn log_just_disconnected()
+{
+   tracing::info!("client disconnected");
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn log_transport_errors(mut errors: EventReader<renet::transport::NetcodeTransportError>)
+{
+    for error in errors.read()
     {
         tracing::warn!(?error);
     }
@@ -136,9 +152,11 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
             ClientFwTickSetPrivate::FwStart
                 .after(bevy_replicon::prelude::ClientSet::Receive)
         )
-        //reinitialization
+        //connection event handling
         .add_systems(PreUpdate,
             (
+                log_just_connected.run_if(bevy_renet::client_just_connected()),
+                log_just_disconnected.run_if(bevy_renet::client_just_disconnected()),
                 // reinitialize when disconnected and not at game end
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
