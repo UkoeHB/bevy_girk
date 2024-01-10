@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 
@@ -15,6 +16,14 @@ use bevy::prelude::*;
 #[test]
 fn basic_ping()
 {
+    // prepare tracing
+    /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    */
+
     // misc.
     let num_players = 1;
 
@@ -26,18 +35,20 @@ fn basic_ping()
     app.add_event::<GamePacket>();
 
     // make the client ready
-    app.world.resource_mut::<Events<ClientPacket>>().send(
-            ClientPacket{
+    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+            client_id: renet::ClientId::from_raw(0u64),
+            event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                                 req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
-        );
+        });
 
     // send ping request
-    app.world.resource_mut::<Events<ClientPacket>>().send(
-            ClientPacket{
+    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+            client_id: renet::ClientId::from_raw(0u64),
+            event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                         req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
@@ -46,14 +57,12 @@ fn basic_ping()
                                 })
                     )}))
                 }
-        );
+        });
 
     app
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
         .init_resource::<bevy_replicon::prelude::LastChangeTick>()
-        //setup app
-        .set_runner(make_test_runner(2))
         //setup game framework
         .insert_resource(GameFwConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
         .insert_resource(GameMessageBuffer::new::<()>())
@@ -65,12 +74,14 @@ fn basic_ping()
         .add_plugins(GameFwPlugin)
         //add game
         .add_plugins(DummyGameCorePlugin)
-        .run();
-/*
+        .add_systems(Update, forward_game_packets);
+    app.update();
+    app.update();
+
     // expect ping response
     let mut found_ping_response: bool = false;
 
-    while let Some(game_packet) = game_packet_receiver.try_recv()
+    for game_packet in app.world.resource_mut::<Events<GamePacket>>().drain()
     {
         // deserialize ping response
         let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
@@ -84,7 +95,7 @@ fn basic_ping()
         found_ping_response = true;
     }
 
-    if !found_ping_response { panic!("Did not find a ping response!"); } */
+    if !found_ping_response { panic!("Did not find a ping response!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

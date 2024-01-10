@@ -5,9 +5,7 @@ use bevy_girk_utils::*;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
-use bevy::prelude::*;
 use bevy::utils::AHasher;
-use bevy_replicon::prelude::*;
 
 //standard shortcuts
 use std::collections::{HashMap, HashSet};
@@ -79,34 +77,6 @@ pub fn prepare_game_initializer(
     let game_context = ClickGameContext::new(0u128, duration_config);
 
     ClickGameInitializer { game_context, players, watchers: HashSet::default() }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-pub fn forward_client_packets(
-    mut packets     : ResMut<Events<ClientPacket>>,
-    mut from_client : EventWriter<FromClient<ClientPacket>>,
-){
-    for packet in packets.drain()
-    {
-        from_client.send(FromClient{ client_id: renet::ClientId::from_raw(0), event: packet });
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-pub fn forward_game_packets(
-    mut to_clients : ResMut<Events<ToClients<GamePacket>>>,
-    mut packets    : EventWriter<GamePacket>,
-){
-    for mut packet in to_clients.drain()
-    {
-        // remove the layered-in replicon change tick
-        let _ = deser_bytes_partial::<RepliconTick>(&mut packet.event.message).expect("failed deserializing change tick");
-        let packet = GamePacket{ send_policy: packet.event.send_policy, message: packet.event.message };
-
-        packets.send(packet);
-    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
