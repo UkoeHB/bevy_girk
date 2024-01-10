@@ -72,9 +72,12 @@ fn handle_game_core_output_gameover(world: &mut World, message: GameMsg, _tick: 
 /// Handle a message sent to the client from the game.
 /// Note: this function is meant to be injected to a [`GameMessageHandler`], where it will be invoked by the client
 ///       framework at the start of each tick to handle incoming game messages.
-pub(crate) fn try_handle_game_core_output(world: &mut World, game_packet: &GamePacket) -> bool
+pub(crate) fn try_handle_game_core_output(
+    world       : &mut World,
+    game_packet : &GamePacket
+) -> Result<(), Option<(Ticks, GameFwMsg)>>
 {
-    let Some((ticks, message)) = deserialize_game_message(game_packet) else { return false; };
+    let (ticks, message) = deserialize_game_message(game_packet)?;
 
     // handle based on current client mode
     match syscall(world, (), get_current_client_core_mode)
@@ -85,7 +88,7 @@ pub(crate) fn try_handle_game_core_output(world: &mut World, game_packet: &GameP
         ClientCoreMode::GameOver => handle_game_core_output_gameover(world, message, ticks),
     }
 
-    return true;
+    Ok(())
 }
 
 //-------------------------------------------------------------------------------------------------------------------
