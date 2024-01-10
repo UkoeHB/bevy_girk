@@ -4,7 +4,6 @@ use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -72,19 +71,12 @@ pub(crate) fn request_game_fw_mode(buffer: Res<ClientRequestBuffer>)
 
 /// Take client messages, dispatch to game.
 pub(crate) fn dispatch_client_packets(
-    mut buffer           : ResMut<ClientRequestBuffer>,
-    client_packet_sender : Res<Sender<ClientPacket>>,
-    client_config        : Res<ClientFwConfig>
+    mut buffer         : ResMut<ClientRequestBuffer>,
+    mut client_packets : EventWriter<ClientPacket>,
 ){
-    while let Some(pending_client_message) = buffer.next()
+    while let Some(pending_packet) = buffer.next()
     {
-        client_packet_sender.send(
-                ClientPacket{
-                        client_id   : client_config.client_id(),
-                        send_policy : pending_client_message.send_policy,
-                        request     : pending_client_message.request,
-                    }
-            ).expect("client fw packet dispatch sender should always succeed");
+        client_packets.send(pending_packet);
     }
 }
 

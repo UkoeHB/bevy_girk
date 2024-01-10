@@ -93,8 +93,6 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
 pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFwConfig) -> Sender<ClientFwCommand>
 {
     // prepare message channels
-    let (game_packet_sender, game_packet_receiver)             = new_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver)         = new_channel::<ClientPacket>();
     let (client_fw_command_sender, client_fw_command_receiver) = new_channel::<ClientFwCommand>();
 
     // prepare client app framework
@@ -103,10 +101,6 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
         .add_plugins(ClientFwPlugin)
         //client framework
         .insert_resource(client_fw_config)
-        .insert_resource(game_packet_sender)
-        .insert_resource(game_packet_receiver)
-        .insert_resource(client_packet_sender)
-        .insert_resource(client_packet_receiver)
         .insert_resource(client_fw_command_receiver);
 
     client_fw_command_sender
@@ -119,6 +113,9 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
 {
     // depends on client framework
 
+    // prepare channels
+    prepare_framework_channels(client_app);
+
     // setup client with bevy_replicon (includes bevy_renet)
     client_app
         //add bevy_replicon client
@@ -129,24 +126,27 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ClientPlugin{ cleanup_prespawns: true })
         //prepare message channels
-        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        //- note: the event types specified here do nothing
+        .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, dummy, receive_server_packets)
+        .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, send_client_packets, dummy)
         //add framework command endpoint for use by connection controls
         .insert_resource(client_fw_command_sender)
         //message receiving
+        .configure_sets(PreUpdate,
+            ClientFwTickSetPrivate::FwStart
+                .after(bevy_replicon::prelude::ClientSet::Receive)
+        )
+        //reinitialization
         .add_systems(PreUpdate,
             (
                 // reinitialize when disconnected and not at game end
                 // - at game end the server will shut down, we don't want to reinitialize in that case
+                // - note: there should not be a race condition here because the client fw only moves to End if
+                //   the server sends an End mode message, but this will only be called in a tick where we are disconnected
+                //   and hence won't receive a game End mode message
                 reinitialize_client
                     .run_if(bevy_renet::client_just_disconnected())
                     .run_if(not(in_state(ClientFwMode::End))),
-                receive_server_packets
-                    .run_if(bevy_renet::client_connected())
             )
                 .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
@@ -169,26 +169,8 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                 .in_set(ClientFwLoadingSet)
         )
         //message sending
-        .add_systems(PostUpdate,
-            //todo: if the client is disconnected then messages will pile up until reconnected; it is probably
-            //      better to drop those messages, but need to do a full analysis to establish a precise framework
-            //      for handling reconnects and resynchronization
-            //      - one problem here is the client sends ClientInitProgress messages while loading, and dropping
-            //        those may cause problems (resend them periodically?) (waiting for replication init solves this,
-            //        the client won't be fully initialized until after connected)
-            //note that bevy_replicon events also internally pile up while waiting, but since we add a layer between
-            //  our events and replicon here, and both systems currently use client_connected(), there should not be
-            //  any race conditions where messages can hang as replicon events
-            send_client_packets
-                .run_if(bevy_renet::client_connected())
-                .after(ClientFwTickSetPrivate::FwEnd)
-                .before(bevy_replicon::prelude::ClientSet::Send)
-        )
-        //message cleanup while disconnected
-        .add_systems(PostUpdate,
-            clear_client_packets
-                .run_if(not(bevy_renet::client_connected()))
-                .after(ClientFwTickSetPrivate::FwEnd)
+        .configure_sets(PostUpdate,
+            ClientFwTickSetPrivate::FwEnd
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
         //log transport errors

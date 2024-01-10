@@ -17,6 +17,7 @@ bevy_simplenet       = { workspace = true }
 bytes              = { workspace = true }
 enfync             = { workspace = true }
 ezsockets          = { workspace = true }
+renet              = { workspace = true }
 serde              = { workspace = true }
 serde_json         = { workspace = true }
 tracing            = { workspace = true }

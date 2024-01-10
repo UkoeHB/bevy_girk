@@ -41,7 +41,7 @@ impl GameMessageBuffer
     /// Makes a new buffer from the expected user-defined game message type.
     pub fn new<T: Serialize + Debug + IntoEventType + 'static>() -> Self
     {
-        let (sender, receiver) = new_channel::<PendingGameMessage>();
+        let (sender, receiver) = new_channel();
         Self{
             user_message_id: TypeId::of::<T>(),
             sender,
@@ -69,15 +69,8 @@ impl GameMessageBuffer
         tracing::trace!(?message, "buffering fw message");
 
         let send_policy = message.into_event_type();
-        self.sender.send(
-                PendingGameMessage{
-                        message: Bytes::from(
-                            ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) })
-                        ),
-                        access_constraints,
-                        send_policy
-                    }
-            ).expect("failed buffering fw message");
+        let message = Bytes::from(ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }));
+        self.sender.send(PendingGameMessage{message, access_constraints, send_policy}).expect("failed buffering fw message");
     }
 
     /// Adds a user-defined game message to the buffer.
@@ -93,15 +86,9 @@ impl GameMessageBuffer
         tracing::trace!(?message, "buffering core message");
 
         let send_policy = message.into_event_type();
-        self.sender.send(
-                PendingGameMessage{
-                        message: Bytes::from(
-                            ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) })
-                        ),
-                        access_constraints,
-                        send_policy
-                    }
-            ).expect("failed buffering user message");
+        let message = Bytes::from(ser_msg(&GameMessage{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }));
+        self.sender.send(PendingGameMessage{message, access_constraints, send_policy})
+            .expect("failed buffering user message");
     }
 
     /// Gets the next available pending message.

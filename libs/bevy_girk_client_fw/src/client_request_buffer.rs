@@ -5,7 +5,6 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
-use bevy_replicon::network_event::EventType;
 use bytes::Bytes;
 use serde::Serialize;
 
@@ -15,22 +14,13 @@ use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A request that will be sent from the client to the server.
-pub struct PendingClientRequest
-{
-    pub request     : Bytes,
-    pub send_policy : EventType,
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 /// A queue of requests waiting to be dispatched to the game.
 #[derive(Resource)]
 pub struct ClientRequestBuffer
 {
     user_request_id : TypeId,
-    sender          : Sender<PendingClientRequest>,
-    receiver        : Receiver<PendingClientRequest>,
+    sender          : Sender<ClientPacket>,
+    receiver        : Receiver<ClientPacket>,
 }
 
 impl ClientRequestBuffer
@@ -38,7 +28,7 @@ impl ClientRequestBuffer
     /// Makes a new buffer from the expected user-defined client request type.
     pub fn new<T: Serialize + Debug + IntoEventType + 'static>() -> Self
     {
-        let (sender, receiver) = new_channel::<PendingClientRequest>();
+        let (sender, receiver) = new_channel();
         Self{
             user_request_id: TypeId::of::<T>(),
             sender,
@@ -63,14 +53,8 @@ impl ClientRequestBuffer
         tracing::trace!(?request, "buffering fw request");
 
         let send_policy = request.into_event_type();
-        self.sender.send(
-                PendingClientRequest{
-                        request: Bytes::from(
-                            ser_msg(&ClientRequest{ req: AimedMsg::<_, ()>::Fw(request) })
-                        ),
-                        send_policy
-                    }
-            ).expect("failed buffering fw request");
+        let request = Bytes::from(ser_msg(&ClientRequest{ req: AimedMsg::<_, ()>::Fw(request) }));
+        self.sender.send(ClientPacket{send_policy, request}).expect("failed buffering fw request");
     }
 
     /// Adds a user-defined client request to the buffer.
@@ -83,18 +67,12 @@ impl ClientRequestBuffer
         tracing::trace!(?request, "buffering core request");
 
         let send_policy = request.into_event_type();
-        self.sender.send(
-                PendingClientRequest{
-                        request: Bytes::from(
-                            ser_msg(&ClientRequest{ req: AimedMsg::<ClientFwRequest, _>::Core(request) })
-                        ),
-                        send_policy
-                    }
-            ).expect("failed buffering user request");
+        let request = Bytes::from(ser_msg(&ClientRequest{ req: AimedMsg::<ClientFwRequest, _>::Core(request) }));
+        self.sender.send(ClientPacket{send_policy, request}).expect("failed buffering user request");
     }
 
-    /// Get the next pending client request.
-    pub fn next(&mut self) -> Option<PendingClientRequest>
+    /// Get the next pending client packet.
+    pub fn next(&mut self) -> Option<ClientPacket>
     {
         self.receiver.try_recv()
     }

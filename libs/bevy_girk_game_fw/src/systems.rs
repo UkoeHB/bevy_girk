@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy::app::AppExit;
-use bevy_kot_utils::*;
+use bevy_replicon::prelude::{ToClients, SendMode};
 
 //standard shortcuts
 
@@ -83,7 +83,7 @@ pub(crate) fn update_game_fw_mode(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increments the number of game framework ticks elapsed.
-pub(crate) fn advance_game_fw_tick(mut game_ticks : ResMut<GameFwTicksElapsed>)
+pub(crate) fn advance_game_fw_tick(mut game_ticks: ResMut<GameFwTicksElapsed>)
 {
     game_ticks.elapsed.advance();
 }
@@ -126,9 +126,9 @@ pub(crate) fn refresh_game_init_progress(
 /// Note: The `GamePacket` receiver may drop messages sent to disconnected clients.
 //todo: refactor to use bevy_replicon rooms
 pub(crate) fn dispatch_messages_to_client(
-    mut buffer          : ResMut<GameMessageBuffer>,
-    game_message_sender : Res<Sender<GamePacket>>,
-    client_query        : Query<(&ClientId, &InfoAccessRights)>
+    mut buffer       : ResMut<GameMessageBuffer>,
+    mut game_packets : EventWriter<ToClients<GamePacket>>,
+    client_query     : Query<(&ClientId, &InfoAccessRights)>
 ){
     while let Some(pending_game_message) = buffer.next()
     {
@@ -136,13 +136,13 @@ pub(crate) fn dispatch_messages_to_client(
         {
             if !access_rights.can_access(&pending_game_message.access_constraints)
                 { continue; }
-            game_message_sender.send(
-                    GamePacket{
-                            client_id   : client_id.id(),
+            game_packets.send(ToClients{
+                    mode  : SendMode::Direct(renet::ClientId::from_raw(client_id.id() as u64)),
+                    event : GamePacket{
                             send_policy : pending_game_message.send_policy,
                             message     : pending_game_message.message.clone()
                         }
-                ).expect("game fw message dispatch sender should always succeed");
+                });
         }
     }
 }

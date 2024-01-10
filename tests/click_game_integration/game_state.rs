@@ -12,9 +12,10 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn end_game(mut end_flag: ResMut<GameEndFlag>)
+fn end_game(mut end_flag: ResMut<GameEndFlag>, mut flag: ResMut<PanicOnDrop>)
 {
     end_flag.set(GameOverReport::default());
+    flag.take();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -78,6 +79,7 @@ fn test_game_setup(num_players: usize)
         //configure execution flow
         .configure_sets(Update, (GameFwSet,).chain())
         //testing
+        .insert_resource(PanicOnDrop::default())
         .insert_resource(NumPlayers(num_players))
         .add_systems(Update, test_game_startup_state)
         .run();

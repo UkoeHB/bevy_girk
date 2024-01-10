@@ -6,7 +6,6 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
-use bevy_kot_utils::*;
 
 //standard shortcuts
 
@@ -17,8 +16,7 @@ use bevy_kot_utils::*;
 fn try_handle_game_fw_message(world: &mut World, game_packet: &GamePacket) -> bool
 {
     // note: we expect this to fail very cheaply if the game message is AimedMsg::Core
-    let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
-    else { tracing::trace!("failed to deserialize game fw message"); return false; };
+    let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..]) else { return false; };
     let AimedMsg::Fw(msg) = message.msg else { return false; };
 
     tracing::trace!(?msg, "received game fw message");
@@ -47,19 +45,11 @@ fn try_handle_game_message(handler: &GameMessageHandler, world: &mut World, game
 /// Handles messages sent to the client from the game.
 pub(crate) fn handle_game_incoming(world: &mut World)
 {
-    let game_packets     = world.remove_resource::<Receiver<GamePacket>>().unwrap();
+    let mut game_packets = world.remove_resource::<Events<GamePacket>>().unwrap();
     let game_msg_handler = world.remove_resource::<GameMessageHandler>().unwrap();
-    let this_client_id   = world.resource::<ClientFwConfig>().client_id();
 
-    while let Some(game_packet) = game_packets.try_recv()
+    for game_packet in game_packets.drain()
     {
-        // validate destination id
-        if game_packet.client_id != this_client_id
-        {
-            tracing::error!(game_packet.client_id, this_client_id, "received game packet destined for another client");
-            continue;
-        }
-
         // handle the packet's message
         if try_handle_game_fw_message(world, &game_packet) { continue; }
         if try_handle_game_message(&game_msg_handler, world, &game_packet) { continue; }

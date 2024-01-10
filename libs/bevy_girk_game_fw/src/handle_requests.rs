@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
-use bevy_kot_utils::*;
+use bevy_replicon::prelude::FromClient;
 
 //standard shortcuts
 
@@ -13,15 +13,13 @@ use bevy_kot_utils::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket) -> bool
+fn try_handle_client_fw_request(world: &mut World, client_id: ClientIdType, client_packet: &ClientPacket) -> bool
 {
     // note: we expect this to fail very cheaply if the client message is AimedMsg::Core
-    let Some(req) = deser_msg::<ClientRequest::<()>>(&client_packet.request[..])
-    else { tracing::trace!("failed to deserialize client framework request"); return false; };
+    let Some(req) = deser_msg::<ClientRequest::<()>>(&client_packet.request[..]) else { return false; };
     let AimedMsg::Fw(request) = req.req else { return false; };
 
-    tracing::trace!(?client_packet.send_policy, ?request, "received client fw request");
-    let client_id = client_packet.client_id;
+    tracing::trace!(?client_id, ?client_packet.send_policy, ?request, "received client fw request");
 
     match request
     {
@@ -36,9 +34,14 @@ fn try_handle_client_fw_request(world: &mut World, client_packet: &ClientPacket)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn try_handle_client_request(handler: &ClientRequestHandler, world: &mut World, client_packet: &ClientPacket) -> bool
+fn try_handle_client_request(
+    handler       : &ClientRequestHandler,
+    world         : &mut World,
+    client_id     : ClientIdType,
+    client_packet : &ClientPacket
+) -> bool
 {
-    handler.try_call(world, client_packet)
+    handler.try_call(world, client_id, client_packet)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -47,15 +50,16 @@ fn try_handle_client_request(handler: &ClientRequestHandler, world: &mut World, 
 /// Handles client requests.
 pub(crate) fn handle_requests(world: &mut World)
 {
-    let client_packets     = world.remove_resource::<Receiver<ClientPacket>>().unwrap();
+    let mut client_packets = world.remove_resource::<Events<FromClient<ClientPacket>>>().unwrap();
     let client_msg_handler = world.remove_resource::<ClientRequestHandler>().unwrap();
 
-    while let Some(client_packet) = client_packets.try_recv()
+    for FromClient{ client_id, event } in client_packets.drain()
     {
-        if try_handle_client_fw_request(world, &client_packet) { continue; }
-        if try_handle_client_request(&client_msg_handler, world, &client_packet) { continue; }
+        let client_id = client_id.raw() as ClientIdType;
+        if try_handle_client_fw_request(world, client_id, &event) { continue; }
+        if try_handle_client_request(&client_msg_handler, world, client_id, &event) { continue; }
 
-        tracing::trace!(?client_packet, "failed to handle client packet");
+        tracing::trace!(client_id, ?event, "failed to handle client packet");
     }
 
     world.insert_resource(client_packets);

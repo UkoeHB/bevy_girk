@@ -8,6 +8,7 @@ use crate::test_helpers::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 
@@ -15,10 +16,11 @@ use bevy_kot_utils::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn check_client_ping_tracker(ping_tracker: Res<PingTracker>)
+fn check_client_ping_tracker(ping_tracker: Res<PingTracker>, mut flag: ResMut<PanicOnDrop>)
 {
     let (estimated_game_ticks_elapsed, _) = ping_tracker.estimate_game_ticks(0u64);
     assert_eq!(estimated_game_ticks_elapsed, Ticks(1));
+    flag.take();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -27,31 +29,42 @@ fn check_client_ping_tracker(ping_tracker: Res<PingTracker>)
 #[test]
 fn basic_game_and_client()
 {
+    // prepare tracing
+    /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    */
+
     // misc.
     let num_players = 1;
     let ticks_per_sec = Ticks(1);
 
     // prepare message channels
-    let (client_packet_sender, client_packet_receiver)        = new_channel::<ClientPacket>();
-    let (game_packet_sender, game_packet_receiver)            = new_channel::<GamePacket>();
+    let mut app = App::new();
+    app.add_event::<ClientPacket>();
+    app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
+    app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
+    app.add_event::<GamePacket>();
     let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFwCommand>();
     let (_player_input_sender, player_input_reader)           = new_channel::<PlayerInput>();
 
     // make the client ready
-    client_packet_sender.send(
-            ClientPacket{
-                    client_id   : 0 as ClientIdType,
+    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+            client_id: renet::ClientId::from_raw(0u64),
+            event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
-        ).unwrap();
+        });
 
     // send ping request
-    client_packet_sender.send(
-            ClientPacket{
-                    client_id   : 0 as ClientIdType,
+    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+            client_id: renet::ClientId::from_raw(0u64),
+            event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
@@ -60,7 +73,7 @@ fn basic_game_and_client()
                                     })
                         )}))
                 }
-        ).unwrap();
+        });
 
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
@@ -75,7 +88,7 @@ fn basic_game_and_client()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
 
-    App::new()
+    app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
@@ -101,12 +114,10 @@ fn basic_game_and_client()
                 ClientFwTickSetPrivate::FwEnd,
             ).chain()
         )
+        .add_systems(PreUpdate, forward_client_packets.before(GameFwTickSetPrivate::FwStart))
+        .add_systems(PostUpdate, forward_game_packets.after(GameFwTickSetPrivate::FwEnd))
         //game framework
-        .insert_resource(client_packet_receiver)
-        .insert_resource(game_packet_sender)
         //client framework
-        .insert_resource(game_packet_receiver)
-        .insert_resource(client_packet_sender)
         .insert_resource(client_fw_command_reader)
         .insert_resource(ClientFwConfig::new( ticks_per_sec, 0 as ClientIdType ))
         //game
@@ -115,9 +126,10 @@ fn basic_game_and_client()
         .insert_resource(player_initializer)
         .insert_resource(player_input_reader)
         // TEST: validate ping (in second tick because client fw needs an extra tick to collect ping response)
+        .insert_resource(PanicOnDrop::default())
         .add_systems(Last, check_client_ping_tracker.run_if(
                 |game_fw_ticks: Res<GameFwTicksElapsed>|
-                game_fw_ticks.elapsed.ticks().0 > 1
+                game_fw_ticks.elapsed.ticks().0 >= 2
             )
         )
         .run();

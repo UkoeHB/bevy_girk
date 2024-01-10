@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
-use bevy_kot_utils::*;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 
@@ -64,28 +64,25 @@ pub fn prepare_player_client_contexts(num_players: usize) -> GameFwInitializer
 #[bevy_plugin]
 pub fn AddMockMessageChannelsPlugin(app: &mut App)
 {
-    let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver) = new_channel::<ClientPacket>();
+    // prepare message channels
+    app.add_event::<ClientPacket>();
+    app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
+    app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
+    app.add_event::<GamePacket>();
 
     // kludge: enable first 10 clients
     for client_id in 0..10
     {
-        client_packet_sender.send(
-                ClientPacket{
-                        client_id   : client_id as ClientIdType,
+        app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+                client_id: renet::ClientId::from_raw(client_id as u64),
+                event: ClientPacket{
                         send_policy : SendOrdered.into(),
                         request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                                 req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                             }))
                     }
-            ).unwrap();
+            });
     }
-
-    app.insert_resource(game_packet_sender)
-        // save the output reader so the channel will stay open
-        .insert_resource(game_packet_receiver)
-        .insert_resource(client_packet_sender)
-        .insert_resource(client_packet_receiver);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -106,6 +103,27 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) + Send + 'static
 
         if !app.world.contains_resource::<GameOverFlag>()
             { panic!("test runner failed: game over flag not found!"); }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+#[derive(Default, Resource)]
+pub struct PanicOnDrop(bool);
+
+impl PanicOnDrop
+{
+    pub fn take(&mut self)
+    {
+        self.0 = true;
+    }
+}
+
+impl Drop for PanicOnDrop
+{
+    fn drop(&mut self)
+    {
+        if !self.0 { panic!("failed to reach test end condition"); }
     }
 }
 

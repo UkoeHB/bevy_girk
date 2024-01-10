@@ -5,7 +5,6 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
@@ -66,21 +65,13 @@ pub fn prepare_game_app_framework(
     game_fw_config      : GameFwConfig,
     game_fw_initializer : GameFwInitializer,
 ){
-    // prepare message channels
-    let (game_packet_sender, game_packet_receiver)     = new_channel::<GamePacket>();
-    let (client_packet_sender, client_packet_receiver) = new_channel::<ClientPacket>();
-
     // prepare server app
     game_app
         //setup components
         .add_plugins(GameFwPlugin)
         //game framework
         .insert_resource(game_fw_config)
-        .insert_resource(game_fw_initializer)
-        .insert_resource(game_packet_sender)
-        .insert_resource(game_packet_receiver)
-        .insert_resource(client_packet_sender)
-        .insert_resource(client_packet_receiver);
+        .insert_resource(game_fw_initializer);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -89,6 +80,9 @@ pub fn prepare_game_app_framework(
 pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration)
 {
     // depends on game framework
+
+    // prepare channels
+    prepare_framework_channels(game_app);
 
     // setup server with bevy_replicon (includes bevy_renet)
     game_app
@@ -107,25 +101,18 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ServerPlugin)
         //prepare message channels
-        .add_server_event_with::<EventConfig<GamePacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_server_event_with::<EventConfig<GamePacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnreliable>, _, _>(EventType::Unreliable, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendUnordered>, _, _>(EventType::Unordered, dummy, dummy)
-        .add_client_event_with::<EventConfig<ClientPacket, SendOrdered>, _, _>(EventType::Ordered, dummy, dummy)
+        //- note: the event types specified here do nothing
+        .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, send_server_packets, dummy)
+        .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, dummy, receive_client_packets)
         //message receiving
-        .add_systems(PreUpdate,
-            receive_client_packets
-                .run_if(resource_exists::<RenetServer>())
+        .configure_sets(PreUpdate,
+            GameFwTickSetPrivate::FwStart
                 .after(bevy_replicon::prelude::ServerSet::Receive)
-                .before(GameFwTickSetPrivate::FwStart)
         )
         // <- client logic is in Update
         //message sending
-        .add_systems(PostUpdate,
-            send_server_packets
-                .run_if(resource_exists::<RenetServer>())
-                .after(GameFwTickSetPrivate::FwEnd)
+        .configure_sets(PostUpdate,
+            GameFwTickSetPrivate::FwEnd
                 .before(bevy_replicon::prelude::ServerSet::Send)
         )
         //log server events and errors

@@ -16,6 +16,7 @@ fn test_game_tick_state(
     test_ctx   : Res<TestContext>,
     prep_ticks : Res<PrepTicksElapsed>,
     game_ticks : Res<PlayTicksElapsed>,
+    mut flag   : ResMut<PanicOnDrop>,
 ){
     // expect the elapsed ticks match expected values
     if (prep_ticks.elapsed.ticks().0 != test_ctx.num_prep_ticks) ||
@@ -23,6 +24,8 @@ fn test_game_tick_state(
     {
         panic!("game game tick state invalid: incorrect number of ticks elapsed");
     }
+
+    flag.take();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -64,6 +67,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         //configure execution flow
         .configure_sets(Update, (GameFwSet,).chain())
         //testing
+        .insert_resource(PanicOnDrop::default())
         .insert_resource( TestContext{ num_prep_ticks, num_game_ticks } )
         .add_systems(OnEnter(GameMode::GameOver), test_game_tick_state)
         .run();

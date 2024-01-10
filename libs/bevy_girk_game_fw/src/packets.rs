@@ -2,6 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
+use bevy::prelude::*;
 use bevy_replicon::network_event::EventType;
 use bytes::Bytes;
 use serde::{Serialize, Deserialize};
@@ -46,11 +47,9 @@ pub struct ClientRequest<T>
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A serialized message to send from the game to a client.
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct GamePacket
 {
-    /// Id of destination client.
-    pub client_id: ClientIdType,
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
     /// The message.
@@ -60,11 +59,9 @@ pub struct GamePacket
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A serialized request to send from a client to the game.
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct ClientPacket
 {
-    /// Id of originating client.
-    pub client_id: ClientIdType,
     /// Packet send policy (reliability and ordering guarantee).
     pub send_policy: EventType,
     /// The request.

@@ -8,6 +8,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
+use bevy_replicon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -38,20 +39,22 @@ impl GameFactoryImpl for DummyGameFactory
         let player_ids: Vec<u128> = launch_pack.client_init_data.iter().map(|m| m.user_id).collect();
 
         // prepare message channels
-        let (client_packet_sender, client_packet_receiver)      = new_channel::<ClientPacket>();
-        let (game_packet_sender, game_packet_receiver)          = new_channel::<GamePacket>();
+        app.add_event::<ClientPacket>();
+        app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
+        app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
+        app.add_event::<GamePacket>();
         let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFwCommand>();
 
         // make the client ready
-        client_packet_sender.send(
-                ClientPacket{
-                        client_id   : 0 as ClientIdType,
+        app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+                client_id: renet::ClientId::from_raw(0u64),
+                event: ClientPacket{
                         send_policy : SendOrdered.into(),
                         request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                                 req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                             }))
                     }
-            ).unwrap();
+            });
 
         // prepare app
         app
@@ -60,15 +63,11 @@ impl GameFactoryImpl for DummyGameFactory
             //setup game framework
             .insert_resource(GameFwConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
-            .insert_resource(client_packet_receiver)
-            .insert_resource(game_packet_sender)
             .insert_resource(GameMessageBuffer::new::<()>())
             //setup client framework
             .insert_resource(
                 ClientFwConfig::new( config.ticks_per_sec, 0 as ClientIdType )
             )
-            .insert_resource(game_packet_receiver)
-            .insert_resource(client_packet_sender)
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestBuffer::new::<()>())
             //setup game core
