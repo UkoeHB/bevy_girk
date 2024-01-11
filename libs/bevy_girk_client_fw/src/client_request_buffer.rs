@@ -53,7 +53,7 @@ impl ClientRequestBuffer
         tracing::trace!(?request, "buffering fw request");
 
         let send_policy = request.into_event_type();
-        let request = Bytes::from(ser_msg(&ClientRequest{ req: AimedMsg::<_, ()>::Fw(request) }));
+        let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<_, ()>::Fw(request) }));
         self.sender.send(ClientPacket{send_policy, request}).expect("failed buffering fw request");
     }
 
@@ -67,7 +67,7 @@ impl ClientRequestBuffer
         tracing::trace!(?request, "buffering core request");
 
         let send_policy = request.into_event_type();
-        let request = Bytes::from(ser_msg(&ClientRequest{ req: AimedMsg::<ClientFwRequest, _>::Core(request) }));
+        let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<ClientFwRequest, _>::Core(request) }));
         self.sender.send(ClientPacket{send_policy, request}).expect("failed buffering user request");
     }
 

@@ -72,7 +72,7 @@ impl GameMessageBuffer
         let send_policy = message.into_event_type();
         let message = Bytes::from(ser_msg(&(
                 self.change_tick,
-                GameMessage{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }
+                GameMessageData{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }
             )));
         self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
             .expect("failed buffering fw message");
@@ -93,7 +93,7 @@ impl GameMessageBuffer
         let send_policy = message.into_event_type();
         let message = Bytes::from(ser_msg(&(
                 self.change_tick,
-                GameMessage{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }
+                GameMessageData{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }
             )));
         self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
             .expect("failed buffering user message");

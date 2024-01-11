@@ -39,7 +39,7 @@ fn basic_ping()
             client_id: renet::ClientId::from_raw(0u64),
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                                 req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
@@ -50,7 +50,7 @@ fn basic_ping()
             client_id: renet::ClientId::from_raw(0u64),
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                         req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
                             PingRequest{
                                     timestamp_ns: 0u64
@@ -84,7 +84,7 @@ fn basic_ping()
     for game_packet in app.world.resource_mut::<Events<GamePacket>>().drain()
     {
         // deserialize ping response
-        let Some(message) = deser_msg::<GameMessage::<()>>(&game_packet.message[..])
+        let Some(message) = deser_msg::<GameMessageData::<()>>(&game_packet.message[..])
         else { panic!("failed to deserialize game fw message"); };
         let AimedMsg::Fw(msg) = message.msg else { panic!("did not receive fw message") };
 

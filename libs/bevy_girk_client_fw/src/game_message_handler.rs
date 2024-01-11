@@ -16,7 +16,7 @@ pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoEvent
     game_packet: &GamePacket,
 ) -> Result<(Ticks, T), Option<(Ticks, GameFwMsg)>>
 {
-    let Some(message) = deser_msg::<GameMessage::<T>>(&game_packet.message[..]) else { return Err(None); };
+    let Some(message) = deser_msg::<GameMessageData::<T>>(&game_packet.message[..]) else { return Err(None); };
     let send_policy = game_packet.send_policy;
 
     match message.msg

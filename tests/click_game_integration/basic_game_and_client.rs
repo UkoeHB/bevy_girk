@@ -55,7 +55,7 @@ fn basic_game_and_client()
             client_id: renet::ClientId::from_raw(0u64),
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
                 }
@@ -66,7 +66,7 @@ fn basic_game_and_client()
             client_id: renet::ClientId::from_raw(0u64),
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequest{
+                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
                                 PingRequest{
                                         timestamp_ns: 0u64

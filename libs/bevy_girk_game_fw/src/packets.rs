@@ -26,7 +26,7 @@ pub enum AimedMsg<F, T>
 
 /// A game message consumed by a client/clients.
 #[derive(Serialize, Deserialize)]
-pub struct GameMessage<T>
+pub struct GameMessageData<T>
 {
     /// Number of ticks elapsed in the game framework.
     pub ticks: Ticks,
@@ -38,7 +38,7 @@ pub struct GameMessage<T>
 
 /// A client request consumed by the game server.
 #[derive(Serialize, Deserialize)]
-pub struct ClientRequest<T>
+pub struct ClientRequestData<T>
 {
     /// The request.
     pub req: AimedMsg<ClientFwRequest, T>,

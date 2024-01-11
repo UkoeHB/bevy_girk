@@ -17,7 +17,7 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEve
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>
 {
-    let Some(req) = deser_msg::<ClientRequest::<T>>(&client_packet.request[..]) else { return Err(None); };
+    let Some(req) = deser_msg::<ClientRequestData::<T>>(&client_packet.request[..]) else { return Err(None); };
     let send_policy = client_packet.send_policy;
 
     match req.req
