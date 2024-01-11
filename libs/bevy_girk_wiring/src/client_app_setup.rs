@@ -147,12 +147,20 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, send_client_packets, dummy)
         //add framework command endpoint for use by connection controls
         .insert_resource(client_fw_command_sender)
-        //message receiving
+
+        //# PREUPDATE #
+        //<-- RenetReceive {renet}: collects network packets
+        //<-- ClientSet::ResetEvents (if client just connected) {replicon}: ensures client and server messages
+        //    don't leak across a reconnect
+        //<-- ClientSet::Receive {replicon}: collects replication messages
+        //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
+        //    disconnect
+        //<-- ClientFwTickSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
+        //    client for this tick
         .configure_sets(PreUpdate,
             ClientFwTickSetPrivate::FwStart
-                .after(bevy_replicon::prelude::ClientSet::Receive)
+                .after(bevy_replicon_repair::ClientRepairSet)
         )
-        //connection event handling
         .add_systems(PreUpdate,
             (
                 log_just_connected.run_if(bevy_renet::client_just_connected()),
@@ -167,30 +175,41 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
                     .run_if(not(in_state(ClientFwMode::End))),
             )
                 .chain()
-                .after(bevy_replicon::prelude::ClientSet::Receive)
+                .after(bevy_replicon_repair::ClientRepairSet)
                 .before(ClientFwTickSetPrivate::FwStart),
         )
-        //client logic
+
+        //# UPDATE #
+        //<-- ClientFwSet {girk}: contains user logic
+        //  <-- ClientFwLoadingSet (in state ClientInitializationState::InProgress) {girk}: should contain all user
+        //      loading systems (systems with `.track_progress()`)
+        //  <-- ClientFwTickSet::Admin .. ClientFwTickSet::End {girk}: ordinal sets for user logic
+        //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
-        //track connection status
-        .add_systems(Update, track_connection_state.track_progress().in_set(ClientFwLoadingSet))
-        //track whether the first replication message post-connect has been received
-        //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
-        //        when a client connects (for reconnects we assume the user did not despawn that entity, or spawned
-        //        some other entity/entities)
         .add_systems(Update,
             (
+                //track connection status
+                track_connection_state.track_progress(),
+                //track whether the first replication message post-connect has been received
+                //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
+                //        when a client connects (for reconnects we assume the user did not despawn that entity, or spawned
+                //        some other entity/entities)
                 bevy_renet::client_just_connected()
                     .pipe(track_replication_initialized)
                     .track_progress()
             )
                 .in_set(ClientFwLoadingSet)
         )
-        //message sending
+
+        //# POSTUPDATE #
+        //<-- ClientFwTickSetPrivate::FwEnd {girk}: disatches messages to replicon, performs final tick cleanup
+        //<-- ClientSet::Send (if connected) {replicon}: dispatches messages to renet (`send_client_packets`)
+        //<-- RenetSend {renet}: dispatches packets to the server
         .configure_sets(PostUpdate,
             ClientFwTickSetPrivate::FwEnd
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
+
         //log transport errors
         //- note that these will be logged out of order, since we need to collect both receive and send errors
         .add_systems(Last, log_transport_errors)
