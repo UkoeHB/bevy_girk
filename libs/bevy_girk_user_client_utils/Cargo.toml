@@ -10,7 +10,6 @@ doctest = false
 [dependencies]
 bevy            = { version = "0.12", default-features = false }
 bevy_fn_plugin  = { workspace = true }
-bevy_kot_derive = { workspace = true }
 bevy_kot_ecs    = { workspace = true }
 bevy_kot_utils  = { workspace = true }
 enfync          = { workspace = true }
