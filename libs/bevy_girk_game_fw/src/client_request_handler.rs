@@ -24,18 +24,16 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEve
     {
         AimedMsg::Fw(fw_request) =>
         {
-            //todo: waiting for replicon update
-            //if fw_request.into_event_type() != send_policy
-            //{ tracing::trace!(client_id, "ignoring client fw request with invalid send policy"); return Err(None); }
+            if fw_request.into_event_type() != send_policy
+            { tracing::trace!(client_id, "ignoring client fw request with invalid send policy"); return Err(None); }
 
             tracing::trace!(client_id, ?send_policy, ?fw_request, "received client fw request");
             return Err(Some(fw_request));
         }
         AimedMsg::Core(request) =>
         {
-            //todo: waiting for replicon update
-            //if request.into_event_type() != send_policy
-            //{ tracing::trace!(client_id, "ignoring client request with invalid send policy"); return Err(None); }
+            if request.into_event_type() != send_policy
+            { tracing::trace!(client_id, "ignoring client request with invalid send policy"); return Err(None); }
 
             tracing::trace!(client_id, ?send_policy, ?request, "received client request");
             return Ok(request);

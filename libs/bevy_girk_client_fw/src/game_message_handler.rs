@@ -23,18 +23,16 @@ pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoEvent
     {
         AimedMsg::Fw(fw_msg) =>
         {
-            //todo: waiting for replicon update
-            //if fw_msg.into_event_type() != send_policy
-            //{ tracing::error!("ignoring game fw message with invalid send policy"); return Err(None); }
+            if fw_msg.into_event_type() != send_policy
+            { tracing::error!("ignoring game fw message with invalid send policy"); return Err(None); }
 
             tracing::trace!(?send_policy, ?fw_msg, "received game fw message");
             return Err(Some((message.ticks, fw_msg)));
         }
         AimedMsg::Core(msg) =>
         {
-            //todo: waiting for replicon update
-            //if msg.into_event_type() != send_policy
-            //{ tracing::error!("ignoring game message with invalid send policy"); return Err(None); }
+            if msg.into_event_type() != send_policy
+            { tracing::error!("ignoring game message with invalid send policy"); return Err(None); }
 
             tracing::trace!(?send_policy, ?msg, "received game message");
             return Ok((message.ticks, msg));

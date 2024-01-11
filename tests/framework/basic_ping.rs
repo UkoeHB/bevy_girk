@@ -49,7 +49,7 @@ fn basic_ping()
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: renet::ClientId::from_raw(0u64),
             event: ClientPacket{
-                    send_policy : SendOrdered.into(),
+                    send_policy : SendUnordered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequest{
                         req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
                             PingRequest{
