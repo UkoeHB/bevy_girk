@@ -59,7 +59,7 @@ fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupCo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a game app with the `bevy_girk` game framework.
+/// Sets up a game app with the `bevy_girk` game framework.
 pub fn prepare_game_app_framework(
     game_app            : &mut App,
     game_fw_config      : GameFwConfig,
@@ -76,13 +76,13 @@ pub fn prepare_game_app_framework(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up `bevy_replicon` in a game app.
+/// Sets up `bevy_replicon` in a game app.
 pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration)
 {
     // depends on game framework
 
     // prepare channels
-    prepare_framework_channels(game_app);
+    prepare_network_channels(game_app);
 
     // setup server with bevy_replicon (includes bevy_renet)
     game_app
@@ -97,20 +97,36 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
                     update_timeout,
                 })
         )
-        //enable replication repair for reconnects
+        //enable replication repair for client reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ServerPlugin)
         //prepare message channels
         //- note: the event types specified here do nothing
         .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, send_server_packets, dummy)
         .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, dummy, receive_client_packets)
-        //message receiving
+
+        //# PREUPDATE #
+        //<-- RenetReceive {renet}: receive network packets from clients
+        //<-- ServerSet::Receive {replicon}: process client acks and connection events
+        //<-- ServerRepairSet {replicon repair}: repairs replicon server internal trackers for reconnected clients
+        //<-- GameFwTickSetPrivate::FwStart {girk}: prepares the app for this tick
         .configure_sets(PreUpdate,
             GameFwTickSetPrivate::FwStart
-                .after(bevy_replicon::prelude::ServerSet::Receive)
+                .after(bevy_replicon_repair::ServerRepairSet)
         )
-        // <- client logic is in Update
-        //message sending
+
+        //# UPDATE #
+        //<-- GameFwSet {girk}: contains user logic
+        //  <-- GameFwTickSet::{Admin, Start} {girk}: ordinal sets for user logic
+        //  <-- GameFwTickSetPrivate::FwHandleRequests {girk}: handle client requests; we do this in the middle of
+        //      the ordinal sets so the game tick and game mode updaters (and user-defined tick initialization logic) can
+        //      run first
+        //  <-- GameFwTickSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
+
+        //# POSTUPDATE
+        //<-- GameFwTickSetPrivate::FwEnd {girk}: dispatch server messages to replicon
+        //<-- ServerSet::Send {replicon}: dispatch replication messages and server messages to renet
+        //<-- RenetSend {renet}: dispatch network packets to clients
         .configure_sets(PostUpdate,
             GameFwTickSetPrivate::FwEnd
                 .before(bevy_replicon::prelude::ServerSet::Send)
@@ -122,10 +138,10 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a game app with renet servers.
+/// Sets up a game app with renet servers.
 ///
-/// If the backend is set up on a WASM target for local
-/// single-player (`native_count` = 0, `wasm_count` = 1, target environment = "wasm"), then in-memory server and
+/// If the game app is set up on a WASM target for local single-player
+/// (`native_count` = 0, `wasm_count` = 1, target environment = "wasm"), then in-memory server and
 /// client transports will be added to the app and the user must manually move the client transport into their client app.
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
@@ -138,8 +154,6 @@ pub fn prepare_game_app_network(
 {
     //todo: wasm single player, we don't need auth key, just use in-memory transport (need server config enum)
     //todo: set up renet server transports based on client types
-    #[cfg(target_family = "wasm")]
-    { panic!("todo: gen random bytes not supported on WASM"); }
 
     let mut native_meta = None;
     let wasm_meta = None;
@@ -171,7 +185,7 @@ pub fn prepare_game_app_network(
     #[cfg(target_family = "wasm")]
     {
         if native_count > 0 || wasm_count != 1
-        { panic!("wasm game app backends are only supported for single-player"); }
+        { panic!("wasm game apps are only supported for single-player"); }
 
         tracing::error!("wasm single-player servers not yet supported");
         //todo: add in-memory server
@@ -182,15 +196,16 @@ pub fn prepare_game_app_network(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a game app to hook into the `bevy_girk` backend.
+/// Sets up a `bevy_girk` game app.
 /// - Sets up the game framework.
 /// - Sets up replication.
-/// - Sets up renet servers based on the number of clients. If the backend is set up on a WASM target for local
+/// - Sets up renet servers based on the number of clients. If the game app is set up on a WASM target for local
 ///   single-player (`native_count` = 0, `wasm_count` = 1, target environment = "wasm"), then in-memory server and
-///   client transports will be added to the app and the user must manually move the client transport into their client app.
+///   client transports will be added to the game app and the user must manually move the client transport into their
+///   client app.
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
-pub fn prepare_game_app_backend(
+pub fn prepare_girk_game_app(
     game_app            : &mut App,
     game_fw_config      : GameFwConfig,
     game_fw_initializer : GameFwInitializer,

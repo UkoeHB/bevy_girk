@@ -102,7 +102,7 @@ fn log_transport_errors(mut errors: EventReader<renet::transport::NetcodeTranspo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a client app with the `bevy_girk` client framework.
+/// Sets up a client app with the `bevy_girk` client framework.
 ///
 /// REQUIREMENTS:
 /// - `bevy::time::TimePlugin`.
@@ -124,13 +124,13 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up `bevy_replicon` in a client app.
+/// Sets up `bevy_replicon` in a client app.
 pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFwCommand>)
 {
     // depends on client framework
 
     // prepare channels
-    prepare_framework_channels(client_app);
+    prepare_network_channels(client_app);
 
     // setup client with bevy_replicon (includes bevy_renet)
     client_app
@@ -156,7 +156,9 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
         //    disconnect
         //<-- ClientFwTickSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
-        //    client for this tick
+        //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
+        //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
+        //    before user logic)
         .configure_sets(PreUpdate,
             ClientFwTickSetPrivate::FwStart
                 .after(bevy_replicon_repair::ClientRepairSet)
@@ -183,7 +185,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
         //<-- ClientFwSet {girk}: contains user logic
         //  <-- ClientFwLoadingSet (in state ClientInitializationState::InProgress) {girk}: should contain all user
         //      loading systems (systems with `.track_progress()`)
-        //  <-- ClientFwTickSet::Admin .. ClientFwTickSet::End {girk}: ordinal sets for user logic
+        //  <-- ClientFwTickSet::{Admin, Start, PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
         .add_systems(Update,
@@ -218,7 +220,7 @@ pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_se
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a renet client and enable renet reconnects.
+/// Sets up a renet client and enables renet reconnects.
 ///
 /// Note that this method simply waits for a new connect pack to appear, then sets up a renet client.
 /// For requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
@@ -237,11 +239,11 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a client app to hook into the `bevy_girk` backend.
+/// Sets up a `bevy_girk` client app compatible with `bevy_girk` game apps.
 /// - Sets up the client framework.
 /// - Sets up replication.
 /// - Sets up the renet client.
-pub fn prepare_client_app_backend(
+pub fn prepare_girk_client_app(
     client_app       : &mut App,
     client_fw_config : ClientFwConfig,
     connect_pack     : RenetClientConnectPack,

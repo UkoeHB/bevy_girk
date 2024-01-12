@@ -37,7 +37,7 @@ const MAX_CLIENT_MESSAGES_PER_TICK: u16 = 64;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn prepare_framework_channels(app: &mut App)
+pub(crate) fn prepare_network_channels(app: &mut App)
 {
     app.init_resource::<NetworkChannels>();
 
@@ -73,7 +73,7 @@ pub(crate) fn send_server_packets(
     {
         let SendMode::Direct(client_id) = game_packet.mode else { panic!("invalid game packet send mode"); };
 
-        // note: the replicon change tick is prepended to the game packet message (overloading to reduce allocations)
+        // note: the replicon change tick is prepended to the game packet message (we overload to reduce allocations)
         match game_packet.event.send_policy
         {
             EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, game_packet.event.message),

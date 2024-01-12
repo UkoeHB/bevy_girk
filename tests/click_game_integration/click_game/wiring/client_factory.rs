@@ -66,7 +66,7 @@ impl ClientFactoryImpl for ClickClientFactory
         let mut client_app = App::new();
 
         client_app.add_plugins(bevy::time::TimePlugin);
-        prepare_client_app_backend(&mut client_app, client_start_pack.client_fw_config, connect_pack);
+        prepare_girk_client_app(&mut client_app, client_start_pack.client_fw_config, connect_pack);
 
         match client_start_pack.click_client_initializer
         {

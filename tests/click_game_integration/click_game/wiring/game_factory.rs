@@ -282,7 +282,7 @@ impl GameFactoryImpl for ClickGameFactory
         let startup = prepare_game_startup(&launch_pack.client_init_data, config.game_duration_config)?;
 
         // prepare game app
-        let (native_meta, wasm_meta) = prepare_game_app_backend(
+        let (native_meta, wasm_meta) = prepare_girk_game_app(
                 app,
                 config.game_fw_config,
                 startup.fw_init,
