@@ -1,7 +1,19 @@
 # Girk Architecture (last updated: WIP)
 
-This document contains a detailed overview of the library's structure and how it can be used to implement a game.
+This document contains an overview of `bevy_girk`'s structure and behavior.
 
+For how to use the library, see `USAGE.md`.
+
+- overview
+    - game app: headless server app that runs a game (authoritative)
+    - client app: connected to game app, this is where you play the game
+    - backend
+        - host server: manages connected users, manages lobbies
+        - game hub server: receives game requests from host server, runs game apps
+    - user client: connects to and interacts with host server (making/joining/starting lobbies), receives game start packages and launches client apps
+
+
+- architecture
 
 
 - backend
@@ -119,6 +131,9 @@ This document contains a detailed overview of the library's structure and how it
 
 
 - binaries
+    - backend (unified single-hub)
+
+
     - game instance
 
 

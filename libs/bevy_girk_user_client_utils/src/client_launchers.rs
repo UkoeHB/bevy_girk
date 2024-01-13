@@ -20,11 +20,6 @@ pub type MultiPlayerLauncherConfig<S> = MultiPlayerLauncherConfigNative<S>;
 #[cfg(target_family = "wasm")]
 pub type MultiPlayerLauncherConfig<S> = MultiPlayerLauncherConfigWasm<S>;
 
-#[cfg(target_family = "wasm")]
-pub trait HandleReqs {}
-#[cfg(target_family = "wasm")]
-impl HandleReqs for () {}
-
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Launch a local single-player game client.

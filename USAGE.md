@@ -1,0 +1,109 @@
+# Girk Usage (last updated: WIP)
+
+This document contains a detailed description of how to use `bevy_girk` to implement a game.
+
+For the library architecture, see `ARCHITECTURE.md`.
+
+- overview
+    - game app: headless server app that runs a game (authoritative)
+    - client app: connected to game app, this is where you play the game
+    - backend
+        - host server: manages connected users, manages lobbies
+        - game hub server: receives game requests from host server, runs game apps
+    - user client: connects to and interacts with host server (making/joining/starting lobbies), receives game start packages and launches client apps
+
+
+- wiring: dependency injection for bevy_girk
+    - host server
+        - LobbyChecker: trait object, validates lobby data, checks if new members can join, and determines whether a lobby can be launched as a game
+        - LobbyData: data object produced by user who creates a lobby, validated by LobbyChecker and used by GameLaunchPackSource for producing GameLaunchPacks
+            - custom data
+    - game hub server
+        - GameLaunchPackSource: trait object, converts GameStartRequest (containing LobbyData) into GameLaunchPack with a non-synchronous API; can be used to insert extra data into the launch pack (e.g. based on a user database query to get user loadouts)
+        - GameLaunchPack: data object produced by GameLaunchPackSource, used for game setup by GameFactory
+            - game init data
+            - ClientInitDataForGame: data object per client
+                - data
+    - game app
+        - GameFactory: trait object, uses GameLaunchPack to set up game apps, produces GameStartReports
+            - GameStartReport: data object produced by the factory, used for client setup by game manager
+                - auth info for creating ServerConnectToken, which are used for client setup by ClientFactory; connect tokens can be produced on-request to enable reconnects (e.g. the host server includes this in its user API)
+                - GameStartInfo: data object per client, used for client setup by ClientFactory
+                    - start data
+        - ClientRequestHandler: trait object, inserted into game apps and used to handle incoming client requests
+        - GameMessageBuffer: bevy Resource, inserted into game apps and used to marshal game messages into the networking backend
+            - GameMessage: type specified on construction, equals the type for all game network message to be sent to the client (should probably be a big enum)
+    - client app
+        - ClientFactory: trait object, uses ServerConnectToken and GameStartInfo to set up client apps
+        - GameMessageHandler: trait object
+        - ClientRequestBuffer: bevy Resource, inserted into client apps and used to marshal client requests into the networking backend
+            - ClientRequest: type specified on construction, equals the type for all client network requests to be sent to the game (should probably be a big enum)
+- app implementation
+    - backend
+        - host server: make_host_server()
+        - game hub server: make_game_hub_server()
+    - game app
+        - setup
+            - GameFactory implementation
+                - prepare_girk_game_app()
+            - launching: a GameInstanceLauncher is needed to create a game hub server
+                - GameInstanceLauncherProcess: launches a game app binary (note: launch_local_player_client() uses this internally)
+                    - use inprocess_game_launcher() inside the binary
+                - GameInstanceLauncherLocal: launches a game app in a thread
+        - replication: use bevy_replicon_repair for registering replicated components (no components are registered by default)
+        - app startup
+            - insert ClientRequestHandler resource with desired request-handling callback
+            - insert GameMessageBuffer resource with desired game message type
+        - API
+            - GameFwTicksElapsed
+            - GameInitProgress (component on entity with `Replication` spawned by framework, if component is registered then clients can use this to track global loading progress)
+            - GameFwSet: contains all GameFwTickSet, runs in Update
+                - GameFwTickSet: ordinal sets for implementation logic
+            - GameFwMode
+            - GameMessageBuffer: send messages to clients
+            - GameEndFlag: set this to enter GameFwMode::End
+                - GameOverReport: data object, extracted by systems in game_instance_setup()
+                    - game over data
+    - client app
+        - setup
+            - ClientFactory implementation
+                - prepare_girk_client_app()
+            - launching
+                - ClientInstanceLauncherProcess: launches a client app binary (note: launch_local_player_client()/launch_multiplayer_client() use this internally)
+                    - use inprocess_client_launcher() inside the binary
+        - app startup
+            - insert GameMessageHandler resource with desired message-handling callback
+            - insert ClientRequestBuffer resource with desired client request type
+        - API
+            - ClientFwSet: contains all ClientFwTickSet, runs in Update
+                - ClientFwTickSet: ordinal sets for implementation logic
+            - ClientFwLoadingSet
+                - ClientInitializationState::InProgress
+            - ClientFwMode
+            - ClientRequestBuffer: send messages to the game
+    - user client
+        - setup
+            - set up HostUserClient websocket client to talk to the host server
+        - launching games
+            - ClientMonitor: keeps track of the currently-running client app
+            - ClientStarter: convenience tool for restarting a client app that has shut down
+            - launch_local_player_client()
+                - launches a game app binary
+                - launches a client app binary
+            - launch_multiplayer_client()
+                - launches a client app binary using data from HostToUserMsg::GameStart
+- binaries
+    - backend binary (unified single-hub binary)
+        - create a host server app
+        - create a game hub server app
+        - run the apps (use `std::thread::spawn` to run one of the servers)
+        - note: for users to set up a HostUserClient you need the host server IP and port; how to distribute that is up to you (a future version of this architecture will include an HTTP auth server, which will provide auth tokens for creating websocket clients)
+    - game app binary
+        - inprocess_game_launcher()
+    - client app binary
+        - inprocess_client_launcher()
+    - user client
+        - make {Local, Multi}PlayerLauncherConfig{Native, Wasm} and insert into app
+        - make HostUserClient websocket client and insert into app
+    - comments
+        - use clap for CLI!
