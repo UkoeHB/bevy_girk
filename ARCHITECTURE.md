@@ -4,13 +4,20 @@ This document contains an overview of `bevy_girk`'s structure and behavior.
 
 For how to use the library, see `USAGE.md`.
 
-- overview
-    - game app: headless server app that runs a game (authoritative)
-    - client app: connected to game app, this is where you play the game
-    - backend
-        - host server: manages connected users, manages lobbies
-        - game hub server: receives game requests from host server, runs game apps
-    - user client: connects to and interacts with host server (making/joining/starting lobbies), receives game start packages and launches client apps
+
+
+## Overview
+
+- **Game/client app framework**: This is a thin layer in your game app and client apps that interfaces with the network layer and manages initialization and reconnects. Crates: `bevy_girk_game_fw`, `bevy_girk_client_fw`.
+- **Game/Client instance**: An instance encapsulates a running app. The game instance and client instance crates contain various utilities for launching and managing game and client instances. Crates: `bevy_girk_game_instance`, `bevy_girk_client_instance`.
+- **Server backend**
+    - **Host server**: Manages lobbies and sends new games to be launched on connected game hub servers, with basic load balancing. Allows users to reconnect to games. Crates: `bevy_girk_host_server`, `bevy_girk_backend_public`.
+    - **Game hub server**: Creates and manages game instances and sends game-over reports to the host server, which are forwarded to game participants. Crates: `bevy_girk_game_hub_server`, `bevy_girk_backend_public`.
+- **Wiring**: Convenience tools for setting up game and client apps. Crate: `bevy_girk_wiring`.
+- **User client utils**: Convenience tools for launching and managing client apps. Crate: `bevy_girk_user_client_utils`.
+- **Utils**: Generic utils library. Crate: `bevy_girk_utils`.
+
+
 
 
 - architecture
