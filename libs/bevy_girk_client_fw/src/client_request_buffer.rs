@@ -37,7 +37,7 @@ impl ClientRequestBuffer
     }
 
     /// Resets the buffer for a new tick.
-    pub fn reset(&mut self)
+    pub(crate) fn reset(&mut self)
     {
         let mut count = 0;
         while let Some(_) = self.next()
@@ -72,7 +72,7 @@ impl ClientRequestBuffer
     }
 
     /// Get the next pending client packet.
-    pub fn next(&mut self) -> Option<ClientPacket>
+    pub(crate) fn next(&mut self) -> Option<ClientPacket>
     {
         self.receiver.try_recv()
     }

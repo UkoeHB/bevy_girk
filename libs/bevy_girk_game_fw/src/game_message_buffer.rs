@@ -54,7 +54,7 @@ impl GameMessageBuffer
     }
 
     /// Resets the buffer for a new tick.
-    pub fn reset(&mut self, change_tick: RepliconTick, elapsed_ticks: Ticks)
+    pub(crate) fn reset(&mut self, change_tick: RepliconTick, elapsed_ticks: Ticks)
     {
         self.change_tick = change_tick;
         self.ticks = elapsed_ticks;
@@ -99,8 +99,8 @@ impl GameMessageBuffer
             .expect("failed buffering user message");
     }
 
-    /// Gets the next available pending message.
-    pub fn next(&mut self) -> Option<PendingGameMessage>
+    /// Takes the next available pending message.
+    pub(crate) fn next(&mut self) -> Option<PendingGameMessage>
     {
         self.receiver.try_recv()
     }
