@@ -1,4 +1,4 @@
-# Girk Architecture (last updated: WIP)
+# Architecture (last updated: WIP)
 
 This document contains an overview of `bevy_girk`'s structure and behavior.
 

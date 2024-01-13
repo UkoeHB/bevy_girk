@@ -1,10 +1,8 @@
-# Girk Usage (last updated: WIP)
+# Usage (last updated: WIP)
 
 This document contains a detailed description of how to use `bevy_girk` to implement a game.
 
 For the library architecture, see `ARCHITECTURE.md`.
-
-For a complete working example, see [bevy_girk_demo](https://github.com/UkoeHB/bevy_girk_demo).
 
 
 
