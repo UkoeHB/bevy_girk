@@ -1,4 +1,4 @@
-# Architecture (last updated: WIP)
+# Architecture
 
 This document contains an overview of `bevy_girk`'s structure and behavior.
 
@@ -7,6 +7,8 @@ For how to use the library, see `USAGE.md`.
 
 
 ## Overview
+
+`bevy_girk` is a highly-opinionated multiplayer game architecture.
 
 - **Game/client app framework**: This is a thin layer in your game app and client apps that interfaces with the network layer and manages initialization and reconnects. Crates: `bevy_girk_game_fw`, `bevy_girk_client_fw`.
 - **Game/Client instance**: An instance encapsulates a running app. The game instance and client instance crates contain various utilities for launching and managing game and client instances. Crates: `bevy_girk_game_instance`, `bevy_girk_client_instance`.
@@ -37,6 +39,9 @@ For how to use the library, see `USAGE.md`.
             - HostUserServer: bevy_simplenet server for host-user connections
 
         - behavior
+            - state updates are single threaded
+            - connections to users and game hubs are managed with websockets running on tokio
+
 
     - game hub server
         - setup: make_game_hub_server()
@@ -50,6 +55,8 @@ For how to use the library, see `USAGE.md`.
             - GameInstanceLauncher: launches game instances from launch packs
 
         - behavior
+            - state updates are single threaded
+            - connection to the host server is managed with websockets running on tokio
 
 
 - backend public

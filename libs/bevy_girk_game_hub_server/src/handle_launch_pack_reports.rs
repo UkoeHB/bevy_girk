@@ -14,7 +14,7 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn report_pack(
+fn handle_report_pack(
     In(launch_pack)         : In<GameLaunchPack>,
     mut pending_games_cache : ResMut<PendingGamesCache>,
     mut running_games_cache : ResMut<RunningGamesCache>,
@@ -36,7 +36,7 @@ fn report_pack(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn report_failure(
+fn handle_report_failure(
     In(game_id)             : In<u64>,
     mut pending_games_cache : ResMut<PendingGamesCache>,
     host_client             : Res<HostHubClient>,
@@ -61,8 +61,8 @@ pub(crate) fn handle_launch_pack_reports(world: &mut World)
     {
         match launch_pack_report
         {
-            GameLaunchPackReport::Pack(launch_pack) => syscall(world, launch_pack, report_pack),
-            GameLaunchPackReport::Failure(game_id)  => syscall(world, game_id, report_failure),
+            GameLaunchPackReport::Pack(launch_pack) => syscall(world, launch_pack, handle_report_pack),
+            GameLaunchPackReport::Failure(game_id)  => syscall(world, game_id, handle_report_failure),
         }
     }
 }

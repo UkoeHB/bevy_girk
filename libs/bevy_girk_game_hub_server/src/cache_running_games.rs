@@ -40,7 +40,7 @@ pub struct RunningGamesCache
 
 impl RunningGamesCache
 {
-    /// make a new cache
+    /// Makes a new cache.
     pub fn new(config: RunningGamesCacheConfig, game_launcher: GameInstanceLauncher) -> RunningGamesCache
     {
         let (instance_report_sender, instance_report_receiver) = new_io_channel::<GameInstanceReport>();
@@ -55,8 +55,9 @@ impl RunningGamesCache
             }
     }
 
-    /// make new game instance
-    /// - returns `Err(())` if there is already a game instance with the given game id
+    /// Makes a new game instance.
+    /// - Returns `Err(())` if there is already a game instance with the given game id.
+    ///
     /// Note that if the game instance experiences an internal launch failure, it will by revealed by an instance
     /// report or by polling for dead instances, but not by this function.
     pub fn make_instance(&mut self, start_request: GameStartRequest, launch_pack: GameLaunchPack) -> Result<(), ()>
@@ -79,41 +80,41 @@ impl RunningGamesCache
         Ok(())
     }
 
-    /// try to remove the game instance
+    /// Tries to remove the game instance.
     /// - returns `None` if the game instance doesn't exist
     pub fn extract_instance(&mut self, game_id: u64) -> Option<GameInstance>
     {
         self.games.remove(&game_id).map(|(instance, _, _)| instance)
     }
 
-    /// try to access the game start request for a game instance
-    /// - returns `None` if the game instance doesn't exist
+    /// Tries to access the game start request for a game instance.
+    /// - Returns `None` if the game instance doesn't exist.
     pub fn game_start_request(&self, game_id: u64) -> Option<&GameStartRequest>
     {
         self.games.get(&game_id).map(|(_, game_start_request, _)| game_start_request)
     }
 
-    /// check if cache has a game with the given game id
+    /// Checks if the cache has a game with the given game id.
     pub fn has_game(&self, game_id: u64) -> bool
     {
         self.games.contains_key(&game_id)
     }
 
-    /// current number of running games
+    /// Returns the current number of running games,
     pub fn num_running(&self) -> usize
     {
         self.games.len()
     }
 
-    /// get next available instance report
+    /// Takes the next available instance report.
     pub fn try_next_instance_report(&mut self) -> Option<GameInstanceReport>
     {
         self.instance_report_receiver.try_recv()
     }
 
-    /// drain expired and terminated running games
-    /// - iterates over all running games (may be inefficient)
-    /// - the caller is expected to check the game instance's status to decide how to handle it
+    /// Drains expired and terminated running games.
+    /// - Iterates over all running games (may be inefficient).
+    /// - The caller is expected to check the game instance's status to decide how to handle it.
     pub fn drain_invalid(&mut self) -> impl Iterator<Item = GameInstance> + '_
     {
         // min birth time = current time - expiry duration
@@ -136,7 +137,7 @@ impl RunningGamesCache
             ).map(|(_, (game_instance, _, _))| -> GameInstance { game_instance })
     }
 
-    /// drain all running games
+    /// Drains all running games.
     pub fn drain_all(&mut self) -> impl Iterator<Item = GameInstance> + '_
     {
         self.games.drain().map(|(_, (game_instance, _, _))| -> GameInstance { game_instance })

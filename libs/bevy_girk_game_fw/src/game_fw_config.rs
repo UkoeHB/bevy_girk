@@ -19,6 +19,9 @@ pub struct GameFwConfig
     /// Maximum number of ticks that may elapse in game framework initialization.
     max_init_ticks: Ticks,
     /// Maximum number of ticks that may elapse after game over.
+    ///
+    /// Not exiting immediately allows time to propagate the game end mode change to clients, and to allow custom
+    /// app termination in game logic (i.e. by setting the max end ticks to infinite).
     max_end_ticks: Ticks,
 }
 

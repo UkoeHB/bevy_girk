@@ -7,16 +7,16 @@ For a complete working example, see [bevy_girk_demo](https://github.com/UkoeHB/b
 For details about this project, see `USAGE.md` and `ARCHITECTURE.md`.
 
 
-### Dependencies
+### Networking
 
-In-game networking is implemented with [bevy_replicon](https://github.com/lifescapegame/bevy_replicon), [bevy_renet](https://github.com/lucaspoffo/renet), and [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair). Game clients can be set up to work on both native and WASM targets (pending a `bevy_renet` WASM transport).
+- In-game networking is implemented with [bevy_replicon](https://github.com/lifescapegame/bevy_replicon), [bevy_renet](https://github.com/lucaspoffo/renet), and [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair).
+- Backend networking is implemented with [bevy_simplenet](https://github.com/UkoeHB/bevy_simplenet).
 
-Backend networking is implemented with [bevy_simplenet](https://github.com/UkoeHB/bevy_simplenet). User clients will work on both native and WASM targets.
-
+Native/WASM compatibility is a big goal of this project, however WASM is not yet supported pending a `bevy_renet` WASM transport.
 
 
 ### Disclaimer
 
 This project is only the starting point for a multiplayer game architecture. Future work involves greatly expanding the server backend to include user authentication, a user profile database, matchmaking, match history, rankings, auto-updates for native client binaries, etc.
 
-There may be limits to how far this framework can go while remaining generic, so this project may need to stabilize at a partial/minimal solution.
+There may be limits to how far `bevy_girk` can go while remaining generic, so this project may need to stabilize at a partial/minimal solution.
