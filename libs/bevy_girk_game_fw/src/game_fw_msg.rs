@@ -27,7 +27,7 @@ pub struct PingResponse
 pub enum GameFwMsg
 {
     /// The current game framework mode.
-    CurrentGameFwMode(GameFwMode),
+    CurrentMode(GameFwMode),
     /// Ping response to a ping request.
     PingResponse(PingResponse),
 }
@@ -38,8 +38,8 @@ impl IntoEventType for GameFwMsg
     {
         match self
         {
-            Self::CurrentGameFwMode(_) => SendOrdered.into(),
-            Self::PingResponse(_)      => SendUnordered.into(),
+            Self::CurrentMode(_)  => SendOrdered.into(),
+            Self::PingResponse(_) => SendUnordered.into(),
         }
     }
 }

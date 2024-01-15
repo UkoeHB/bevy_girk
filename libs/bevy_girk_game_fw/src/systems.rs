@@ -159,7 +159,7 @@ pub(crate) fn notify_game_fw_mode_single(
     current_game_mode : Res<State<GameFwMode>>,
 ){
     buffer.fw_send(
-            GameFwMsg::CurrentGameFwMode(**current_game_mode),
+            GameFwMsg::CurrentMode(**current_game_mode),
             vec![InfoAccessConstraint::Targets(vec![client_id])]
         );
 }
@@ -172,7 +172,7 @@ pub(crate) fn notify_game_fw_mode_all(
     current_game_mode : Res<State<GameFwMode>>,
 ){
     buffer.fw_send(
-            GameFwMsg::CurrentGameFwMode(**current_game_mode),
+            GameFwMsg::CurrentMode(**current_game_mode),
             vec![]
         );
 }

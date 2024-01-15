@@ -20,3 +20,10 @@ Native/WASM compatibility is a big goal of this project, however WASM is not yet
 This project is only the starting point for a multiplayer game architecture. Future work involves greatly expanding the server backend to include user authentication, a user profile database, matchmaking, match history, rankings, auto-updates for native client binaries, etc.
 
 There may be limits to how far `bevy_girk` can go while remaining generic, so this project may need to stabilize at a partial/minimal solution.
+
+
+### Major TODOs
+
+- Add an authentication server so `bevy_girk` games can plausibly be deployed in production (or at least alpha nets).
+- Refactor everything to use generics to eliminate multi-layered serialization/deserialization. Alternatively, write custom serializers/deserializers for data objects that reuse existing allocations (via `Bytes`).
+- Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees where needed.

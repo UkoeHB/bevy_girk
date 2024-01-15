@@ -18,11 +18,11 @@ Since the backend needs to manage and launch your games, we use dependency injec
 
 A project using `bevy_girk` will end up with a number of distinct apps. Each of those apps may or may not live in separate binaries (more on that below).
 
-- **Game App**: A headless app with your core game logic (i.e. a 'single-threaded authoritative game server').
+- **Game App**: A headless app with your core game logic (i.e. a 'single-threaded authoritative game server'). Game messaging and state replication are done with `bevy_replicon` and `bevy_replicon_repair` using a `renet` server/client setup.
 - **Client App**: A GUI app connected to a game app, this is where users play your game.
 - **Backend**:
-    - **Host Server**: A headless server app that manages connected users and lobbies.
-    - **Game Hub Server**: A headless server app that receives game requests from the host server and runs game apps.
+    - **Host Server**: A headless server app that manages connected users and lobbies. Networking uses `bevy_simplenet`.
+    - **Game Hub Server**: A headless server app that receives game requests from the host server and runs game apps. Networking uses `bevy_simplenet`.
 - **User Client**: A GUI app that connects to, and interacts with, the host server (making/joining/starting lobbies). The app receives game start packages from the host server and launches client apps. It is also helps coordinate client app reconnects for ongoing games.
 
 
@@ -55,7 +55,7 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 
 ### Game App
 
-- **`GameFactory`** (trait object): Consumes `GameLaunchPack`s to set up game apps and produces `GameStartReport`s.
+- **`GameFactory`** (trait object): Consumes `GameLaunchPack`s to set up game apps, and produces `GameStartReport`s.
 - **`GameStartReport`** (data object): Produced by a `GameFactory`, used to orchestrate client setup by the game manager (for multiplayer games this is the host server).
     - Includes auth info for creating `ServerConnectToken`s, which are used by client apps to connect to the game app's `renet` server. Start reports include auth info instead of connect tokens so that tokens can be produced on-demand by the host server to support reconnects.
     - **`GameStartInfo`** (data object): Per-client custom data, used for client setup by `ClientFactory`. The start data field in this type should deserialize to game-specific initialization details for a client app.
@@ -68,7 +68,7 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 
 ### Client App
 
-- **`ClientFactory`** (trait object): Uses `ServerConnectToken` and `GameStartInfo` to set up client apps.
+- **`ClientFactory`** (trait object): Consumes `ServerConnectToken`s and `GameStartInfo`s to set up client apps.
 - **`GameMessageHandler`** (trait object): Bevy resource inserted into client apps and used to handle incoming game-specific game messages.
 - **`ClientRequestBuffer`**: Bevy resource inserted into client apps and used to marshal client requests into the networking backend.
     - `ClientRequest`: Type specified on construction, must equal the type for all client network requests to be sent to the game (it should probably be a big enum).
@@ -99,18 +99,21 @@ Your game infrastructure will be implemented in a set of Bevy apps.
 
 ### Game App
 
+The game is a single-threaded authoritative app where game logic is executed. Clients communicate with the game app via a `renet` server/client relationship, and game state is replicated to clients with `bevy_replicon`/`bevy_replicon_repair`. Networking details are mostly hidden by `bevy_girk` APIs.
+
 **Setup**
 
-- Implement a `GameFactory` for making game apps. Your factory can use `prepare_girk_game_app()` to set up `bevy_girk`-related systems and resources.
+- Implement a `GameFactory` for making game apps. Your factory should use `prepare_girk_game_app()` to set up `bevy_girk`-related systems and resources (if you don't use that helper than none of the information below will be accurate).
 
 **Replication**
 
 - Use [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair) to register replicated components. No components are registered by default.
+- Include a [bevy_replicon](https://github.com/lifescapegame/bevy_replicon) `Replication` component in entities that should be replicated.
 
 **App Startup**
 
 - Insert a `ClientRequestHandler` resource to the app with your desired request-handling callback.
-    - The callback can use `deserialize_client_request()?` to extract requests.
+    - The callback should use `deserialize_client_request()?` to extract requests. This function is exposed in case you want to read `ClientFwRequest`s sent by the client framework.
 - Insert a `GameMessageBuffer` resource to the app with your desired game message type. The message type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
@@ -136,14 +139,16 @@ You can track and respond to client connection events with `EventReader<bevy_ren
 
 ### Client App
 
+The client is a GUI app where you play a game. Clients communicate with the game app via a `renet` server/client relationship. Game state is replicated into the client app with `bevy_replicon`/`bevy_replicon_repair`. Networking details are mostly hidden by `bevy_girk` APIs.
+
 **Setup**
 
-- Implement a `ClientFactory` for making client apps. Your factory can use `prepare_girk_client_app()` to set up `bevy_girk`-related systems and resources.
+- Implement a `ClientFactory` for making client apps. Your factory should use `prepare_girk_client_app()` to set up `bevy_girk`-related systems and resources (if you don't use that helper than none of the information below will be accurate).
 
 **App Startup**
 
 - Insert a `GameMessageHandler` resource to your app with your desired message-handling callback.
-    - The callback can use `deserialize_game_message()?` to extract messages.
+    - The callback should use `deserialize_game_message()?` to extract messages. This function is exposed in case you want to read `GameFwMsg`s sent by the game framework.
 - Insert a `ClientRequestBuffer` resource to your app with your desired client request type. The request type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
@@ -161,14 +166,14 @@ The client framework exposes a small API for your client logic.
     - `ClientFwMode::Init` is set when initializing the client or on disconnect from the game's `renet` server (but only if the app is **not** in `ClientFwMode::End` already).
     - `ClientFwMode::Init` -> `ClientFwMode::Game` occurs when the client is in state `ClientInitializationState::Done` and the client receives a `GameFwMode::Game` message from the game framework (this message will be requested, sent, and processed automatically when `ClientInitializationState::Done` is entered).
 - **`ClientRequestBuffer`**: Bevy resource that you inserted to your app on app startup. All requests you want to send from the client to the game should be submitted to this buffer.
-    - *Note*: This is cleared in `PreUpdate` in order to synchronize with the networking framework. Any earlier-buffered requests will not be sent. This is relevant for e.g. GUI-based player inputs, which may be collected in an earlier schedule. It is recommended to cache player inputs in a custom buffer and marshal them into `ClientRequestBuffer` in `ClientFwSet` in `Update`. Note that this indirection makes it easier to do headless testing of the client app's core (non-graphical) logic.
+    - *Note*: This is cleared in `PreUpdate` in order to synchronize with the networking framework. Any earlier-buffered requests will not be sent. This is relevant for e.g. GUI-based player inputs, which may be collected in an earlier schedule. It is recommended to cache player inputs in a custom buffer and marshal them into `ClientRequestBuffer` in `ClientFwSet` in `Update`. This indirection makes it easier to do headless testing of the client app's core (non-graphical) logic, and facilitates multiple client front-ends for different platforms.
 - **`PingTracker`**: Bevy resource used to estimate the current game framework tick. (TODO: this is very rudimentary, it needs significant work to be production-grade)
 
 **Reconnecting**
 
-Ergonomic and robust client reconnects are a major feature of this library. A client app can disconnect and reconnect to the game app without needing to restart.
+Robust, ergonomic client reconnects are a major feature of this library. A disconnected client app will automatically try to reconnect to the game app without needing to restart.
 
-When a disconnect is detected, there are a number of details to keep in mind.
+When a disconnect is detected, there are a number of details to keep in mind. (TODO: refactor ClientFwSet::Init into multiple sets)
 
 - The `renet` `is_disconnected()` run condition will be true for at least one full tick after a disconnect is detected.
 - `ClientFwMode::Init` will be set on disconnect. There are three modalities to client initialization, which can be used to control which systems run in different scenarios (e.g. with custom system sets).
@@ -176,37 +181,57 @@ When a disconnect is detected, there are a number of details to keep in mind.
     - *Startup loading*: Use `in_state(ClientFwMode::Init)` plus `in_state(your custom client mode is INIT)` (assumes you track your own client mode that matches the current game mode).
     - *Reconnecting*: Use `in_state(ClientFwMode::Init)` plus `not(in_state(your custom client mode is INIT))` (assumes you track your own client mode that matches the current game mode).
 - `ClientInitializationState::InProgress` will be set, which means the `ClientFwLoadingSet` will run.
-- `bevy_replicon_repair` will preserve `bevy_replicon` replicated client state across a reconnect IF you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<MyComponent>()`).
-- Client requests submitted to the `ClientRequestBuffer` will fail to send while the `renet` client is not connected (is disconnected or connecting). This ensures a clean start when the `renet` run condition `client_just_connected()` fires.
-    - *Note*: There is a span of time within `ClientFwMode::Init` where all client requests will fail to send, and a span after that when ordered and unordered requests will succeed. You must use `renet` connection run conditions directly if sending requests during inititialization. Requests sent in `ClientFwMode::Game` will only fail to send if the client becomes disconnected (which may occur a number of ticks after a failed request was submitted), in which case the client app will re-initialize.
-- Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism.
+- `bevy_replicon` replicated client state will be preserved across a reconnect if you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<GameInitProgress>()`). If you don't use `bevy_replicon_repair` then you need to manually repair your client state (e.g. by despawning and cleaning up all old replicated entities when entering `ClientFwMode::Syncing`).
+- Client requests submitted to the `ClientRequestBuffer` will fail to send while the `renet` client is not connected (is disconnected or connecting). This ensures a clean start when the `renet` run condition `client_just_connected()` fires. (TODO: fails to send in `ClientFwMode::Connecting` + span of time before that when disconnected but not detected)
+    - *Note*: There is a span of time within `ClientFwMode::Init` where all client requests will fail to send, and a span after that when requests will succeed (except unreliable messages, which might still fail). You must use `renet` run conditions directly if sending requests during inititialization. Requests sent in `ClientFwMode::Game` will reliably succeed unless the client becomes disconnected (which may occur a number of ticks after failed requests were submitted), in which case the client app will re-initialize.
+- Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism. (TODO: will not appear in `ClientFwMode::Connecting` and `ClientFwMode::Syncing`)
 
 
 ### User Client
 
-- setup
-    - set up HostUserClient websocket client to talk to the host server
-- host server interactions (mainly lobby management): see API (HostToUserMsg, HostToUserResponse, UserToHostMsg, UserToHostRequest)
-- launching games
-    - ClientMonitor: keeps track of the currently-running client app; receives ClientInstanceReports from the client and sends new ServerConnectTokens into the client
-    - ClientStarter: convenience tool for restarting a client app that has shut down
-    - launch_local_player_client(): uses
-        - launches a game app binary (native: uses GameInstanceLauncherProcess)
-        - launches a client app binary (native: uses ClientInstanceLauncherProcess)
-    - launch_multiplayer_client()
-        - launches a client app binary using data from HostToUserMsg::GameStart (native: uses GameInstanceLauncherProcess)
-- client app reconnect support
-    - complete restart: if a game is running and client app + user client are closed
-        - on user client connect to host server, host server will automatically send HostToUserMsg::GameStart
-        - initialize ClientStarter with launch_multiplayer_client()
-        - use ClientStarter + ClientMonitor to launch
-    - client app restart: if a game is running and client app is closed
-        - expose a 'Reconnect' button to users; on press, send UserToHostRequest::GetConnectToken to host server
-        - on receipt of HostToUserResponse::ConnectToken, use ClientStarter + ClientMonitor to launch
-    - client app reconnect: if a game is running and the client app disconnects
-        - ClientMonitor will emit a ClientInstanceReport::RequestConnectToken
-        - send UserToHostRequest::GetConnectToken to host server
-        - on receipt of HostToUserResponse::ConnectToken, send the token to the client app via ClientMonitor
+The user client is a GUI app that communicates with the host server and launches client apps. It is possible to build an integrated user client/game client app, however the setup helpers currently provided by `bevy_girk` assume they are separate apps in separate processes.
+
+**Setup**
+
+- Set up a `HostUserClient` `bevy_simplenet` client to talk to the host server.
+    - Most host server interactions are related to lobby management (making/joining/leaving/launching/searching lobbies). For the entire API see `HostToUserMsg`, `HostToUserResponse`, `UserToHostMsg`, `UserToHostRequest`.
+- Add the `ClientMonitorPlugin` to your app.
+    - **`ClientMonitor`**: Bevy resource inserted by `ClientMonitorPlugin` that keeps track of the currently-running client app if there is one. It receives `ClientInstanceReport`s from the client and can send new `ServerConnectToken`s into the client.
+- Add the `ClientStarterPlugin` to your app.
+    - **`ClientStarter`**: Bevy resource inserted by `ClientStarterPlugin` that makes it easy to restart a client app that has shut down.
+
+**Launching Local Single-Player Game Clients**
+
+1. Make a `GameLaunchPack` for the game.
+1. Use `launch_local_player_client()` to launch the game (no network connection required).
+    - Internally this launches your game app binary. On native it uses `GameInstanceLauncherProcess`. TODO: WASM
+    - Internally this launches your client app binary. On native it uses `ClientInstanceLauncherProcess`. TODO: WASM
+
+**Launching Hosted Multiplayer Game Clients**
+
+Hosted gamed should use the `ClientStarter` to support reconnects that need to re-use `GameStartInfo`.
+
+1. Receive a `HostToUserMsg::GameStart` from the host server. This includes `ServerConnectToken` and `GameStartInfo`.
+1. Set the client starter: `ClientStarter::set()`.
+    - Use `launch_multiplayer_client()` in the starter callback to launch the game. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
+        - Internally this launches your client app binary. On native it uses `ClientInstanceLauncherProcess`. TODO: WASM
+1. Launch the client with `ClientStarter::start()`.
+
+**Hosted Multiplayer Reconnect Support**
+
+The user client helps reconnect users to hosted games. There are three kinds of reconnects.
+
+- **Complete restart**: A hosted game is running and the client app and user client are both closed.
+    1. When the user client connects to the host server, the host server will automatically send a `HostToUserMsg::GameStart` containing `ServerConnectToken` and `GameStartInfo`.
+    1. `ClientStarter::set()` with `launch_multiplayer_client()` in the callback. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
+    1. Launch the client with `ClientStarter::start()`.
+- **Client app restart**: A hosted game is running and the client app is closed but the user client is open.
+    1. Expose a 'Reconnect' button to users, which will display when `ClientStarter` has been set (i.e. was set by a game start but not cleared by a game over, implying a hosted game is still running). On press, send `UserToHostRequest::GetConnectToken` to the host server.
+    1. On receipt of `HostToUserResponse::ConnectToken`, use the already-set `ClientStarter` to launch the client app with `ClientStarter::start()`.
+- **Client app reconnect**: A hosted game is running and the client app disconnected but remains open (and the user client is open).
+    1. The `ClientMonitor` will emit a `ClientInstanceReport::RequestConnectToken`.
+    1. Send `UserToHostRequest::GetConnectToken` to the host server.
+    1. On receipt of `HostToUserResponse::ConnectToken`, send the token to the client app via `ClientMonitor::send_token()`.
 
 
 ---
@@ -214,31 +239,42 @@ When a disconnect is detected, there are a number of details to keep in mind.
 
 ## Binaries
 
+Your project will need several binary crates to get started.
+
 
 ### Backend (unified single-hub binary)
 
-- create a host server app
-- create a game hub server app
-- run the apps (use `std::thread::spawn` to run one of the servers)
-- note: for users to set up a HostUserClient you need the host server IP and port; how to distribute that is up to you (a future version of this architecture will include an HTTP auth server, which will provide auth tokens for creating websocket clients)
+For testing it is recommended to build one unified binary for the backend.
+
+1. Create a host server app.
+1. Create a game hub server app.
+1. Run the apps. Use `std::thread::spawn` to run one of the servers in another thread.
+
+*Note*: For users to set up a `HostUserClient` you need the host server IP and port. How to distribute that information is up to you. A future version of `bevy_girk` will include an HTTP auth server, which will provide auth tokens to clients for creating `HostUserClient`s. In that case you'd only need to distribute the auth server's address (which is easier to bake into client binaries).
 
 
 ### Game App
 
-- inprocess_game_launcher()
+Your game app should have its own binary. This binary can be launched by both the game hub server for hosted games and the user client for local single-player games.
+
+1. Use `inprocess_game_launcher()` in your `fn main()`.
 
 
 ### Client App
 
-- inprocess_client_launcher()
+Your game app should have its own binary. This binary can be launched by the user client for users to play your game.
+
+1. Use `inprocess_client_launcher()` in your `fn main()`.
 
 
 ### User Client
 
-- make {Local, Multi}PlayerLauncherConfig{Native, Wasm} and insert into app
-- make HostUserClient websocket client and insert into app
+Your user client should also have a binary.
+
+1. In order to call `launch_local_player_client()` and `launch_multiplayer_client()` you will need launcher configs. These should be made in your `fn main()` and inserted into the app. They are (for native and WASM environments): `LocalPlayerLauncherConfigNative`, `MultiPlayerLauncherConfigNative`, `LocalPlayerLauncherConfigWasm`, `MultiPlayerLauncherConfigWasm`.
+1. Make a `HostUserClient` websocket client and insert it into the app.
 
 
 ### Notes
 
-- use clap for CLI!
+- Use [`clap`](https://docs.rs/clap/4.4.11/clap/index.html) for CLI!

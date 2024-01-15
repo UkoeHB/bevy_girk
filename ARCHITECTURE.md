@@ -1,4 +1,4 @@
-# Architecture
+# Architecture (WIP)
 
 This document contains an overview of `bevy_girk`'s structure and behavior.
 
@@ -20,7 +20,9 @@ For how to use the library, see `USAGE.md`.
 - **Utils**: Generic utils library. Crate: `bevy_girk_utils`.
 
 
+WORK IN PROGRESS
 
+<!--
 
 - architecture
 
@@ -161,3 +163,4 @@ For how to use the library, see `USAGE.md`.
     - network utils
     - rand64
 
+-->

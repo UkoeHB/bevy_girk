@@ -18,8 +18,8 @@ fn handle_game_fw_message(world: &mut World, ticks: Ticks, msg: GameFwMsg)
 
     match msg
     {
-        GameFwMsg::CurrentGameFwMode(mode) => syscall(world, mode, handle_current_game_fw_mode),
-        GameFwMsg::PingResponse(ping_rsp)  => syscall(world, (ticks, ping_rsp), handle_ping_response),
+        GameFwMsg::CurrentMode(mode)      => syscall(world, mode, handle_current_game_fw_mode),
+        GameFwMsg::PingResponse(ping_rsp) => syscall(world, (ticks, ping_rsp), handle_ping_response),
     }
 }
 
