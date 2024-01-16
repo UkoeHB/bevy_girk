@@ -24,15 +24,15 @@ tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = [ "env-filter", "std", "tracing-log" ] }
 url                = { workspace = true }
 
-bevy_girk_backend_public  = { path = "../libs/bevy_girk_backend_public" }
-bevy_girk_client_fw       = { path = "../libs/bevy_girk_client_fw" }
-bevy_girk_client_instance = { path = "../libs/bevy_girk_client_instance" }
-bevy_girk_game_fw         = { path = "../libs/bevy_girk_game_fw" }
-bevy_girk_game_hub_server = { path = "../libs/bevy_girk_game_hub_server" }
-bevy_girk_game_instance   = { path = "../libs/bevy_girk_game_instance" }
-bevy_girk_host_server     = { path = "../libs/bevy_girk_host_server" }
-bevy_girk_utils           = { path = "../libs/bevy_girk_utils" }
-bevy_girk_wiring          = { path = "../libs/bevy_girk_wiring" }
+bevy_girk_backend_public  = { path = "../bevy_girk_backend_public" }
+bevy_girk_client_fw       = { path = "../bevy_girk_client_fw" }
+bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
+bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }
+bevy_girk_game_hub_server = { path = "../bevy_girk_game_hub_server" }
+bevy_girk_game_instance   = { path = "../bevy_girk_game_instance" }
+bevy_girk_host_server     = { path = "../bevy_girk_host_server" }
+bevy_girk_utils           = { path = "../bevy_girk_utils" }
+bevy_girk_wiring          = { path = "../bevy_girk_wiring" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rand = { version = "0.8" }
