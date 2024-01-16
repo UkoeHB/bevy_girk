@@ -7,8 +7,6 @@ For the library architecture, see `ARCHITECTURE.md`.
 To navigate the types and functions in this document it is recommended to open it in a text editor and use 'go to definition'.
 
 
----
-
 
 ## Overview
 
@@ -25,8 +23,6 @@ A project using `bevy_girk` will end up with a number of distinct apps. Each of 
     - **Game Hub Server**: A headless server app that receives game requests from the host server and runs game apps. Networking uses `bevy_simplenet`.
 - **User Client**: A GUI app that connects to, and interacts with, the host server (making/joining/starting lobbies). The app receives game start packages from the host server and launches client apps. It is also helps coordinate client app reconnects for ongoing games.
 
-
----
 
 
 ## Wiring
@@ -74,8 +70,6 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
     - `ClientRequest`: Type specified on construction, must equal the type for all client network requests to be sent to the game (it should probably be a big enum).
     - *Note*: We use type id consistency checks in the `ClientRequestBuffer` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
 
-
----
 
 
 ## Implementing Apps
@@ -233,8 +227,6 @@ The user client helps reconnect users to hosted games. There are three kinds of 
     1. Send `UserToHostRequest::GetConnectToken` to the host server.
     1. On receipt of `HostToUserResponse::ConnectToken`, send the token to the client app via `ClientMonitor::send_token()`.
 
-
----
 
 
 ## Binaries
