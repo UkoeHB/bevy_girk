@@ -5,7 +5,6 @@ use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -61,9 +60,8 @@ pub fn make_test_game_hub_server(
             ticks_per_sec       : game_ticks_per_sec,
             game_duration_ticks : game_num_ticks,
         };
-    let game_config_ser = ser_msg(&game_config);
     let game_launch_pack_source = GameLaunchPackSource::new(
-            DummyGameLaunchPackSource::new(game_config_ser, lp_source_works)
+            DummyGameLaunchPackSource::new(game_config, lp_source_works)
         );
 
     // server app

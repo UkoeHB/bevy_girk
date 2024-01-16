@@ -27,7 +27,6 @@ fn cache_running_games_basic()
             ticks_per_sec       : Ticks(100000),
             game_duration_ticks : Ticks(1),
         };
-    let game_config_ser = ser_msg(&game_config);
 
 
     // empty cache test
@@ -36,11 +35,12 @@ fn cache_running_games_basic()
 
     // add one game
     let game_id = 0u64;
-    let launch_pack = GameLaunchPack::new(game_id, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack = GameLaunchPack::new(game_id, ser_msg(&dummy_pack));
     let start_request = GameStartRequest{ lobby_data: LobbyData{ id: game_id, ..Default::default() } };
     cache.make_instance(start_request.clone(), launch_pack).expect("making game instance should succeed");
     assert!(cache.has_game(game_id));
-    let launch_pack = GameLaunchPack::new(game_id, game_config_ser.clone(), Vec::default());
+    let launch_pack = GameLaunchPack::new(game_id, ser_msg(&dummy_pack));
     if let Ok(_) = cache.make_instance(start_request, launch_pack) { panic!("making duplicate instance should fail"); }
 
     assert_eq!(cache.num_running(), 1);
@@ -54,11 +54,12 @@ fn cache_running_games_basic()
     let total = 10u64;
     for game_id in 1u64..=total
     {
-        let launch_pack = GameLaunchPack::new(game_id, game_config_ser.clone(), Vec::default());
+        let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+        let launch_pack = GameLaunchPack::new(game_id, ser_msg(&dummy_pack));
         let start_request = GameStartRequest{ lobby_data: LobbyData{ id: game_id, ..Default::default() } };
         cache.make_instance(start_request.clone(), launch_pack).expect("making game instance should succeed");
         assert!(cache.has_game(game_id));
-        let launch_pack = GameLaunchPack::new(game_id, game_config_ser.clone(), Vec::default());
+        let launch_pack = GameLaunchPack::new(game_id, ser_msg(&dummy_pack));
         if let Ok(_) = cache.make_instance(start_request, launch_pack) { panic!("making duplicate instance should fail"); }
     }
     assert_eq!(cache.num_running(), total as usize);
@@ -91,12 +92,12 @@ fn cache_running_games_expiration()
             ticks_per_sec       : Ticks(100),
             game_duration_ticks : Ticks(100),  //long game time
         };
-    let game_config_ser = ser_msg(&game_config);
 
 
     // add game
     let game_id_1 = 0u64;
-    let launch_pack_1 = GameLaunchPack::new(game_id_1, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_1 = GameLaunchPack::new(game_id_1, ser_msg(&dummy_pack));
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
     cache.make_instance(start_request_1, launch_pack_1).expect("making game instance should succeed");
 
@@ -105,7 +106,8 @@ fn cache_running_games_expiration()
 
     // add another game
     let game_id_2 = 2u64;
-    let launch_pack_2 = GameLaunchPack::new(game_id_2, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_2 = GameLaunchPack::new(game_id_2, ser_msg(&dummy_pack));
     let start_request_2 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_2, ..Default::default() } };
     cache.make_instance(start_request_2, launch_pack_2).expect("making game instance should succeed");
 
@@ -140,7 +142,8 @@ fn cache_running_games_expiration()
 
     // add new game with user 1
     let game_id_3 = 3u64;
-    let launch_pack_3 = GameLaunchPack::new(game_id_3, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_3 = GameLaunchPack::new(game_id_3, ser_msg(&dummy_pack));
     let start_request_3 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_3, ..Default::default() } };
     cache.make_instance(start_request_3, launch_pack_3).expect("making game instance should succeed");
 
@@ -179,12 +182,12 @@ fn cache_running_games_termination()
             ticks_per_sec       : Ticks(100),
             game_duration_ticks : Ticks(6),  //60ms game time
         };
-    let game_config_ser = ser_msg(&game_config);
 
 
     // add game
     let game_id_1 = 0u64;
-    let launch_pack_1 = GameLaunchPack::new(game_id_1, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_1 = GameLaunchPack::new(game_id_1, ser_msg(&dummy_pack));
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
     cache.make_instance(start_request_1, launch_pack_1).expect("making game instance should succeed");
 
@@ -193,7 +196,8 @@ fn cache_running_games_termination()
 
     // add another game
     let game_id_2 = 2u64;
-    let launch_pack_2 = GameLaunchPack::new(game_id_2, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_2 = GameLaunchPack::new(game_id_2, ser_msg(&dummy_pack));
     let start_request_2 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_2, ..Default::default() } };
     cache.make_instance(start_request_2, launch_pack_2).expect("making game instance should succeed");
 
@@ -228,7 +232,8 @@ fn cache_running_games_termination()
 
     // add new game with user 1
     let game_id_3 = 3u64;
-    let launch_pack_3 = GameLaunchPack::new(game_id_3, game_config_ser.clone(), Vec::default());
+    let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
+    let launch_pack_3 = GameLaunchPack::new(game_id_3, ser_msg(&dummy_pack));
     let start_request_3 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_3, ..Default::default() } };
     cache.make_instance(start_request_3, launch_pack_3).expect("making game instance should succeed");
 

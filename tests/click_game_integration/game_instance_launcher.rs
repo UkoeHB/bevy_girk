@@ -102,7 +102,6 @@ fn game_instance_launcher_demo()
             game_fw_config,
             game_duration_config,
         };
-    let game_factory_config_ser = ser_msg(&game_factory_config);
 
     // make game factory
     let game_factory = GameFactory::new(ClickGameFactory{});
@@ -112,7 +111,7 @@ fn game_instance_launcher_demo()
 
 
     // make init data for the clients
-    let mut client_init_data = Vec::<ClientInitDataForGame>::new();
+    let mut client_init_data = Vec::<ClickClientInitDataForGame>::new();
     client_init_data.reserve(num_players + num_watchers);
 
     for i in 0..num_players
@@ -128,7 +127,8 @@ fn game_instance_launcher_demo()
 
     // make new game instance
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
-    let launch_pack = GameLaunchPack::new(0u64, game_factory_config_ser, client_init_data);
+    let launch_pack = ClickLaunchPackData{ config: game_factory_config, clients: client_init_data};
+    let launch_pack = GameLaunchPack::new(0u64, ser_msg(&launch_pack));
     let mut game_instance = game_launcher.launch(launch_pack, report_sender);
     std::thread::sleep(Duration::from_millis(30));
     assert!(game_instance.is_running());

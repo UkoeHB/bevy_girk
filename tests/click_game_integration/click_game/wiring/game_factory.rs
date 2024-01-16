@@ -31,7 +31,7 @@ struct GameStartupHelper
 
 /// Prepare information to use when setting up the game app.
 fn prepare_game_startup(
-    client_init_data     : &Vec<ClientInitDataForGame>,
+    client_init_data     : Vec<ClickClientInitDataForGame>,
     game_duration_config : GameDurationConfig
 ) -> Result<GameStartupHelper, ()>
 {
@@ -47,16 +47,12 @@ fn prepare_game_startup(
     watchers.reserve(client_init_data.len());
     clients.reserve(client_init_data.len());
 
-    for client_init in client_init_data.iter()
+    for client_init in client_init_data
     {
-        // deserialize the client init
-        let Some(extracted_client_init) = deser_msg::<ClickClientInitDataForGame>(&client_init.data)
-        else { tracing::error!("unable to deserialize a client's init data"); return Err(()); };
-
         // handle client type
-        let client_id = match extracted_client_init
+        let client_id = match client_init.init
         {
-            ClickClientInitDataForGame::Player{ client_id, player_name } =>
+            ClickClientInit::Player{ client_id, player_name } =>
             {
                 players.insert(client_id, 
                         PlayerState{
@@ -66,7 +62,7 @@ fn prepare_game_startup(
                             });
                 client_id
             },
-            ClickClientInitDataForGame::Watcher{ client_id } =>
+            ClickClientInit::Watcher{ client_id } =>
             {
                 watchers.insert(client_id);
                 client_id
@@ -216,7 +212,7 @@ fn get_game_start_infos(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Configuration for setting up a game with a game factory.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ClickGameFactoryConfig
 {
     pub server_setup_config  : GameServerSetupConfig,
@@ -227,8 +223,8 @@ pub struct ClickGameFactoryConfig
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client init data used when setting up a game.
-#[derive(Serialize, Deserialize)]
-pub enum ClickClientInitDataForGame
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ClickClientInit
 {
     Player{
         /// the client's in-game id
@@ -240,6 +236,35 @@ pub enum ClickClientInitDataForGame
         /// the client's in-game id
         client_id: ClientIdType,
     }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Used by a game factory to initialize a client in the game.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ClickClientInitDataForGame
+{
+    /// The client's environment type.
+    pub env: bevy_simplenet::EnvType,
+
+    /// The client's server-side user id.
+    pub user_id: u128,
+
+    /// Client init data for use in initializing a game.
+    pub init: ClickClientInit,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Used by a game factory to initialize a game.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ClickLaunchPackData
+{
+    /// Game config.
+    pub config: ClickGameFactoryConfig,
+
+    /// Client init data for use in initializing a game.
+    pub clients: Vec<ClickClientInitDataForGame>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -275,11 +300,13 @@ impl GameFactoryImpl for ClickGameFactory
     fn new_game(&self, app: &mut App, launch_pack: GameLaunchPack) -> Result<GameStartReport, ()>
     {
         // extract game factory config
-        let Some(config) = deser_msg::<ClickGameFactoryConfig>(&launch_pack.game_init_data)
+        let Some(data) = deser_msg::<ClickLaunchPackData>(&launch_pack.game_launch_data)
         else { tracing::error!("could not deserialize click game factory config"); return Err(()); };
 
         // initialize clients and game config
-        let startup = prepare_game_startup(&launch_pack.client_init_data, config.game_duration_config)?;
+        let config = data.config;
+        let clients = data.clients;
+        let startup = prepare_game_startup(clients, config.game_duration_config)?;
 
         // prepare game app
         let (native_meta, wasm_meta) = prepare_girk_game_app(

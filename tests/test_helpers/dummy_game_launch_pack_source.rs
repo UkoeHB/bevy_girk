@@ -1,6 +1,8 @@
 //local shortcuts
+use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
+use bevy_girk_utils::*;
 
 //third-party shortcuts
 
@@ -9,17 +11,16 @@ use std::collections::VecDeque;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Default)]
 pub struct DummyGameLaunchPackSource
 {
-    game_config  : Vec<u8>,
+    game_config  : DummyGameConfig,
     source_works : Option<bool>,
     queue        : VecDeque<GameLaunchPackReport>,
 }
 
 impl DummyGameLaunchPackSource
 {
-    pub fn new(game_config: Vec<u8>, source_works: Option<bool>) -> DummyGameLaunchPackSource
+    pub fn new(game_config: DummyGameConfig, source_works: Option<bool>) -> DummyGameLaunchPackSource
     {
         DummyGameLaunchPackSource{ game_config, source_works, queue: VecDeque::default() }
     }
@@ -35,27 +36,26 @@ impl GameLaunchPackSourceImpl for DummyGameLaunchPackSource
             Some(true)  =>
             {
                 // collect user ids
-                let client_init_data: Vec<ClientInitDataForGame> =
+                let clients: Vec<DummyClientInit> =
                     start_request
                         .lobby_data
                         .members
                         .iter()
                         .map(
                             |(id, _)|
-                            ClientInitDataForGame{
+                            DummyClientInit{
                                 env     : bevy_simplenet::env_type(),
-                                user_id : *id,
-                                data    : Vec::default()
+                                user_id : *id
                             })
                         .collect();
 
                 // add launch pack
+                let config = self.game_config.clone();
                 self.queue.push_back(
                         GameLaunchPackReport::Pack(
                                 GameLaunchPack{
-                                        game_id        : start_request.game_id(),
-                                        game_init_data : self.game_config.clone(),
-                                        client_init_data,
+                                        game_id          : start_request.game_id(),
+                                        game_launch_data : ser_msg(&DummyLaunchPack{ config, clients })
                                     }
                             )
                     )

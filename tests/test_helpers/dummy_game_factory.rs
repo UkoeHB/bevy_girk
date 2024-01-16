@@ -16,11 +16,32 @@ use serde::{Deserialize, Serialize};
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct DummyGameConfig
 {
     pub ticks_per_sec       : Ticks,
     pub game_duration_ticks : Ticks,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DummyClientInit
+{
+    /// The client's environment type.
+    pub env: bevy_simplenet::EnvType,
+
+    /// The client's server-side user id.
+    pub user_id: u128,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DummyLaunchPack
+{
+    pub config: DummyGameConfig,
+    pub clients: Vec<DummyClientInit>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -33,10 +54,10 @@ impl GameFactoryImpl for DummyGameFactory
     fn new_game(&self, app: &mut App, launch_pack: GameLaunchPack) -> Result<GameStartReport, ()>
     {
         // extract factory config
-        let Some(config) = deser_msg::<DummyGameConfig>(&launch_pack.game_init_data) else { return Err(()); };
+        let Some(pack) = deser_msg::<DummyLaunchPack>(&launch_pack.game_launch_data) else { return Err(()); };
 
         // get player ids
-        let player_ids: Vec<u128> = launch_pack.client_init_data.iter().map(|m| m.user_id).collect();
+        let player_ids: Vec<u128> = pack.clients.iter().map(|m| m.user_id).collect();
 
         // prepare message channels
         app.add_event::<ClientPacket>();
@@ -62,17 +83,17 @@ impl GameFactoryImpl for DummyGameFactory
             .add_plugins(bevy::time::TimePlugin)
             .init_resource::<bevy_replicon::prelude::LastChangeTick>()
             //setup game framework
-            .insert_resource(GameFwConfig::new( config.ticks_per_sec, Ticks(1), Ticks(0) ))
+            .insert_resource(GameFwConfig::new( pack.config.ticks_per_sec, Ticks(1), Ticks(0) ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
             .insert_resource(GameMessageBuffer::new::<()>())
             //setup client framework
             .insert_resource(
-                ClientFwConfig::new( config.ticks_per_sec, 0 as ClientIdType )
+                ClientFwConfig::new( pack.config.ticks_per_sec, 0 as ClientIdType )
             )
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestBuffer::new::<()>())
             //setup game core
-            .insert_resource(DummyGameDurationConfig{ max_ticks: config.game_duration_ticks })
+            .insert_resource(DummyGameDurationConfig{ max_ticks: pack.config.game_duration_ticks })
             //add game framework
             .add_plugins(GameFwPlugin)
             //add client framework

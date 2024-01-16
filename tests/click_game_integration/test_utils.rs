@@ -1,7 +1,5 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
-use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
@@ -22,32 +20,30 @@ pub fn get_test_protocol_id() -> u64
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn make_player_init_for_game(user_id: u128, client_id: ClientIdType) -> ClientInitDataForGame
+pub fn make_player_init_for_game(user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
 {
-    let client_init_data = ClickClientInitDataForGame::Player{
-            client_id   : client_id,
+    let init = ClickClientInit::Player{
+            client_id,
             player_name : String::from("player") + stringify!(client_id),
         };
 
-    ClientInitDataForGame{
-            env     : bevy_simplenet::env_type(),
-            user_id : user_id,
-            data    : ser_msg(&client_init_data),
+        ClickClientInitDataForGame{
+            env: bevy_simplenet::env_type(),
+            user_id,
+            init,
         }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn make_watcher_init_for_game(user_id: u128, client_id: ClientIdType) -> ClientInitDataForGame
+pub fn make_watcher_init_for_game(user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
 {
-    let client_init_data = ClickClientInitDataForGame::Watcher{
-            client_id: client_id,
-        };
+    let init = ClickClientInit::Watcher{ client_id };
 
-    ClientInitDataForGame{
-            env     : bevy_simplenet::env_type(),
-            user_id : user_id,
-            data    : ser_msg(&client_init_data),
+        ClickClientInitDataForGame{
+            env: bevy_simplenet::env_type(),
+            user_id,
+            init,
         }
 }
 

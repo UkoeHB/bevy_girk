@@ -85,14 +85,13 @@ fn game_instance_factory_demo()
             game_fw_config,
             game_duration_config,
         };
-    let game_factory_config_ser = ser_msg(&game_factory_config);
 
     // make game factory
     let game_factory = GameFactory::new(ClickGameFactory{});
 
 
     // make init data for the clients
-    let mut client_init_data = Vec::<ClientInitDataForGame>::new();
+    let mut client_init_data = Vec::<ClickClientInitDataForGame>::new();
     client_init_data.reserve(num_players + num_watchers);
 
     for i in 0..num_players
@@ -107,7 +106,8 @@ fn game_instance_factory_demo()
 
 
     // make new game
-    let launch_pack = GameLaunchPack::new(0u64, game_factory_config_ser, client_init_data);
+    let launch_pack = ClickLaunchPackData{ config: game_factory_config, clients: client_init_data};
+    let launch_pack = GameLaunchPack::new(0u64, ser_msg(&launch_pack));
     let mut game_server_app = App::default();
     let mut game_start_report = game_factory.new_game(&mut game_server_app, launch_pack).unwrap();
 
