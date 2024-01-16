@@ -35,7 +35,8 @@ pub struct GameLaunchPack
     /// Id of the game.
     pub game_id: u64,
 
-    /// Game init data (serialized).
+    /// Game launch data (serialized).
+    /// - Note: Client data in here should be pre-shuffled.
     #[serde_as(as = "Bytes")]
     pub game_init_data: Vec<u8>,
 

@@ -1,6 +1,6 @@
 # Bevy game instance framework
 
-A framework for multiplayer games where the player list is known before starting a game and games last a few hours at most.
+A framework/architecture for match-based multiplayer games.
 
 For a complete working example, see [bevy_girk_demo](https://github.com/UkoeHB/bevy_girk_demo).
 
@@ -26,4 +26,4 @@ There may be limits to how far `bevy_girk` can go while remaining generic, so th
 
 - Add an authentication server so `bevy_girk` games can plausibly be deployed in production (or at least alpha nets).
 - Refactor everything to use generics to eliminate multi-layered serialization/deserialization. Alternatively, write custom serializers/deserializers for data objects that reuse existing allocations (via `Bytes`).
-- Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees where needed.
+- Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees.

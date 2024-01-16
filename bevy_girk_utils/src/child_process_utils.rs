@@ -162,7 +162,8 @@ pub fn run_app_in_child_process<I, O>(
     mut app             : App,
     stdin_sender        : IoSender<I>,
     mut stdout_receiver : IoReceiver<O>,
-    on_stdin_null       : impl FnOnce() + Send + Sync + 'static,
+    on_input_failure    : impl FnOnce() + Send + Sync + 'static,
+    on_critical_err     : impl FnOnce() + Send + Sync + 'static,
 )
 where
     I: Debug + for<'de> Deserialize<'de> + Send + Sync + 'static,
@@ -183,7 +184,7 @@ where
 
                 if line.is_empty()
                 {
-                    (on_stdin_null)();
+                    (on_input_failure)();
                     return;
                 }
 
@@ -202,7 +203,10 @@ where
         .add_systems(Last, monitor_for_outputs::<O>);
 
     // run the app to completion
-    app.run();
+    if let Err(_) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || { app.run(); }))
+    {
+        (on_critical_err)();
+    }
 
     // drain any lingering outputs
     drain_outputs(&mut stdout_receiver);

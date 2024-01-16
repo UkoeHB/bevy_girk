@@ -43,14 +43,25 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
         let instance_handle = enfync::builtin::native::CPUHandle::adopt_or_default().spawn(
                 async move
                 {
-                    let Ok(mut app) = game_instance_setup(
-                            game_factory,
-                            launch_pack,
-                            report_sender,
-                            command_receiver_clone,
-                        ) else { return false; };
-                    app.run();
-                    true
+                    let report_sender_clone = report_sender.clone();
+                    let Ok(result) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+                            move ||
+                            {
+                                let Ok(mut app) = game_instance_setup(
+                                        game_factory,
+                                        launch_pack,
+                                        report_sender_clone,
+                                        command_receiver_clone,
+                                    ) else { return false; };
+                                app.run();
+                                true
+                            }
+                        ))
+                    else {
+                        let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                        return false;
+                    };
+                    result
                 }
             );
 

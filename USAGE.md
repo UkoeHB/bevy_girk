@@ -33,7 +33,7 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 ### Host Server
 
 - **`LobbyChecker`** (trait object): Validates `LobbyData`, checks if new members can join a lobby, and determines whether a lobby can be launched as a game.
-- **`LobbyData`** (data object): Produced by a user who creates a lobby, validated by `LobbyChecker` and consumed by `GameLaunchPackSource` for producing `GameLaunchPacks`. Sent to users by the host server during lobby setup so it can be used to display up-to-date lobby information (e.g. as members join/leave).
+- **`LobbyData`** (data object): Produced by a user who creates a lobby, validated by `LobbyChecker` and consumed by `GameLaunchPackSource` for producing `GameLaunchPack`s. Sent to users by the host server during lobby setup so it can be used to display up-to-date lobby information (e.g. as members join/leave).
     - The custom data field in this type should deserialize to your custom lobby data.
 
 

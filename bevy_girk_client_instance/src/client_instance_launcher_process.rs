@@ -143,7 +143,7 @@ pub fn inprocess_client_launcher(args: ClientInstanceCli, factory: &mut ClientFa
             args.token,
             args.start_info,
             args.config,
-            report_sender,
+            report_sender.clone(),
             command_receiver,
         ).expect("failed setting up client instance");
 
@@ -156,7 +156,12 @@ pub fn inprocess_client_launcher(args: ClientInstanceCli, factory: &mut ClientFa
             move ||
             {
                 let _ = command_sender.send(ClientInstanceCommand::Abort);
-                tracing::error!("stdin received null unexpectedly, aborting client");
+                tracing::error!("child process input failed unexpectedly, aborting client");
+            },
+            move ||
+            {
+                let _ = report_sender.send(ClientInstanceReport::Aborted(game_id));
+                tracing::error!("critical error in child process, client aborted");
             }
         );
 

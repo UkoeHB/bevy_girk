@@ -129,7 +129,7 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
     let app = game_instance_setup(
             game_factory,
             args.launch_pack,
-            report_sender,
+            report_sender.clone(),
             command_receiver,
         ).expect("failed setting up game instance");
 
@@ -142,7 +142,12 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
             move ||
             {
                 let _ = command_sender.send(GameInstanceCommand::Abort);
-                tracing::error!("stdin received null unexpectedly, aborting game");
+                tracing::error!("child process input failed unexpectedly, aborting game");
+            },
+            move ||
+            {
+                let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                tracing::error!("critical error in child process, game aborted");
             }
         );
 
