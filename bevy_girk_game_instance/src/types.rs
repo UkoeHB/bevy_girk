@@ -10,6 +10,7 @@ use serde_with::{Bytes, serde_as};
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Contains all data needed to launch a game with a game factory.
+//todo: deserializing this can be optimized by storing Bytes and just taking a clone of the originating Bytes
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameLaunchPack

@@ -41,8 +41,7 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 
 - **`GameLaunchPackSource`** (trait object): Converts `GameStartRequest`s (containing `LobbyData`s) into `GameLaunchPack`s with an asynchronous API. This allows you to insert extra data into launch packs beyond just the lobby data (e.g. based on a user database query to get user loadouts).
 - **`GameLaunchPack`** (data object): Produced by a `GameLaunchPackSource`, used for game app setup by `GameFactory`. 
-    - The game init data field in this type should deserialize to game-specific initialization details for a game.
-    - **`ClientInitDataForGame`** (data object): Internal per-client data in a launch pack. The data field in this type should deserialize to per-client game-specific initialization details for a game. (TODO: consolidate data in launch packs to one blob)
+    - The game launch data field in this type should deserialize to game-specific initialization details for a game.
 - **`GameInstanceLauncher`** (trait object): Launches a game app, returns a `GameInstance` for managing the game. Two default implementations are provided:
     - `GameInstanceLauncherProcess`: Launches a game app binary in a child process.
         - Use `inprocess_game_launcher()` inside the binary. This helper uses a `GameFactory` to create your game app.
