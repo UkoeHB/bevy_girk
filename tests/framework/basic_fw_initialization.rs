@@ -20,7 +20,7 @@ fn basic_fw_initialization()
 {
     // misc.
     let num_players = 1;
-    let ticks_per_sec = Ticks(1);
+    let ticks_per_sec = 1;
 
     // prepare message channels
     let mut app = App::new();
@@ -48,7 +48,7 @@ fn basic_fw_initialization()
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
-        .insert_resource(GameFwConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         .insert_resource(GameMessageBuffer::new::<()>())
         //setup client framework
@@ -56,7 +56,7 @@ fn basic_fw_initialization()
         .insert_resource(client_fw_comand_reader)
         .insert_resource(ClientRequestBuffer::new::<()>())
         //setup game core
-        .insert_resource(DummyGameDurationConfig{ max_ticks: Ticks(1) })
+        .insert_resource(DummyGameDurationConfig{ max_ticks: 1 })
         //add game framework
         .add_plugins(GameFwPlugin)
         //add client framework

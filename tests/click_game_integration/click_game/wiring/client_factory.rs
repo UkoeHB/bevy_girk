@@ -22,7 +22,7 @@ use bevy_kot_utils::*;
 fn DummyClientCorePlugin(app: &mut App)
 {
     app.insert_resource(GameMessageHandler::new(
-            | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Ticks, GameFwMsg)>>
+            | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
             {
                 deserialize_game_message::<()>(packet)?;
                 Ok(())

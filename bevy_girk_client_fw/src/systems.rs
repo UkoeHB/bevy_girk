@@ -19,7 +19,7 @@ pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientRequestBuffer
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Update client's intialization cache.
+/// Updates the client's intialization cache.
 ///
 /// Note: the ProgressCounter is removed when it reaches 100%, but we may still need the initialization cache.
 pub(crate) fn update_initialization_cache(
@@ -35,7 +35,7 @@ pub(crate) fn update_initialization_cache(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Send client initialization progress report to the game.
+/// Sends client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
     initialization_progress_cache : Res<InitializationProgressCache>,
     buffer                        : Res<ClientRequestBuffer>
@@ -49,7 +49,7 @@ pub(crate) fn send_initialization_progress_report(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Change client framework mode to 'init'.
+/// Changes the client framework mode to 'init'.
 pub(crate) fn reinitialize_client_fw(
     mut client_initialization_state : ResMut<NextState<ClientInitializationState>>,
     mut client_fw_mode              : ResMut<NextState<ClientFwMode>>
@@ -61,7 +61,7 @@ pub(crate) fn reinitialize_client_fw(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Request the current game framework mode.
+/// Requests the current game framework mode.
 pub(crate) fn request_game_fw_mode(buffer: Res<ClientRequestBuffer>)
 {
     buffer.fw_request(ClientFwRequest::GetGameFwMode);
@@ -69,7 +69,7 @@ pub(crate) fn request_game_fw_mode(buffer: Res<ClientRequestBuffer>)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Take client messages, dispatch to game.
+/// Takes client messages and dispatches them to the game.
 pub(crate) fn dispatch_client_packets(
     mut buffer         : ResMut<ClientRequestBuffer>,
     mut client_packets : EventWriter<ClientPacket>,

@@ -1,7 +1,6 @@
 //local shortcuts
 use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
@@ -24,8 +23,8 @@ fn cache_running_games_basic()
 
     // prep game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100000),
-            game_duration_ticks : Ticks(1),
+            ticks_per_sec       : 100000,
+            game_duration_ticks : 1,
         };
 
 
@@ -89,8 +88,8 @@ fn cache_running_games_expiration()
 
     // prep game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100),
-            game_duration_ticks : Ticks(100),  //long game time
+            ticks_per_sec       : 100,
+            game_duration_ticks : 100,  //long game time
         };
 
 
@@ -179,8 +178,8 @@ fn cache_running_games_termination()
 
     // prep game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100),
-            game_duration_ticks : Ticks(6),  //60ms game time
+            ticks_per_sec       : 100,
+            game_duration_ticks : 6,  //60ms game time
         };
 
 

@@ -87,14 +87,14 @@ fn make_hub_server_test_configs() -> GameHubServerStartupPack
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn make_click_game_test_configs(game_ticks_per_sec: Ticks, game_num_ticks: Ticks) -> ClickGameFactoryConfig
+fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) -> ClickGameFactoryConfig
 {
     // versioning
     let test_protocol_id = get_test_protocol_id();
 
     // config
-    let max_init_ticks  = Ticks(200);
-    let game_prep_ticks = Ticks(0);
+    let max_init_ticks  = 200;
+    let game_prep_ticks = 0;
 
     // server setup config
     let server_setup_config = GameServerSetupConfig{
@@ -105,7 +105,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: Ticks, game_num_ticks: Ticks
         };
 
     // game framework config
-    let game_fw_config = GameFwConfig::new(game_ticks_per_sec, max_init_ticks, Ticks(0));
+    let game_fw_config = GameFwConfig::new(game_ticks_per_sec, max_init_ticks, 0);
 
     // game duration config
     let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_num_ticks);
@@ -153,7 +153,7 @@ fn make_test_game_hub_server(
 
 fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 {
-    Readiness::new(game_init_progress.single().0).is_ready()
+    Readiness::new(**game_init_progress.single()).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -228,8 +228,8 @@ fn basic_server_integration()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_test_configs());
 
     // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(100);
-    let game_num_ticks     = Ticks(10);
+    let game_ticks_per_sec = 100;
+    let game_num_ticks     = 10;
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),

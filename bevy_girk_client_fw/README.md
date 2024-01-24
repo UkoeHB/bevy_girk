@@ -5,8 +5,6 @@ PRECONDITION: plugin dependencies
 
 PRECONDITION: the following must be initialized by the client framework manager
 - `Res<ClientFwConfig>`
-- `Res<Receiver<GamePacket>>`
-- `Res<Sender<ClientPacket>>`
 - `Res<Receiver<ClientFwCommand>>`
 
 PRECONDITION: the following must be initialized by the client core that uses this client framework
@@ -25,4 +23,4 @@ INTERFACE: for users of the framework (framework owners and client dependents)
 - `Res<ClientFwConfig>` provides miscellaneous information about the client
 - `State<ClientFwMode>` tracks what mode the client is in
 - `Res<InitializationProgressCache>` may be used to track the progress of initialization
-- `[iyes_progress]`: add `.track_progress().in_set(ClientFwLoadingSet)` to a system to track it during initialization
+- `iyes_progress`: add `.track_progress().in_set(ClientFwLoadingSet)` to a system to track it during initialization

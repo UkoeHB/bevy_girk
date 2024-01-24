@@ -1,7 +1,6 @@
 //local shortcuts
 use crate::game_hub_server::*;
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_host_server::*;
 
@@ -56,8 +55,8 @@ fn game_lifecycle()
             host_hub_server.url(),
             false,
             make_configs(),
-            Ticks(100),
-            Ticks(3),
+            100,
+            3,
             Some(true)
         );
     hub_server_app.update();

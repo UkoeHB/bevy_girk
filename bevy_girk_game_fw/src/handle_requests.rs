@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
-use bevy_replicon::prelude::{FromClient, EventType};
+use bevy_replicon::prelude::FromClient;
 
 //standard shortcuts
 
@@ -12,9 +12,9 @@ use bevy_replicon::prelude::{FromClient, EventType};
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_client_fw_request(world: &mut World, client_id: ClientIdType, send_policy: EventType, request: ClientFwRequest)
+fn handle_client_fw_request(world: &mut World, client_id: ClientIdType, request: ClientFwRequest)
 {
-    tracing::trace!(?client_id, ?send_policy, ?request, "received client fw request");
+    // Note: We log the framework request in [`deserialize_client_request()`].
 
     match request
     {
@@ -39,7 +39,7 @@ pub(crate) fn handle_requests(world: &mut World)
 
         match handler.try_call(world, client_id, &event)
         {
-             Err(Some(fw_request)) => handle_client_fw_request(world, client_id, event.send_policy, fw_request),
+             Err(Some(fw_request)) => handle_client_fw_request(world, client_id, fw_request),
              Err(None)             => tracing::trace!(client_id, ?event, "failed to handle client packet"),
              Ok(())                => (),
         }

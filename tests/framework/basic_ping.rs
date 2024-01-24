@@ -64,12 +64,12 @@ fn basic_ping()
         .add_plugins(bevy::time::TimePlugin)
         .init_resource::<bevy_replicon::prelude::LastChangeTick>()
         //setup game framework
-        .insert_resource(GameFwConfig::new( Ticks(1), Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( 1, 1, 0 ))
         .insert_resource(GameMessageBuffer::new::<()>())
         //setup client framework
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
-        .insert_resource(DummyGameDurationConfig{ max_ticks: Ticks(1) })
+        .insert_resource(DummyGameDurationConfig{ max_ticks: 1 })
         //add game framework
         .add_plugins(GameFwPlugin)
         //add game

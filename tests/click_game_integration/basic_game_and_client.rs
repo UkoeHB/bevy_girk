@@ -18,8 +18,8 @@ use bevy_replicon::prelude::*;
 
 fn check_client_ping_tracker(ping_tracker: Res<PingTracker>, mut flag: ResMut<PanicOnDrop>)
 {
-    let (estimated_game_ticks_elapsed, _) = ping_tracker.estimate_game_ticks(0u64);
-    assert_eq!(estimated_game_ticks_elapsed, Ticks(1));
+    let (estimated_game_tick, _) = ping_tracker.estimate_game_tick(0u64);
+    assert_eq!(estimated_game_tick, Tick(1));
     flag.take();
 }
 
@@ -39,7 +39,7 @@ fn basic_game_and_client()
 
     // misc.
     let num_players = 1;
-    let ticks_per_sec = Ticks(1);
+    let ticks_per_sec = 1;
 
     // prepare message channels
     let mut app = App::new();
@@ -78,7 +78,7 @@ fn basic_game_and_client()
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
             num_players,
-            GameDurationConfig::new(Ticks(0), Ticks(0)),
+            GameDurationConfig::new(0, 0),
         );
 
     // prepare client initializer
@@ -94,7 +94,7 @@ fn basic_game_and_client()
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
         .init_resource::<LastChangeTick>()
         //setup game framework
-        .insert_resource(GameFwConfig::new(ticks_per_sec, Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new(ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
         .set_runner(make_test_runner(3))
@@ -106,14 +106,18 @@ fn basic_game_and_client()
             (
                 GameFwTickSetPrivate::FwStart,
                 ClientFwTickSetPrivate::FwStart
-            ).chain()
+            )
+                .chain()
+                .after(bevy_replicon::prelude::ClientSet::Receive)
         )
         .configure_sets(Update, (GameFwSet, ClientFwSet).chain())
         .configure_sets(PostUpdate,
             (
                 GameFwTickSetPrivate::FwEnd,
                 ClientFwTickSetPrivate::FwEnd,
-            ).chain()
+            )
+                .chain()
+                .before(bevy_replicon::prelude::ClientSet::Send)
         )
         .add_systems(PreUpdate, forward_client_packets.before(GameFwTickSetPrivate::FwStart))
         .add_systems(PostUpdate, forward_game_packets.after(GameFwTickSetPrivate::FwEnd))
@@ -129,8 +133,8 @@ fn basic_game_and_client()
         // TEST: validate ping (in second tick because client fw needs an extra tick to collect ping response)
         .insert_resource(PanicOnDrop::default())
         .add_systems(Last, check_client_ping_tracker.run_if(
-                |game_fw_ticks: Res<GameFwTicksElapsed>|
-                game_fw_ticks.elapsed.ticks().0 >= 2
+                |game_fw_tick: Res<GameFwTick>|
+                ***game_fw_tick >= 2
             )
         )
         .run();

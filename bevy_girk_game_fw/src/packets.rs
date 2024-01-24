@@ -28,8 +28,8 @@ pub enum AimedMsg<F, T>
 #[derive(Serialize, Deserialize)]
 pub struct GameMessageData<T>
 {
-    /// Number of ticks elapsed in the game framework.
-    pub ticks: Ticks,
+    /// Game framework tick where this message was created.
+    pub tick: Tick,
     /// The message.
     pub msg: AimedMsg<GameFwMsg, T>,
 }

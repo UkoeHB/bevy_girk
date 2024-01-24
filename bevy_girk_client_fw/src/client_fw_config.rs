@@ -10,12 +10,12 @@ use serde::{Deserialize, Serialize};
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Client framework config
+/// Client framework config.
 #[derive(Resource, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ClientFwConfig
 {
-    /// Tick rate of the game.
-    ticks_per_sec: Ticks,
+    /// Tick rate of the game (not the client).
+    ticks_per_sec: u32,
 
     /// This client's id
     client_id: ClientIdType,
@@ -23,21 +23,23 @@ pub struct ClientFwConfig
 
 impl ClientFwConfig
 {
-    /// New game framework config
+    /// Makes a new game framework config.
     pub fn new(
-        ticks_per_sec : Ticks,
+        ticks_per_sec : u32,
         client_id     : ClientIdType,
     ) -> ClientFwConfig 
     {
-        if ticks_per_sec == Ticks(0) { panic!("ClientFwConfig: tick rate must be > 0!"); }
+        if ticks_per_sec == 0 { panic!("ClientFwConfig: tick rate must be > 0!"); }
         ClientFwConfig{
                 ticks_per_sec,
                 client_id,
             }
     }
 
-    /// Getters
-    pub fn ticks_per_sec(&self) -> Ticks { self.ticks_per_sec }
+    /// Gets the tick rate of the game.
+    pub fn ticks_per_sec(&self) -> u32 { self.ticks_per_sec }
+
+    /// Gets this client's id.
     pub fn client_id(&self) -> ClientIdType { self.client_id }
 }
 

@@ -92,7 +92,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration
             ReplicationPlugins
                 .build()
                 .disable::<ClientPlugin>()
-                .set( ServerPlugin{
+                .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
                     update_timeout,
                 })

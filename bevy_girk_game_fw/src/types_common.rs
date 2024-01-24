@@ -9,36 +9,15 @@ use serde::{Deserialize, Serialize};
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A number of game ticks.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Copy, Clone, Default, Debug, Serialize, Deserialize)]
-pub struct Ticks(pub u32);
+/// A game tick.
+///
+/// Represents a span of time where events occurred and logic executed.
+#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Copy, Clone, Default, Debug, Serialize, Deserialize, Deref, DerefMut)]
+pub struct Tick(pub u32);
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A ticks counter.
-#[derive(Eq, PartialEq, Hash, Copy, Clone, Default, Debug, Serialize, Deserialize)]
-pub struct TicksElapsed
-{
-    ticks: Ticks
-}
-
-impl TicksElapsed
-{
-    /// Get the current number of elapsed ticks.
-    pub fn ticks(&self) -> Ticks
-    {
-        self.ticks
-    }
-    /// Advance the elapsed ticks.
-    pub fn advance(&mut self)
-    {
-        self.ticks.0 += 1;
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Readiness of an entity (on a scale of [0.0, 1.0])
+/// Readiness of a client (on a scale of [0.0, 1.0])
 #[derive(Copy, Clone, Component, Default)]
 pub struct Readiness
 {

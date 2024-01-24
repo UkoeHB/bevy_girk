@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct DummyGameConfig
 {
-    pub ticks_per_sec       : Ticks,
-    pub game_duration_ticks : Ticks,
+    pub ticks_per_sec       : u32,
+    pub game_duration_ticks : u32,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ impl GameFactoryImpl for DummyGameFactory
             .add_plugins(bevy::time::TimePlugin)
             .init_resource::<bevy_replicon::prelude::LastChangeTick>()
             //setup game framework
-            .insert_resource(GameFwConfig::new( pack.config.ticks_per_sec, Ticks(1), Ticks(0) ))
+            .insert_resource(GameFwConfig::new( pack.config.ticks_per_sec, 1, 0 ))
             .insert_resource(prepare_player_client_contexts(player_ids.len()))
             .insert_resource(GameMessageBuffer::new::<()>())
             //setup client framework

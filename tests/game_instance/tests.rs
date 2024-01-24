@@ -1,6 +1,5 @@
 //local shortcuts
 use crate::test_helpers::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 
@@ -22,8 +21,8 @@ fn basic_game()
 
     // game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100),
-            game_duration_ticks : Ticks(2),
+            ticks_per_sec       : 100,
+            game_duration_ticks : 2,
         };
 
 
@@ -66,8 +65,8 @@ fn two_games()
 
     // game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100),
-            game_duration_ticks : Ticks(6),
+            ticks_per_sec       : 100,
+            game_duration_ticks : 6,
         };
 
 
@@ -136,8 +135,8 @@ fn abort_game()
 
     // game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : Ticks(100),
-            game_duration_ticks : Ticks(10),
+            ticks_per_sec       : 100,
+            game_duration_ticks : 10,
         };
 
 

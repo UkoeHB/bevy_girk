@@ -1,7 +1,6 @@
 //local shortcuts
 use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
@@ -44,8 +43,8 @@ pub fn make_test_game_hub_server(
     hub_server_url            : url::Url,
     reconnect_on_server_close : bool,
     startup_pack              : GameHubServerStartupPack,
-    game_ticks_per_sec        : Ticks,
-    game_num_ticks            : Ticks,
+    game_ticks_per_sec        : u32,
+    game_num_ticks            : u32,
     lp_source_works           : Option<bool>,
 ) -> (Sender<GameHubCommand>, App)
 {

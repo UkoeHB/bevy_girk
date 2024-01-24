@@ -35,7 +35,7 @@ pub struct GameMessageBuffer
     sender          : Sender<PendingGameMessage>,
     receiver        : Receiver<PendingGameMessage>,
     change_tick     : RepliconTick,
-    ticks           : Ticks,
+    current_tick    : Tick,
 }
 
 impl GameMessageBuffer
@@ -48,16 +48,16 @@ impl GameMessageBuffer
             user_message_id: TypeId::of::<T>(),
             sender,
             receiver,
-            change_tick : RepliconTick::default(),
-            ticks       : Ticks::default(),
+            change_tick  : RepliconTick::default(),
+            current_tick : Tick::default(),
         }
     }
 
     /// Resets the buffer for a new tick.
-    pub(crate) fn reset(&mut self, change_tick: RepliconTick, elapsed_ticks: Ticks)
+    pub(crate) fn reset(&mut self, change_tick: RepliconTick, current_tick: Tick)
     {
         self.change_tick = change_tick;
-        self.ticks = elapsed_ticks;
+        self.current_tick = current_tick;
 
         let mut count = 0;
         while let Some(_) = self.next() { count += 1; }
@@ -67,12 +67,12 @@ impl GameMessageBuffer
     /// Adds a game framework message to the buffer.
     pub fn fw_send(&self, message: GameFwMsg, access_constraints: Vec<InfoAccessConstraint>)
     {
-        tracing::trace!(?message, "buffering fw message");
+        tracing::trace!(?self.current_tick, ?message, "buffering fw message");
 
         let send_policy = message.into_event_type();
         let message = Bytes::from(ser_msg(&(
                 self.change_tick,
-                GameMessageData{ ticks: self.ticks, msg: AimedMsg::<_, ()>::Fw(message) }
+                GameMessageData{ tick: self.current_tick, msg: AimedMsg::<_, ()>::Fw(message) }
             )));
         self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
             .expect("failed buffering fw message");
@@ -88,12 +88,12 @@ impl GameMessageBuffer
     ){
         if TypeId::of::<T>() != self.user_message_id { panic!("game message type does not match registered type"); }
 
-        tracing::trace!(?message, "buffering core message");
+        tracing::trace!(?self.current_tick, ?message, "buffering core message");
 
         let send_policy = message.into_event_type();
         let message = Bytes::from(ser_msg(&(
                 self.change_tick,
-                GameMessageData{ ticks: self.ticks, msg: AimedMsg::<GameFwMsg, _>::Core(message) }
+                GameMessageData{ tick: self.current_tick, msg: AimedMsg::<GameFwMsg, _>::Core(message) }
             )));
         self.sender.send(PendingGameMessage{ message, access_constraints, send_policy })
             .expect("failed buffering user message");

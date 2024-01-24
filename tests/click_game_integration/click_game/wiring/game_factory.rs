@@ -160,7 +160,7 @@ fn click_client_initializer(
 fn prepare_client_start_pack(
     game_initializer : &ClickGameInitializer,
     client_id        : ClientIdType,
-    ticks_per_sec    : Ticks,
+    ticks_per_sec    : u32,
 ) -> Result<ClickClientStartPack, ()>
 {
     // set up client framework

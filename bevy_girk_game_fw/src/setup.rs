@@ -15,8 +15,8 @@ use std::collections::HashMap;
 fn setup_misc_resources(world: &mut World)
 {
     world.insert_resource(GameEndFlag::default());
-    world.insert_resource(GameFwTicksElapsed::default());
-    world.insert_resource(GameFwEndTick::default());
+    world.insert_resource(GameFwTick::default());
+    world.insert_resource(GameFwPreEndTick::default());
     world.spawn(GameInitProgressEntity::default());
 }
 

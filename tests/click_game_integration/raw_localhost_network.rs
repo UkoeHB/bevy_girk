@@ -20,7 +20,7 @@ use bevy_renet::renet::RenetClient;
 
 fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 {
-    Readiness::new(game_init_progress.single().0).is_ready()
+    Readiness::new(**game_init_progress.single()).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -55,13 +55,13 @@ fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_cl
 fn raw_localhost_network_demo(num_players: usize)
 {
     // durations
-    let ticks_per_sec   = Ticks(1);
-    let max_init_ticks  = Ticks(200);
-    let game_prep_ticks = Ticks(0);
-    let game_play_ticks = Ticks(200);
+    let ticks_per_sec   = 1;
+    let max_init_ticks  = 200;
+    let game_prep_ticks = 0;
+    let game_play_ticks = 200;
 
     // game framework config
-    let game_fw_config = GameFwConfig::new( ticks_per_sec, max_init_ticks, Ticks(0) );
+    let game_fw_config = GameFwConfig::new( ticks_per_sec, max_init_ticks, 0 );
 
     // game context
     let game_initializer = test_utils::prepare_game_initializer(

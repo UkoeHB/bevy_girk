@@ -96,13 +96,13 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) + Send + 'static
         for _ in 0..num_ticks
         {
             if app.world.contains_resource::<GameOverFlag>()
-                { panic!("test runner failed: game over flag found too early (should appear in the last tick)!"); }
+            { panic!("test runner failed: game over flag found too early (should appear in the last tick)!"); }
 
             app.update();
         }
 
         if !app.world.contains_resource::<GameOverFlag>()
-            { panic!("test runner failed: game over flag not found!"); }
+        { panic!("test runner failed: game over flag not found!"); }
     }
 }
 

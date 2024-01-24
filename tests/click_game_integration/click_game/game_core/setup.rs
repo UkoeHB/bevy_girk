@@ -14,10 +14,10 @@ use std::collections::HashMap;
 fn setup_misc_resources(world: &mut World, game_context: &ClickGameContext)
 {
     world.insert_resource::<GameRand>(GameRand::new(game_context.seed()));
-    world.insert_resource::<GameTicksElapsed>(GameTicksElapsed::default());
-    world.insert_resource::<PrepTicksElapsed>(PrepTicksElapsed::default());
-    world.insert_resource::<PlayTicksElapsed>(PlayTicksElapsed::default());
-    world.insert_resource::<GameOverTicksElapsed>(GameOverTicksElapsed::default());
+    world.insert_resource::<GameTick>(GameTick::default());
+    world.insert_resource::<PrepTick>(PrepTick::default());
+    world.insert_resource::<PlayTick>(PlayTick::default());
+    world.insert_resource::<GameOverTick>(GameOverTick::default());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

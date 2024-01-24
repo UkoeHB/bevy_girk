@@ -3,7 +3,6 @@ use crate::game_hub_server::*;
 use crate::host_server::*;
 use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_host_server::*;
 
@@ -84,8 +83,8 @@ fn basic_host_hub_integration()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_host_server_configs());
 
     // launch game hub server attached to host server
-    let game_ticks_per_sec = Ticks(100);
-    let game_num_ticks     = Ticks(3);
+    let game_ticks_per_sec = 100;
+    let game_num_ticks     = 3;
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             false,

@@ -1,7 +1,6 @@
 //local shortcuts
 use crate::game_hub_server::*;
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_host_server::*;
 
@@ -56,8 +55,8 @@ fn reject_duplicate_game()
             host_hub_server.url(),
             false,
             make_configs(10u16),
-            Ticks(100),
-            Ticks(20),
+            100,
+            20,
             Some(true)
         );
     hub_server_app.update();
@@ -206,8 +205,8 @@ fn reject_no_capacity()
             host_hub_server.url(),
             false,
             make_configs(1u16),
-            Ticks(100),
-            Ticks(7),
+            100,
+            7,
             Some(true)
         );
     hub_server_app.update();
@@ -367,8 +366,8 @@ fn reject_launch_pack_fail()
             host_hub_server.url(),
             false,
             make_configs(10u16),
-            Ticks(100),
-            Ticks(20),
+            100,
+            20,
             Some(false)  //cause launch pack source to fail
         );
     hub_server_app.update();
@@ -454,8 +453,8 @@ fn reject_hub_shutdown()
             host_hub_server.url(),
             false,
             make_configs(10u16),
-            Ticks(100),
-            Ticks(20),
+            100,
+            20,
             Some(true)
         );
     hub_server_app.update();

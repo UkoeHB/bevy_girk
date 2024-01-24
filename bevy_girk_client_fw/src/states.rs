@@ -22,17 +22,18 @@ pub enum ClientInitializationState
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client framework mode.
-/// Note that we can be in `ClientInitializationState::Done` but also in `ClientFwMode::Init` if the client
+///
+/// Note that we can remain in [`ClientFwMode::Init`] even if in state [`ClientInitializationState::Done`] if the client
 /// is done initializing but the game is not (e.g. because it is waiting for other clients).
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum ClientFwMode
 {
-    /// Client fw state when the game fw state is 'initializing' OR when the client is reinitializing.
+    /// Runs in [`GameFwState::Init`] OR runs when the client is reinitializing.
     #[default]
     Init,
-    /// Client fw state when the game fw state is 'in game'.
+    /// Runs in [`GameFwState::Game`].
     Game,
-    /// Client fw state when the game fw state is 'game end'.
+    /// Runs in [`GameFwState::End`].
     End
 }
 

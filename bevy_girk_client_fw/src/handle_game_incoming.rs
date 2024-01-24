@@ -12,14 +12,14 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_game_fw_message(world: &mut World, ticks: Ticks, msg: GameFwMsg)
+fn handle_game_fw_message(world: &mut World, tick: Tick, msg: GameFwMsg)
 {
-    tracing::trace!(?msg, "received game fw message");
+    // Note: We log the framework message in [`deserialize_game_message()`].
 
     match msg
     {
         GameFwMsg::CurrentMode(mode)      => syscall(world, mode, handle_current_game_fw_mode),
-        GameFwMsg::PingResponse(ping_rsp) => syscall(world, (ticks, ping_rsp), handle_ping_response),
+        GameFwMsg::PingResponse(ping_rsp) => syscall(world, (tick, ping_rsp), handle_ping_response),
     }
 }
 
@@ -36,7 +36,7 @@ pub(crate) fn handle_game_incoming(world: &mut World)
     {
         match handler.try_call(world, &packet)
         {
-             Err(Some((ticks, fw_message))) => handle_game_fw_message(world, ticks, fw_message),
+             Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
              Err(None)                      => tracing::trace!(?packet, "failed to handle game packet"),
              Ok(())                         => (),
         }

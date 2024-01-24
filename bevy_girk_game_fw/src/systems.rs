@@ -26,14 +26,14 @@ fn clients_are_ready(client_readiness: &Query<&Readiness, With<ClientId>>) -> bo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Checks if init mode is over.
+/// Checks if init mode ended in the previous tick.
 fn init_mode_is_over(
-    max_init_ticks   : Ticks,
-    game_ticks       : Ticks,
+    max_init_ticks   : u32,
+    game_fw_tick     : Tick,
     client_readiness : &Query<&Readiness, With<ClientId>>
 ) -> bool
 {
-    if game_ticks > max_init_ticks         { return true; }
+    if *game_fw_tick > max_init_ticks     { return true; }
     if clients_are_ready(client_readiness) { return true; }
     return false;
 }
@@ -41,10 +41,31 @@ fn init_mode_is_over(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Increments the [`GameFwTick`].
+pub(crate) fn advance_game_fw_tick(mut game_fw_tick: ResMut<GameFwTick>)
+{
+    *game_fw_tick.0 = game_fw_tick.0.checked_add(1).expect("GameFwTick exceeded max tick size");
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Resets the [`GameMessageBuffer`] for a new tick.
+pub(crate) fn reset_game_message_buffer(
+    mut buffer       : ResMut<GameMessageBuffer>,
+    last_change_tick : Res<LastChangeTick>,
+    game_fw_tick     : Res<GameFwTick>,
+){
+    buffer.reset(**last_change_tick, **game_fw_tick);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Updates the game framework mode.
+///
+/// This runs at the very start of a tick after incrementing the tick counter.
 pub(crate) fn update_game_fw_mode(
     game_fw_config     : Res<GameFwConfig>,
-    game_ticks         : Res<GameFwTicksElapsed>,
+    game_fw_tick       : Res<GameFwTick>,
     client_readiness   : Query<&Readiness, With<ClientId>>,
     game_end_flag      : Res<GameEndFlag>,
     current_game_mode  : Res<State<GameFwMode>>,
@@ -68,7 +89,7 @@ pub(crate) fn update_game_fw_mode(
     if *current_game_mode == GameFwMode::Game { return; }
 
     // b. check mode -> Game transition condition
-    if init_mode_is_over(game_fw_config.max_init_ticks(), game_ticks.elapsed.ticks(), &client_readiness)
+    if init_mode_is_over(game_fw_config.max_init_ticks(), **game_fw_tick, &client_readiness)
     {
         let next_mode = GameFwMode::Game;
         next_game_mode.set(next_mode);
@@ -77,26 +98,7 @@ pub(crate) fn update_game_fw_mode(
     }
 
     // 3. -> Init mode
-    if *current_game_mode != GameFwMode::Init { panic!("Unexpected current game mode (should be GameFwMode::Init)!"); }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Increments the number of game framework ticks elapsed.
-pub(crate) fn advance_game_fw_tick(mut game_ticks: ResMut<GameFwTicksElapsed>)
-{
-    game_ticks.elapsed.advance();
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Resets the game message buffer for a new tick.
-pub(crate) fn reset_game_message_buffer(
-    mut buffer       : ResMut<GameMessageBuffer>,
-    last_change_tick : Res<LastChangeTick>,
-    game_ticks       : Res<GameFwTicksElapsed>,
-){
-    buffer.reset(**last_change_tick, game_ticks.elapsed.ticks());
+    if *current_game_mode != GameFwMode::Init { panic!("unexpected current game mode (should be GameFwMode::Init)"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -180,21 +182,22 @@ pub(crate) fn notify_game_fw_mode_all(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Starts the 'end mode' countdown, which will end in closing the app.
-pub(crate) fn start_end_countdown(game_ticks: Res<GameFwTicksElapsed>, mut game_end_tick: ResMut<GameFwEndTick>)
+pub(crate) fn start_end_countdown(ending_game_fw_tick: Res<GameFwTick>, mut game_end_tick: ResMut<GameFwPreEndTick>)
 {
-    game_end_tick.0 = Some(game_ticks.elapsed.ticks());
+    game_end_tick.0 = Some(Tick(***ending_game_fw_tick));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Exits the app if all game end ticks have elapsed.
 ///
-/// If the max game end ticks equals zero, then the app will be exited in the same tick that `GameFwMode::End` is set.
+/// If [`GameFwConfig::max_end_ticks`] is <= 1, then the app will be exited at the end of the tick where [`GameFwMode::End`]
+/// is set.
 //todo: consider exiting early if all clients have acked the game end state
 pub(crate) fn try_exit_app(
     current_game_mode : Res<State<GameFwMode>>,
-    game_ticks        : Res<GameFwTicksElapsed>,
-    game_end_tick     : Res<GameFwEndTick>,
+    game_fw_tick      : Res<GameFwTick>,
+    game_end_tick     : Res<GameFwPreEndTick>,
     game_fw_config    : Res<GameFwConfig>,
     mut app_exit      : EventWriter<AppExit>,
 ){
@@ -202,12 +205,8 @@ pub(crate) fn try_exit_app(
     if *current_game_mode != GameFwMode::End
     { tracing::error!("tried to terminate game app but not in GameFwMode::End"); return; }
 
-    // get end tick
-    let Some(end_tick) = game_end_tick.0
-    else { tracing::error!("tried to terminate game app but game fw end tick is missing"); return; };
-
-    // check if game end ticks have elapsed
-    if game_ticks.elapsed.ticks().0.saturating_sub(end_tick.0) < game_fw_config.max_end_ticks().0 { return; }
+    // check if all game end ticks have elapsed
+    if game_end_tick.num_end_ticks(*game_fw_tick) < game_fw_config.max_end_ticks() { return; }
 
     // exit the game
     tracing::info!("exiting game app");

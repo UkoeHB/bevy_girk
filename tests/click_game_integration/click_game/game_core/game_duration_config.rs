@@ -15,17 +15,17 @@ use serde::{Deserialize, Serialize};
 pub struct GameDurationConfig
 {
     /// Number of ticks that should elapse in [GameMode::Prep] before switching [GameMode::Prep] -> [GameMode::Play].
-    prep_ticks: Ticks,
+    prep_ticks: u32,
     /// Number of ticks that should elapse in [GameMode::Play] before switching [GameMode::Play] -> [GameMode::GameOver].
-    game_ticks: Ticks
+    game_ticks: u32,
     // The first 'game over' tick will occur after 'prep_ticks + game_ticks' ticks have elapsed.
 }
 
 impl GameDurationConfig
 {
     pub fn new(
-        prep_ticks : Ticks,
-        game_ticks : Ticks
+        prep_ticks : u32,
+        game_ticks : u32,
     ) -> GameDurationConfig
     {
         GameDurationConfig{
@@ -34,14 +34,14 @@ impl GameDurationConfig
             }
     }
 
-    pub fn expected_mode(&self, game_ticks_elapsed: Ticks) -> GameMode
+    pub fn expected_mode(&self, game_tick: Tick) -> GameMode
     {
         // prep
-        if game_ticks_elapsed.0 < self.prep_ticks.0
+        if *game_tick < self.prep_ticks
             { return GameMode::Prep; }
 
         // play
-        if game_ticks_elapsed.0 < (self.prep_ticks.0 + self.game_ticks.0)
+        if *game_tick < (self.prep_ticks + self.game_ticks)
             { return GameMode::Play; }
 
         // game over

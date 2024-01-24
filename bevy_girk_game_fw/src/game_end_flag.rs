@@ -11,6 +11,7 @@ use serde_with::{Bytes, serde_as};
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Game over report containing details summarizing a game.
+///
 /// This is an opaque type which contains the true game over report in serialized form.
 #[serde_as]
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +33,7 @@ impl GameOverReport
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Flag that contains the game over report once 'game over' occurs.
+///
 /// The game over report can only be taken once.
 #[derive(Resource, Default, Debug)]
 pub struct GameEndFlag

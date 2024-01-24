@@ -27,33 +27,21 @@ impl GameRand
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// The number of ticks that have occurred since the game began (after the game was initialized).
-#[derive(Resource, Default)]
-pub struct GameTicksElapsed
-{
-    pub elapsed: TicksElapsed
-}
+/// The current game tick (starting after the game was initialized).
+#[derive(Resource, Default, Deref)]
+pub struct GameTick(pub Tick);
 
-/// The number of ticks that have occurred during [GameMode::Prep].
-#[derive(Resource, Default)]
-pub struct PrepTicksElapsed
-{
-    pub elapsed: TicksElapsed
-}
+/// The current tick within [GameMode::Prep].
+#[derive(Resource, Default, Deref)]
+pub struct PrepTick(pub Tick);
 
-/// The number of ticks that have occurred during [GameMode::Play].
-#[derive(Resource, Default)]
-pub struct PlayTicksElapsed
-{
-    pub elapsed: TicksElapsed
-}
+/// The current tick within [GameMode::Play].
+#[derive(Resource, Default, Deref)]
+pub struct PlayTick(pub Tick);
 
-/// The number of ticks that have occurred during [GameMode::GameOver].
-#[derive(Resource, Default)]
-pub struct GameOverTicksElapsed
-{
-    pub elapsed: TicksElapsed
-}
+/// The current tick within [GameMode::GameOver].
+#[derive(Resource, Default, Deref)]
+pub struct GameOverTick(pub Tick);
 
 //-------------------------------------------------------------------------------------------------------------------
 

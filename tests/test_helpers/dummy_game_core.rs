@@ -14,7 +14,7 @@ use bevy_fn_plugin::*;
 #[derive(Resource)]
 pub struct DummyGameDurationConfig
 {
-    pub max_ticks: Ticks
+    pub max_ticks: u32
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -29,12 +29,13 @@ fn prestartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+// runs at the end of the current tick
 fn try_end_dummy_game(
     duration_config : Res<DummyGameDurationConfig>,
-    game_fw_ticks   : Res<GameFwTicksElapsed>,
+    game_fw_tick    : Res<GameFwTick>,
     mut end_flag    : ResMut<GameEndFlag>
 ){
-    if duration_config.max_ticks > game_fw_ticks.elapsed.ticks() { return; }
+    if duration_config.max_ticks > ***game_fw_tick { return; }
     if end_flag.is_set() { return; }
     end_flag.set(GameOverReport::default());
 }

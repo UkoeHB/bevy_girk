@@ -97,24 +97,23 @@ pub enum GameFwTickSet
 /// Game framework tick plugin. Depends on [`GameFwStartupPlugin`].
 ///
 /// We treat a tick as a span of time in which events occur: |__stuff_happening__|. Our logic for handling the stuff that
-/// happened in a span runs after the *end* of that span (after the span's tick counter increments). This means we think
-/// in terms of a span (a tick) having 'elapsed'. The very first time our logic runs, no tick has elapsed yet. To handle
-/// that, we imagine a 'virtual tick' that ends just before our first logic run.
+/// happened in a span runs after all 'real-space' events of that span have occurred.
 ///
-/// Each tick is assigned one game mode, represented by [`GameFwMode`]. Game mode transitions occur **between** two ticks,
-/// which means they occur after one tick's logic run and before the span of the tick with the new game mode begins.
-///
-/// In practice, the order of events in a tick is:
-/// 1) Elapse a time span (tick).
-/// 2) Increment 'elapsed tick' counter for the elapsed tick.
-/// 3) Determine mode for the elapsed tick.
-/// 4) Execute logic for the elapsed tick.
+/// Each tick is assigned one game mode, represented by [`GameFwMode`].
+/// We determine the game mode for the next tick at the start of the current tick, using the state of the current tick.
 ///
 /// Transition logic can use the `OnEnter(GameFwMode::*)` and `OnExit(GameFwMode::*)` schedules.
+/// Keep in mind that [`GameFwTick`] will equal the *current* tick (i.e. the first tick of the on-entered mode ) when
+/// these schedules run.
 ///
-/// Note that 'before the virtual tick' is assumed to be [`GameFwMode::Init`], which means the `OnEnter(GameFwMode::Init)`
-/// schedule will always be invoked in the app's first update, even if the virtual tick is [`GameFwMode::Game`] (in which
-/// case `OnExit(GameFwMode::Init)` and `OnEnter(GameFwMode::Game)` will also be invoked in the first update).
+/// In practice, since all our game logic is located at the end of a tick span in real time, the order of events in a
+/// tick is:
+/// 1) Elapse a time span (tick).
+/// 2) Increment [`GameFwTick`] for the current tick.
+/// 3) Determine mode for the current tick.
+/// 4) Execute logic for the current tick.
+///
+/// Tick 1's game mode is always [`GameFwMode::Init`].
 #[bevy_plugin]
 pub fn GameFwTickPlugin(app: &mut App)
 {
@@ -133,10 +132,9 @@ pub fn GameFwTickPlugin(app: &mut App)
     // FWSTART
     app.add_systems(PreUpdate,
             (
-                // elapse the previous tick
+                // begin the current tick
                 advance_game_fw_tick,
                 reset_game_message_buffer,
-                // determine which game framework mode the previous tick was in and set it
                 update_game_fw_mode,
                 apply_state_transition::<GameFwMode>,
             ).chain().in_set(GameFwTickSetPrivate::FwStart)

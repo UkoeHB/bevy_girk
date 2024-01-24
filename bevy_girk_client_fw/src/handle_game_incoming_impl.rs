@@ -10,7 +10,7 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle current game framework mode.
+/// Handles a notification for the current game framework mode.
 pub(crate) fn handle_current_game_fw_mode(
     In(current_game_fw_mode)    : In<GameFwMode>,
     client_initialization_state : Res<State<ClientInitializationState>>,
@@ -37,13 +37,13 @@ pub(crate) fn handle_current_game_fw_mode(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle ping response.
+/// Handles a ping response.
 pub(crate) fn handle_ping_response(
-    In((game_ticks_elapsed, response)) : In<(Ticks, PingResponse)>,
-    time                               : Res<Time>,
-    mut ping_tracker                   : ResMut<PingTracker>
+    In((game_fw_tick, response)) : In<(Tick, PingResponse)>,
+    time                         : Res<Time>,
+    mut ping_tracker             : ResMut<PingTracker>
 ){
-    ping_tracker.add_ping_cycle(game_ticks_elapsed, response.request.timestamp_ns, time.elapsed().as_nanos() as u64);
+    ping_tracker.add_ping_cycle(game_fw_tick, response.request.timestamp_ns, time.elapsed().as_nanos() as u64);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

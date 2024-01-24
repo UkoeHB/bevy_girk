@@ -12,33 +12,33 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increment the number of game ticks elapsed.
-pub(crate) fn advance_game_tick(mut game_ticks : ResMut<GameTicksElapsed>)
+pub(crate) fn advance_game_tick(mut game_tick : ResMut<GameTick>)
 {
-    game_ticks.elapsed.advance();
+    *game_tick.0 += 1;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increment the number of prep ticks elapsed.
-pub(crate) fn advance_prep_tick(mut prep_ticks : ResMut<PrepTicksElapsed>)
+pub(crate) fn advance_prep_tick(mut prep_tick : ResMut<PrepTick>)
 {
-    prep_ticks.elapsed.advance();
+    *prep_tick.0 += 1;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increment the number of play ticks elapsed.
-pub(crate) fn advance_play_tick(mut play_ticks : ResMut<PlayTicksElapsed>)
+pub(crate) fn advance_play_tick(mut play_tick : ResMut<PlayTick>)
 {
-    play_ticks.elapsed.advance();
+    *play_tick.0 += 1;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Increment the number of game-over ticks elapsed.
-pub(crate) fn advance_game_over_tick(mut game_over_ticks : ResMut<GameOverTicksElapsed>)
+pub(crate) fn advance_game_over_tick(mut game_over_tick : ResMut<GameOverTick>)
 {
-    game_over_ticks.elapsed.advance();
+    *game_over_tick.0 += 1;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -46,13 +46,13 @@ pub(crate) fn advance_game_over_tick(mut game_over_ticks : ResMut<GameOverTicksE
 /// Check the game duration conditions and update the game mode.
 pub(crate) fn update_game_mode(
     game_ctx           : Res<ClickGameContext>,
-    game_ticks         : Res<GameTicksElapsed>,
+    game_tick         : Res<GameTick>,
     current_game_mode  : Res<State<GameMode>>,
     mut next_game_mode : ResMut<NextState<GameMode>>
 ){
     // get expected mode based on elapsed ticks
     let duration_config    = game_ctx.duration_config();
-    let expected_game_mode = duration_config.expected_mode(game_ticks.elapsed.ticks());
+    let expected_game_mode = duration_config.expected_mode(**game_tick);
 
     // update the game mode
     if expected_game_mode == **current_game_mode
@@ -99,7 +99,7 @@ pub(crate) fn notify_game_mode_all(
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn set_game_end_flag(
-    game_ticks        : Res<GameTicksElapsed>,
+    game_tick         : Res<GameTick>,
     players           : Query<(&PlayerId, &PlayerScore)>,
     mut game_end_flag : ResMut<GameEndFlag>,
 ){
@@ -117,7 +117,7 @@ pub(crate) fn set_game_end_flag(
 
     // build game over report
     let game_over_report = ClickGameOverReport{
-            game_ticks: game_ticks.elapsed.ticks(),
+            last_game_tick: **game_tick,
             player_reports,
         };
 

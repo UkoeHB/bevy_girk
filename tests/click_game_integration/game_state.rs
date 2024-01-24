@@ -52,7 +52,7 @@ struct NumPlayers(usize);
 
 fn test_game_setup(num_players: usize)
 {
-    let ticks_per_sec = Ticks(1);
+    let ticks_per_sec = 1;
 
     // setup game (no client fw or client core)
     App::new()
@@ -63,13 +63,13 @@ fn test_game_setup(num_players: usize)
         .set_runner(make_test_runner(2))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
-        .insert_resource(GameFwConfig::new( ticks_per_sec, Ticks(1), Ticks(0) ))
+        .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
         .insert_resource(
                 test_utils::prepare_game_initializer(
                         num_players,
-                        GameDurationConfig::new(Ticks(0), Ticks(0)),
+                        GameDurationConfig::new(0, 0),
                     )
             )
         //add game framework
