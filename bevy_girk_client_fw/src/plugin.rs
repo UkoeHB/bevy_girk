@@ -5,6 +5,7 @@ use crate::*;
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
 use bevy_kot_utils::*;
+use bevy_replicon::client_just_disconnected;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -134,6 +135,7 @@ pub fn ClientFwTickPlugin(app: &mut App)
     // FWSTART
     app.add_systems(PreUpdate,
             (
+                reset_init_progress.run_if(client_just_disconnected()),
                 reset_client_request_buffer,
                 handle_commands,
                 handle_game_incoming,

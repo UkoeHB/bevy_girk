@@ -11,6 +11,18 @@ use iyes_progress::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Resets the [`GameInitProgress`] component if it exists.
+/// 
+/// Runs when the client has just disconnected.
+pub(crate) fn reset_init_progress(mut progress: Query<&mut GameInitProgress>)
+{
+    let Ok(mut progress) = progress.get_single_mut() else { return; };
+    tracing::trace!("resetting GameInitProgress");
+    progress.reset();
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Resets the game message buffer for a new tick.
 pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientRequestBuffer>)
 {

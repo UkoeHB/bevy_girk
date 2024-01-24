@@ -37,8 +37,19 @@ impl GameFwPreEndTick
 /// Total initialization progress of the game.
 ///
 /// Can be replicated to clients.
+/// If replicated, then the client framework will automatically reset it when the client has just disconnected.
+/// This makes it easier to use when displaying a loading screen, since otherwise it won't go back to zero until
+/// the client has reconnected.
 #[derive(Component, Debug, Default, PartialEq, Copy, Clone, Serialize, Deserialize, Deref)]
 pub struct GameInitProgress(pub(crate) f32);
+
+impl GameInitProgress
+{
+    pub fn reset(&mut self)
+    {
+        self.0 = 0.0;
+    }
+}
 
 #[derive(Bundle, Default)]
 pub struct GameInitProgressEntity
