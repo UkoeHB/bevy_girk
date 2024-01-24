@@ -164,6 +164,8 @@ fn setup_native_renet_client(
 /// - Assumes there is a bevy_replicon::NetworkChannels resource already loaded in the app.
 pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerConfig) -> SocketAddr
 {
+    tracing::info!("setting up renet server");
+
     // get server/client channels
     let network_channels = server_app.world.resource::<NetworkChannels>();
     let server_channels  = network_channels.get_server_configs();
@@ -234,7 +236,7 @@ impl RenetClientConnectPack
 /// - Removes the [`RenetClientConnectPack`] resource from the world, or returns an error if it is missing.
 pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
 {
-    tracing::debug!("setting up renet client");
+    tracing::info!("setting up renet client");
 
     let connect_pack = world.remove_resource::<RenetClientConnectPack>().ok_or(())?;
     match connect_pack
