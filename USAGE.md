@@ -111,7 +111,7 @@ The game is a single-threaded authoritative app where game logic is executed. Cl
 
 **API**
 
-The game framework exposes a small API for your game logic.
+The game framework exposes a small API to support your game logic.
 
 - **`GameFwTick`**: Bevy resource that records the current game tick. See the `GameFwTickPlugin` code docs for more details.
 - **`GameInitProgress`**: Bevy component on an entity spawned by the framework at startup. It tracks the total initialization progress of all clients while the game is initializing. The entity includes `bevy_replicon::prelude::Replication` by default, so if the `GameInitProgress` component is registered for replication then clients can use this entity to track global loading progress. If replicated, the client framework will automatically reset the progress when the client disconnects.
@@ -132,7 +132,7 @@ You can track and respond to client connection events with `EventReader<bevy_ren
 
 ### Client App
 
-The client is a GUI app where you play a game. Clients communicate with the game app via a `renet` server/client relationship. Game state is replicated into the client app with `bevy_replicon`/`bevy_replicon_repair`. Networking details are mostly hidden by `bevy_girk` APIs.
+The client is a GUI app where you play a game. Clients communicate with the game app through a `renet` server/client relationship. Game state is replicated into the client app with `bevy_replicon`/`bevy_replicon_repair`. Networking details are mostly hidden by `bevy_girk` APIs.
 
 **Setup**
 
@@ -141,23 +141,25 @@ The client is a GUI app where you play a game. Clients communicate with the game
 **App Startup**
 
 - Insert a `GameMessageHandler` resource to your app with your desired message-handling callback.
-    - The callback should use `deserialize_game_message()?` to extract messages. This function is exposed in case you want to read `GameFwMsg`s sent by the game framework.
+    - The callback should use `deserialize_game_message()?` to extract messages. This function is exposed instead of used automatically in case you want to read `GameFwMsg`s sent by the game framework.
 - Insert a `ClientRequestBuffer` resource to your app with your desired client request type. The request type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
 
-The client framework exposes a small API for your client logic.
+The client framework exposes a small API to support your client logic.
 
 - The `GameMessageHandler` callback is invoked for all received game messages at the end of `PreUpdate` after the networking backend is done, but before any client logic has run. We consider game messages to be *authoritative* over the client app, so we handle them as soon as possible.
 - **`ClientFwSet`**: Ordinal system set that runs in `Update` and contains all `ClientFwTickSet`s.
     - **`ClientFwTickSet`**: Ordinal system sets for client logic. All client code should go in these sets.
-- **`ClientFwLoadingSet`**: Modal system set that runs in `Update` if the client is in mode `ClientInitializationState::InProgress`. This should contain all systems that use `iyes_progress` to track initialization progress after connecting to the game's `renet` server.
+    - **`ClientFwLoadingSet`**: Modal system set that runs if the client is in mode `ClientInitializationState::InProgress`. This should contain all systems that use `iyes_progress` to track initialization progress.
 - **`ClientInitializationState`**: Bevy state that tracks whether the client is initializing or not.
     - `ClientInitializationState::InProgress` -> `ClientInitializationState::Done` is controlled by `iyes_progress`. It will only happen when all `.track_progress()` system modifiers return 100\%.
-    - `ClientInitializationState::InProgress` will be set when the client disconnects. The `prepare_girk_client_app()` helper adds initialization-tracking systems to your app that prevent full initialization until the `renet` client is fully connected and the client app has received at least one `bevy_replicon` replication message.
+    - `ClientInitializationState::InProgress` will be set when the client disconnects. The `prepare_girk_client_app()` helper adds initialization-tracking systems to your app that prevent full initialization until after the first tick of `ClientFwMode::Init`. This means your app will be in `ClientInitializationState::InProgress` for the entirety of `ClientFwMode::Connecting` and `ClientFwMode::Syncing`, plus at least one tick of `ClientFwMode::Init`.
 - **`ClientFwMode`**: Bevy state that tracks the client framework lifecycle.
-    - `ClientFwMode::Init` is set when initializing the client or on disconnect from the game's `renet` server (but only if the app is **not** in `ClientFwMode::End` already).
-    - `ClientFwMode::Init` -> `ClientFwMode::Game` occurs when the client is in state `ClientInitializationState::Done` and the client receives a `GameFwMode::Game` message from the game framework (this message will be requested, sent, and processed automatically when `ClientInitializationState::Done` is entered).
+    - `ClientFwMode::Connecting` is set when initializing the client or on disconnect from the game's `renet` server (but only if the app is **not** in `ClientFwMode::End` already). This mode always runs for at least one tick during an initialization cycle, and in the first tick `renet`'s `client_just_disconnected()` run condition will be true.
+    - `ClientFwMode::Syncing` is set when the client has connected to the `renet` server and is waiting for `bevy_replicon`'s first replication message. No server messages will be consumed in this mode, they will only be buffered until `ClientFwMode::Init` since `bevy_replicon` forces server messages to synchronize with replication state. This mode always runs for at least one tick during an initialization cycle, and in the first tick `renet`'s `client_just_connected()` run condition will be true.
+    - `ClientFwMode::Init` is set when the client has synchronized with the server's replication state. The client may not be fully synchronized, however, if there are unreceived server messages required to fully initialize. This mode always runs for at least one tick during an initialization cycle.
+    - `ClientFwMode::Init` -> `ClientFwMode::Game` occurs when the client is in state `ClientInitializationState::Done` and the client receives a `GameFwMode::Game` message from the game framework (the `GameFwMode` will be requested, sent by the server, and processed automatically by the client when `ClientInitializationState::Done` is entered).
 - **`ClientRequestBuffer`**: Bevy resource that you inserted to your app on app startup. All requests you want to send from the client to the game should be submitted to this buffer.
     - *Note*: This is cleared in `PreUpdate` in order to synchronize with the networking framework. Any earlier-buffered requests will not be sent. This is relevant for e.g. GUI-based player inputs, which may be collected in an earlier schedule. It is recommended to cache player inputs in a custom buffer and marshal them into `ClientRequestBuffer` in `ClientFwSet` in `Update`. This indirection makes it easier to do headless testing of the client app's core (non-graphical) logic, and facilitates multiple client front-ends for different platforms.
 - **`PingTracker`**: Bevy resource used to estimate the current game framework tick. (TODO: this is very rudimentary, it needs significant work to be production-grade)
@@ -166,18 +168,15 @@ The client framework exposes a small API for your client logic.
 
 Robust, ergonomic client reconnects are a major feature of this library. A disconnected client app will automatically try to reconnect to the game app without needing to restart.
 
-When a disconnect is detected, there are a number of details to keep in mind. (TODO: refactor ClientFwSet::Init into multiple sets)
+When a disconnect is detected, there are a number of details to keep in mind.
 
-- The `renet` `is_disconnected()` run condition will be true for at least one full tick after a disconnect is detected.
-- `ClientFwMode::Init` will be set on disconnect. There are three modalities to client initialization, which can be used to control which systems run in different scenarios (e.g. with custom system sets).
-    - *Initializing*: Use `in_state(ClientFwMode::Init)`.
-    - *Startup loading*: Use `in_state(ClientFwMode::Init)` plus `in_state(your custom client mode is INIT)` (assumes you track your own client mode that matches the current game mode).
-    - *Reconnecting*: Use `in_state(ClientFwMode::Init)` plus `not(in_state(your custom client mode is INIT))` (assumes you track your own client mode that matches the current game mode).
-- `ClientInitializationState::InProgress` will be set, which means the `ClientFwLoadingSet` will run.
-- `bevy_replicon` replicated client state will be preserved across a reconnect if you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<GameInitProgress>()`). If you don't use `bevy_replicon_repair` then you need to manually repair your client state (e.g. by despawning and cleaning up all old replicated entities when entering `ClientFwMode::Syncing`).
-- Client requests submitted to the `ClientRequestBuffer` will fail to send while the `renet` client is not connected (is disconnected or connecting). This ensures a clean start when the `renet` run condition `client_just_connected()` fires. (TODO: fails to send in `ClientFwMode::Connecting` + span of time before that when disconnected but not detected)
-    - *Note*: There is a span of time within `ClientFwMode::Init` where all client requests will fail to send, and a span after that when requests will succeed (except unreliable messages, which might still fail). You must use `renet` run conditions directly if sending requests during inititialization. Requests sent in `ClientFwMode::Game` will reliably succeed unless the client becomes disconnected (which may occur a number of ticks after failed requests were submitted), in which case the client app will re-initialize.
-- Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism. (TODO: will not appear in `ClientFwMode::Connecting` and `ClientFwMode::Syncing`)
+- `ClientFwMode::Connecting` will be set on disconnect. There are two dimensions to client initialization, which can be used to control which systems run in different scenarios (e.g. with custom system sets).
+    - *Framework initialization cycle*: The framework moves through these states every time your client app connects/reconnects: `ClientFwMode::Connecting` -> `ClientFwMode::Syncing` -> `ClientFwMode::Init`.
+    - *Client initialization types*: Usually multiplayer games are divided into an initial loading phase and then a game phase. The game phase can contain multiple reconnect cycles. You can track your game's state separately to distinguish between startup loading and reconnecting (which may require different loading screens and systems).
+- `ClientInitializationState::InProgress` will be set on disconnect, which means the `ClientFwLoadingSet` will run.
+- `bevy_replicon` replicated client state will be preserved across a reconnect if you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<GameInitProgress>()`). If you don't use `bevy_replicon_repair` then you need to manually repair your client state (e.g. by despawning and cleaning up all old replicated entities when entering `ClientFwMode::Syncing`, although note that this may cause a visual glitch for the duration of this mode).
+- Client requests submitted to the `ClientRequestBuffer` will fail to send while in `ClientFwMode::Connecting`. This ensures a clean start when you enter `ClientFwMode::Syncing`. Note that a disconnect event always occurs at an ambiguous point in time. In practice your client messages will fail to send from that ambiguous disconnect point until you enter `ClientFwMode::Syncing` for the reconnect cycle, and then will succeed until another disconnect occurs (which will trigger another reconnect cycle to repair the client).
+- Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism. This means you won't receive any server messages until you enter `ClientFwMode::Init`.
 
 
 ### User Client
@@ -216,10 +215,10 @@ The user client helps reconnect users to hosted games. There are three kinds of 
 
 - **Complete restart**: A hosted game is running and the client app and user client are both closed.
     1. When the user client connects to the host server, the host server will automatically send a `HostToUserMsg::GameStart` containing `ServerConnectToken` and `GameStartInfo`.
-    1. `ClientStarter::set()` with `launch_multiplayer_client()` in the callback. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
+    1. Call `ClientStarter::set()` with `launch_multiplayer_client()` in the callback. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
     1. Launch the client with `ClientStarter::start()`.
 - **Client app restart**: A hosted game is running and the client app is closed but the user client is open.
-    1. Expose a 'Reconnect' button to users, which will display when `ClientStarter` has been set (i.e. was set by a game start but not cleared by a game over, implying a hosted game is still running). On press, send `UserToHostRequest::GetConnectToken` to the host server.
+    1. Expose a 'Reconnect' button to users, which will display when `ClientStarter` has been set (i.e. it was set by a game start but not cleared by a game over, implying a hosted game is still running). On press, send `UserToHostRequest::GetConnectToken` to the host server.
     1. On receipt of `HostToUserResponse::ConnectToken`, use the already-set `ClientStarter` to launch the client app with `ClientStarter::start()`.
 - **Client app reconnect**: A hosted game is running and the client app disconnected but remains open (and the user client is open).
     1. The `ClientMonitor` will emit a `ClientInstanceReport::RequestConnectToken`.

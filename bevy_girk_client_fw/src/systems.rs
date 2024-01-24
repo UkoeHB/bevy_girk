@@ -33,15 +33,15 @@ pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientRequestBuffer
 
 /// Updates the client's intialization cache.
 ///
-/// Note: the ProgressCounter is removed when it reaches 100%, but we may still need the initialization cache.
+/// Note: The `ProgressCounter` resource is removed when it reaches 100%, but we may still need the initialization cache.
 pub(crate) fn update_initialization_cache(
-    progress_counter                  : Option<Res<ProgressCounter>>,
-    mut initialization_progress_cache : ResMut<InitializationProgressCache>,
+    progress_counter : Option<Res<ProgressCounter>>,
+    mut cache        : ResMut<InitializationProgressCache>,
 ){
     match &progress_counter
     {
-        Some(counter) => initialization_progress_cache.set_progress(counter.progress_complete()),
-        None          => initialization_progress_cache.set_progress_complete()
+        Some(counter) => cache.set_progress(counter.progress_complete()),
+        None          => cache.set_progress_complete()
     }
 }
 
@@ -49,26 +49,26 @@ pub(crate) fn update_initialization_cache(
 
 /// Sends client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
-    initialization_progress_cache : Res<InitializationProgressCache>,
-    buffer                        : Res<ClientRequestBuffer>
+    cache  : Res<InitializationProgressCache>,
+    buffer : Res<ClientRequestBuffer>
 ){
     // don't send if no intialization progress has been made since last frame
-    if !initialization_progress_cache.progress_changed_last_update() { return; }
+    if !cache.progress_changed_last_update() { return; }
 
     // sent progress report
-    buffer.fw_request(ClientFwRequest::SetInitProgress(initialization_progress_cache.progress().into()));
+    buffer.fw_request(ClientFwRequest::SetInitProgress(cache.progress().into()));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Changes the client framework mode to 'init'.
+/// Sets [`ClientFwMode::Connecting`] and [`ClientInitializationState::InProgress`].
 pub(crate) fn reinitialize_client_fw(
-    mut client_initialization_state : ResMut<NextState<ClientInitializationState>>,
-    mut client_fw_mode              : ResMut<NextState<ClientFwMode>>
+    mut client_init_state : ResMut<NextState<ClientInitializationState>>,
+    mut client_fw_mode    : ResMut<NextState<ClientFwMode>>
 ){
-    tracing::info!("reinitializing client framework");
-    client_initialization_state.set(ClientInitializationState::InProgress);
-    client_fw_mode.set(ClientFwMode::Init);
+    tracing::info!("connecting client");
+    client_init_state.set(ClientInitializationState::InProgress);
+    client_fw_mode.set(ClientFwMode::Connecting);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

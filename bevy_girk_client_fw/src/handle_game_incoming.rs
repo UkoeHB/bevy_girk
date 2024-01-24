@@ -15,7 +15,6 @@ use bevy_kot_ecs::*;
 fn handle_game_fw_message(world: &mut World, tick: Tick, msg: GameFwMsg)
 {
     // Note: We log the framework message in [`deserialize_game_message()`].
-
     match msg
     {
         GameFwMsg::CurrentMode(mode)      => syscall(world, mode, handle_current_game_fw_mode),
@@ -37,8 +36,8 @@ pub(crate) fn handle_game_incoming(world: &mut World)
         match handler.try_call(world, &packet)
         {
              Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
-             Err(None)                      => tracing::trace!(?packet, "failed to handle game packet"),
-             Ok(())                         => (),
+             Err(None)                     => tracing::trace!(?packet, "failed to handle game packet"),
+             Ok(())                        => (),
         }
     }
 

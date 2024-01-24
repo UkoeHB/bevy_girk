@@ -36,6 +36,26 @@ fn poststartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Returns a Bevy run condition indicating if the client is initializing.
+///
+/// The run condition returns true when in state [`ClientFwMod::Connecting`], [`ClientFwMod::Syncing`],
+/// and [`ClientFwMod::Init`]
+pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwMode>>) -> bool + Clone
+{
+    |current_state: Res<State<ClientFwMode>>| -> bool
+    {
+        match **current_state
+        {
+            ClientFwMode::Connecting |
+            ClientFwMode::Syncing |
+            ClientFwMode::Init => true,
+            _ => false,
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Client startup plugin.
 #[bevy_plugin]
 pub fn ClientFwStartupPlugin(app: &mut App)
@@ -95,7 +115,7 @@ pub enum ClientFwTickSet
     End
 }
 
-/// Runs when the client state is 'initializing in progress'.
+/// Runs when in [`ClientInitializationState::InProgress`].
 ///
 /// This happens when initially connecting to the game, and whenever the client reconnects to the game.
 ///
@@ -138,8 +158,13 @@ pub fn ClientFwTickPlugin(app: &mut App)
                 reset_init_progress.run_if(client_just_disconnected()),
                 reset_client_request_buffer,
                 handle_commands,
+                // The client may have been commanded to reinitialize.
+                apply_state_transition::<ClientInitializationState>,
+                // We want connection-related mode changes to be applied here since game mode changes will be ignored if
+                // initializing.
+                apply_state_transition::<ClientFwMode>,
                 handle_game_incoming,
-                apply_state_transition::<ClientInitializationState>,  //the client may have been commanded to reinitialize
+                // The game may have caused a mode change (will be ignored if in the middle of initializing).
                 apply_state_transition::<ClientFwMode>,
             ).chain().in_set(ClientFwTickSetPrivate::FwStart)
         );
@@ -160,7 +185,7 @@ pub fn ClientFwTickPlugin(app: &mut App)
     app.add_systems(PostUpdate,
             (
                 apply_state_transition::<ClientInitializationState>,
-                update_initialization_cache.run_if(in_state(ClientFwMode::Init)),
+                update_initialization_cache.run_if(client_is_initializing()),
                 send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
                 dispatch_client_packets,
             ).chain()

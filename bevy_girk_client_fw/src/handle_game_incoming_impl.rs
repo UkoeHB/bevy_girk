@@ -22,7 +22,7 @@ pub(crate) fn handle_current_game_fw_mode(
     if *client_initialization_state != ClientInitializationState::Done { return; }
 
     // update mode
-    let new_client_fw_mode =
+    let mode =
         match current_game_fw_mode
         {
             GameFwMode::Init => ClientFwMode::Init,
@@ -30,9 +30,10 @@ pub(crate) fn handle_current_game_fw_mode(
             GameFwMode::End  => ClientFwMode::End,
         };
 
-    if new_client_fw_mode == **current_client_fw_mode { return; }
-    next_client_fw_mode.set(new_client_fw_mode);
-    tracing::info!(?new_client_fw_mode, "new client framework mode");
+    if mode == **current_client_fw_mode { return; }
+    next_client_fw_mode.set(mode);
+    let old_mode = **current_client_fw_mode;
+    tracing::info!(?old_mode, ?mode, "setting client framework mode");
 }
 
 //-------------------------------------------------------------------------------------------------------------------

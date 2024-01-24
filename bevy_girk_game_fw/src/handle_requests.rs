@@ -15,7 +15,6 @@ use bevy_replicon::prelude::FromClient;
 fn handle_client_fw_request(world: &mut World, client_id: ClientIdType, request: ClientFwRequest)
 {
     // Note: We log the framework request in [`deserialize_client_request()`].
-
     match request
     {
         ClientFwRequest::SetInitProgress(prog) => syscall(world, (client_id, prog), handle_set_client_init_progress),

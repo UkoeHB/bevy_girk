@@ -7,7 +7,9 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_utils::*;
-use bevy_replicon::prelude::*;
+use bevy_replicon::prelude::{
+    ClientEventAppExt, ClientSet, EventType, ReplicationPlugins, RepliconTick, ServerPlugin, ServerEventAppExt
+};
 use iyes_progress::*;
 
 //standard shortcuts
@@ -34,6 +36,20 @@ fn track_connection_state(client: Res<bevy_renet::renet::RenetClient>) -> Progre
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn track_initialization_state(mode: Res<State<ClientFwMode>>) -> Progress
+{
+    match **mode
+    {
+        ClientFwMode::Connecting => Progress{ done: 0, total: 2 },
+        ClientFwMode::Syncing    => Progress{ done: 1, total: 2 },
+        ClientFwMode::Init       => Progress{ done: 2, total: 2 },
+        _                        => Progress{ done: 2, total: 2 },
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 fn track_replication_initialized(
     In(just_connected) : In<bool>,
     mut initialized    : Local<bool>,
@@ -50,6 +66,7 @@ fn track_replication_initialized(
     }
 
     // set initialized
+    // - note: does nothing if the tick changes multiple times after connecting
     if client.is_connected()
     && tick.is_changed()
     {
@@ -66,10 +83,28 @@ fn track_replication_initialized(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn reinitialize_client(client_fw_command_sender: Res<Sender<ClientFwCommand>>)
+fn reinitialize_client(command_sender: Res<Sender<ClientFwCommand>>)
 {
-    if let Err(_) = client_fw_command_sender.send(ClientFwCommand::ReInitialize)
+    if let Err(_) = command_sender.send(ClientFwCommand::ReInitialize)
     { tracing::error!("failed commanding client framework to reinitialize"); }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn set_client_syncing(mut client_fw_mode: ResMut<NextState<ClientFwMode>>)
+{
+    tracing::info!("synchronizing client");
+    client_fw_mode.set(ClientFwMode::Syncing);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn set_client_init(mut client_fw_mode: ResMut<NextState<ClientFwMode>>)
+{
+    tracing::info!("initializing client");
+    client_fw_mode.set(ClientFwMode::Init);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -123,7 +158,7 @@ pub struct GirkClientConfig
 pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFwConfig) -> Sender<ClientFwCommand>
 {
     // prepare message channels
-    let (client_fw_command_sender, client_fw_command_receiver) = new_channel::<ClientFwCommand>();
+    let (command_sender, command_receiver) = new_channel::<ClientFwCommand>();
 
     // prepare client app framework
     client_app
@@ -131,18 +166,18 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
         .add_plugins(ClientFwPlugin)
         //client framework
         .insert_resource(client_fw_config)
-        .insert_resource(client_fw_command_receiver);
+        .insert_resource(command_receiver);
 
-    client_fw_command_sender
+    command_sender
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a client app.
 pub fn prepare_client_app_replication(
-    client_app               : &mut App,
-    client_fw_command_sender : Sender<ClientFwCommand>,
-    resend_time              : Duration,
+    client_app     : &mut App,
+    command_sender : Sender<ClientFwCommand>,
+    resend_time    : Duration,
 ){
     // depends on client framework
 
@@ -163,7 +198,7 @@ pub fn prepare_client_app_replication(
         .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, dummy, receive_server_packets)
         .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, send_client_packets, dummy)
         //add framework command endpoint for use by connection controls
-        .insert_resource(client_fw_command_sender)
+        .insert_resource(command_sender)
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: collects network packets
@@ -177,6 +212,14 @@ pub fn prepare_client_app_replication(
         //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
         .configure_sets(PreUpdate,
+            // Ordering explanation:
+            // - We want `ClientFwMode::Syncing` to run for at least one tick before handling the first replication
+            //   message. So we block the client set in the range [Connecting, Syncing first tick]
+            ClientSet::Receive
+                .run_if(not(in_state(ClientFwMode::Connecting)))
+                .run_if(not(bevy_renet::client_just_connected()))
+        )
+        .configure_sets(PreUpdate,
             ClientFwTickSetPrivate::FwStart
                 .after(bevy_replicon_repair::ClientRepairSet)
         )
@@ -188,10 +231,23 @@ pub fn prepare_client_app_replication(
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
                 //   the server sends an End mode message, but this will only be called in a tick where we are disconnected
-                //   and hence won't receive a game End mode message
+                //   and hence won't receive a game End mode message in `ClientFwTickSetPrivate::FwStart` after this
                 reinitialize_client
                     .run_if(bevy_renet::client_just_disconnected())
                     .run_if(not(in_state(ClientFwMode::End))),
+                // set syncing when just connected
+                // - note: this will not run in the first tick of `ClientFwMode::Connecting` because we disable
+                //   `setup_renet_client` for that tick (it actually takes at least 3 ticks to connect once disconnected)
+                set_client_syncing
+                    .run_if(bevy_renet::client_just_connected())
+                    .run_if(in_state(ClientFwMode::Connecting)),
+                // set initialized when just synchronized
+                // - note: this will not run in the first tick of `ClientFwMode::Syncing` because we disabled
+                //   `ClientSet::Receive` for that tick, so RepliconTick will not change (unless the user manually changes
+                //   it)
+                set_client_init
+                    .run_if(resource_changed::<RepliconTick>())
+                    .run_if(in_state(ClientFwMode::Syncing)),
             )
                 .chain()
                 .after(bevy_replicon_repair::ClientRepairSet)
@@ -204,7 +260,6 @@ pub fn prepare_client_app_replication(
         //      loading systems (systems with `.track_progress()`)
         //  <-- ClientFwTickSet::{Admin, Start, PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
-        .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
         .add_systems(Update,
             (
                 //track connection status
@@ -215,10 +270,19 @@ pub fn prepare_client_app_replication(
                 //        some other entity/entities)
                 bevy_renet::client_just_connected()
                     .pipe(track_replication_initialized)
+                    .track_progress(),
+                //track whether the client is initialized
+                //- note: this leverages the fact that `iyes_progress` collects progress in PostUpdate to ensure
+                //        `ClientInitializationState::Done` will not be entered until `ClientFwMode::Init` has run
+                //        for at least one tick (because the client fw will not try to leave `ClientFwMode::Init` until
+                //        `ClientInitializationState::Done` has been entered, which can happen in the second Init tick
+                //        at earliest)
+                track_initialization_state
                     .track_progress()
             )
                 .in_set(ClientFwLoadingSet)
         )
+        .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
 
         //# POSTUPDATE #
         //<-- ClientFwTickSetPrivate::FwEnd {girk}: disatches messages to replicon, performs final tick cleanup
@@ -226,7 +290,7 @@ pub fn prepare_client_app_replication(
         //<-- RenetSend {renet}: dispatches packets to the server
         .configure_sets(PostUpdate,
             ClientFwTickSetPrivate::FwEnd
-                .before(bevy_replicon::prelude::ClientSet::Send)
+                .before(ClientSet::Send)
         )
 
         //log transport errors
@@ -240,17 +304,21 @@ pub fn prepare_client_app_replication(
 /// Sets up a renet client and enables renet reconnects.
 ///
 /// Note that this method simply waits for a new connect pack to appear, then sets up a renet client.
-/// For requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
+/// For automatically requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
 {
     client_app.insert_resource(connect_pack)
-        .add_systems(Startup, setup_renet_client.map(Result::unwrap))
         .add_systems(PreUpdate,
+            // Ordering explanation:
+            // - We want `ClientFwMode::Connecting` to run for at least one tick.
+            // - We want `client_just_disconnected()` to return true for the first tick of `ClientFwMode::Connecting`.
+            // - We don't put this in Last in case the client manually disconnects halfway through Update.
             setup_renet_client.map(Result::unwrap)
-                .before(bevy_renet::RenetReceive)
-                .run_if(not(bevy_renet::client_just_disconnected()))  //allow at least 1 tick while disconnected
-                .run_if(bevy_renet::client_disconnected())
-                .run_if(resource_exists::<RenetClientConnectPack>())
+                .after(bevy_renet::RenetReceive)  //detect disconnected
+                .before(ClientSet::Receive)       //add ordering constraint
+                .run_if(not(bevy_renet::client_just_disconnected()))  //ignore for first full tick while disconnected
+                .run_if(bevy_renet::client_disconnected())            //poll for connect packs while disconnected
+                .run_if(resource_exists::<RenetClientConnectPack>())  //check for connect pack
         );
 }
 
@@ -262,8 +330,8 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
 /// - Sets up the renet client.
 pub fn prepare_girk_client_app(client_app: &mut App, config: GirkClientConfig)
 {
-    let client_fw_command_sender = prepare_client_app_framework(client_app, config.client_fw_config);
-    prepare_client_app_replication(client_app, client_fw_command_sender, config.resend_time);
+    let command_sender = prepare_client_app_framework(client_app, config.client_fw_config);
+    prepare_client_app_replication(client_app, command_sender, config.resend_time);
     prepare_client_app_network(client_app, config.connect_pack);
 }
 
