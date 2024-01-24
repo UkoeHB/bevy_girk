@@ -113,7 +113,7 @@ The game is a single-threaded authoritative app where game logic is executed. Cl
 
 The game framework exposes a small API for your game logic.
 
-- **`GameFwTicksElapsed`**: Bevy resource that counts how many game ticks have elapsed since startup. See the `GameFwTickPlugin` code docs for more details.
+- **`GameFwTick`**: Bevy resource that records the current game tick. See the `GameFwTickPlugin` code docs for more details.
 - **`GameInitProgress`**: Bevy component on an entity spawned by the framework at startup. It tracks the total initialization progress of all clients while the game is initializing. The entity includes `bevy_replicon::prelude::Replication` by default, so if the `GameInitProgress` component is registered for replication then clients can use this entity to track global loading progress.
 - **`GameFwSet`**: Ordinal system set that runs in `Update`. It contains all `GameFwTickSet`s.
     - **`GameFwTickSet`**: Ordinal system sets for game app logic. All game code should go in these sets.

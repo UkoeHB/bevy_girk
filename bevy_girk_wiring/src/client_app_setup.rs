@@ -11,7 +11,7 @@ use bevy_replicon::prelude::*;
 use iyes_progress::*;
 
 //standard shortcuts
-
+use std::time::Duration;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -102,6 +102,20 @@ fn log_transport_errors(mut errors: EventReader<renet::transport::NetcodeTranspo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Configuration details for setting up a `bevy_girk` client app.
+#[derive(Debug)]
+pub struct GirkClientConfig
+{
+    /// Config for the client framework.
+    pub client_fw_config: ClientFwConfig,
+    /// Resend time for client messages within `renet`.
+    pub resend_time: Duration,
+    /// Client pack for the initial `renet` connection attempt.
+    pub connect_pack: RenetClientConnectPack,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Sets up a client app with the `bevy_girk` client framework.
 ///
 /// REQUIREMENTS:
@@ -125,12 +139,15 @@ pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: Clie
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a client app.
-pub fn prepare_client_app_replication(client_app: &mut App, client_fw_command_sender: Sender<ClientFwCommand>)
-{
+pub fn prepare_client_app_replication(
+    client_app               : &mut App,
+    client_fw_command_sender : Sender<ClientFwCommand>,
+    resend_time              : Duration,
+){
     // depends on client framework
 
     // prepare channels
-    prepare_network_channels(client_app);
+    prepare_network_channels(client_app, resend_time);
 
     // setup client with bevy_replicon (includes bevy_renet)
     client_app
@@ -243,14 +260,11 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
 /// - Sets up the client framework.
 /// - Sets up replication.
 /// - Sets up the renet client.
-pub fn prepare_girk_client_app(
-    client_app       : &mut App,
-    client_fw_config : ClientFwConfig,
-    connect_pack     : RenetClientConnectPack,
-){
-    let client_fw_command_sender = prepare_client_app_framework(client_app, client_fw_config);
-    prepare_client_app_replication(client_app, client_fw_command_sender);
-    prepare_client_app_network(client_app, connect_pack);
+pub fn prepare_girk_client_app(client_app: &mut App, config: GirkClientConfig)
+{
+    let client_fw_command_sender = prepare_client_app_framework(client_app, config.client_fw_config);
+    prepare_client_app_replication(client_app, client_fw_command_sender, config.resend_time);
+    prepare_client_app_network(client_app, config.connect_pack);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

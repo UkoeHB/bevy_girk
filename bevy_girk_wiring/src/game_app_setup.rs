@@ -59,6 +59,26 @@ fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupCo
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Configuration details for setting up a `bevy_girk` server app.
+#[derive(Debug)]
+pub struct GirkServerConfig
+{
+    /// Config for the game framework.
+    pub game_fw_config: GameFwConfig,
+    /// Initializer for the game framework.
+    pub game_fw_initializer: GameFwInitializer,
+    /// Resend time for server messages within `renet`.
+    pub resend_time: Duration,
+    /// Config for setting up a game server.
+    pub game_server_config: GameServerSetupConfig,
+    /// The number of native clients that will connect.
+    pub native_count: usize,
+    /// The number of WASM clients that will connect.
+    pub wasm_count: usize,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Sets up a game app with the `bevy_girk` game framework.
 pub fn prepare_game_app_framework(
     game_app            : &mut App,
@@ -77,12 +97,12 @@ pub fn prepare_game_app_framework(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a game app.
-pub fn prepare_game_app_replication(game_app: &mut App, update_timeout: Duration)
+pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, update_timeout: Duration)
 {
     // depends on game framework
 
     // prepare channels
-    prepare_network_channels(game_app);
+    prepare_network_channels(game_app, resend_time);
 
     // setup server with bevy_replicon (includes bevy_renet)
     game_app
@@ -206,17 +226,22 @@ pub fn prepare_game_app_network(
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
 pub fn prepare_girk_game_app(
-    game_app            : &mut App,
-    game_fw_config      : GameFwConfig,
-    game_fw_initializer : GameFwInitializer,
-    game_server_config  : GameServerSetupConfig,
-    native_count        : usize,
-    wasm_count          : usize,
+    game_app : &mut App,
+    config   : GirkServerConfig
 ) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    prepare_game_app_framework(game_app, game_fw_config, game_fw_initializer);
-    prepare_game_app_replication(game_app, Duration::from_secs((game_server_config.timeout_secs * 2).min(1i32) as u64));
-    let (native_meta, wasm_meta) = prepare_game_app_network(game_app, game_server_config, native_count, wasm_count);
+    prepare_game_app_framework(game_app, config.game_fw_config, config.game_fw_initializer);
+    prepare_game_app_replication(
+        game_app,
+        config.resend_time,
+        Duration::from_secs((config.game_server_config.timeout_secs * 2).min(1i32) as u64),
+    );
+    let (native_meta, wasm_meta) = prepare_game_app_network(
+        game_app,
+        config.game_server_config,
+        config.native_count,
+        config.wasm_count
+    );
 
     (native_meta, wasm_meta)
 }

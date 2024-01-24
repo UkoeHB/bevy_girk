@@ -4,12 +4,13 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet::renet::{RenetClient, RenetServer};
+use bevy_renet::renet::{RenetClient, RenetServer, SendType};
 use bevy_replicon::network_event::EventType;
 use bevy_replicon::prelude::{FromClient, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients};
 
 //standard shortcuts
 use std::marker::PhantomData;
+use std::time::Duration;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -37,18 +38,21 @@ const MAX_CLIENT_MESSAGES_PER_TICK: u16 = 64;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn prepare_network_channels(app: &mut App)
+pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 {
     app.init_resource::<NetworkChannels>();
 
     let mut channels = app.world.resource_mut::<NetworkChannels>();
 
+    let unordered = SendType::ReliableUnordered{ resend_time };
+    let ordered   = SendType::ReliableOrdered{ resend_time };
+
     let unreliable_game_packet   = channels.create_server_channel(EventType::Unreliable.into());
-    let unordered_game_packet    = channels.create_server_channel(EventType::Unordered.into());
-    let ordered_game_packet      = channels.create_server_channel(EventType::Ordered.into());
+    let unordered_game_packet    = channels.create_server_channel(unordered.clone());
+    let ordered_game_packet      = channels.create_server_channel(ordered.clone());
     let unreliable_client_packet = channels.create_client_channel(EventType::Unreliable.into());
-    let unorderd_client_packet   = channels.create_client_channel(EventType::Unordered.into());
-    let ordered_client_packet    = channels.create_client_channel(EventType::Ordered.into());
+    let unorderd_client_packet   = channels.create_client_channel(unordered);
+    let ordered_client_packet    = channels.create_client_channel(ordered);
 
     app
         .insert_resource(EventChannel::<(GamePacket, SendUnreliable)>::new(unreliable_game_packet))

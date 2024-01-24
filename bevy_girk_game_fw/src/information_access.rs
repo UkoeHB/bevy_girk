@@ -45,7 +45,7 @@ pub enum InfoAccessConstraint
 //-------------------------------------------------------------------------------------------------------------------
 
 //todo: replace this with bevy_replicon rooms
-#[derive(Component, Clone, Default)]
+#[derive(Component, Clone, Default, Debug)]
 pub struct InfoAccessRights
 {
     /// Can access targeted client data

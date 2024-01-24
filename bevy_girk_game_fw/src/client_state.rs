@@ -34,7 +34,7 @@ impl ClientId
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client state bundle.
-#[derive(Bundle, Clone, Default)]
+#[derive(Bundle, Clone, Default, Debug)]
 pub struct ClientState
 {
     /// Client id

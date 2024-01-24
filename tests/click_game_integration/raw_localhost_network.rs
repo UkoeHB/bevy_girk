@@ -89,7 +89,7 @@ fn raw_localhost_network_demo(num_players: usize)
         client_app.add_plugins(bevy::time::TimePlugin);
 
         // set up replication
-        prepare_client_app_replication(&mut client_app, client_fw_command_sender);
+        prepare_client_app_replication(&mut client_app, client_fw_command_sender, std::time::Duration::from_millis(100));
 
         // prepare client initializer
         let player_context = ClickPlayerContext::new(
@@ -112,7 +112,7 @@ fn raw_localhost_network_demo(num_players: usize)
 
     let mut watcher_client_app = App::new();
     let client_fw_command_sender = prepare_client_app_framework(&mut watcher_client_app, client_fw_config);
-    prepare_client_app_replication(&mut watcher_client_app, client_fw_command_sender);
+    prepare_client_app_replication(&mut watcher_client_app, client_fw_command_sender, std::time::Duration::from_millis(100));
     watcher_client_app
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(DummyClientCorePlugin)
@@ -127,7 +127,7 @@ fn raw_localhost_network_demo(num_players: usize)
     // prepare game server app
     let mut game_server_app = App::new();
     prepare_game_app_framework(&mut game_server_app, game_fw_config, game_fw_initializer);
-    prepare_game_app_replication(&mut game_server_app, std::time::Duration::from_secs(10));
+    prepare_game_app_replication(&mut game_server_app, std::time::Duration::from_millis(100), std::time::Duration::from_secs(10));
     prepare_game_app_core(&mut game_server_app, game_initializer);
 
 

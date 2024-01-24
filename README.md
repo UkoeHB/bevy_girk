@@ -24,6 +24,7 @@ There may be limits to how far `bevy_girk` can go while remaining generic, so th
 
 ### Major TODOs
 
+- Redesign framework system sets to incorporate `FixedUpdate`.
 - Add an authentication server so `bevy_girk` games can plausibly be deployed in production (or at least alpha nets).
 - Refactor everything to use generics to eliminate multi-layered serialization/deserialization. Alternatively, write custom serializers/deserializers for data objects that reuse existing allocations (via `Bytes`).
 - Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees.

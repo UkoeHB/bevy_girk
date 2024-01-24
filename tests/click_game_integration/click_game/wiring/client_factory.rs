@@ -62,11 +62,18 @@ impl ClientFactoryImpl for ClickClientFactory
         // new connect pack
         let connect_pack = RenetClientConnectPack::new(self.expected_protocol_id, token).unwrap();
 
+        // girk client config
+        let config = GirkClientConfig{
+            client_fw_config: client_start_pack.client_fw_config,
+            resend_time: std::time::Duration::from_millis(100),
+            connect_pack,
+        };
+
         // set up client app
         let mut client_app = App::new();
 
         client_app.add_plugins(bevy::time::TimePlugin);
-        prepare_girk_client_app(&mut client_app, client_start_pack.client_fw_config, connect_pack);
+        prepare_girk_client_app(&mut client_app, config);
 
         match client_start_pack.click_client_initializer
         {
