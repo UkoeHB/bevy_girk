@@ -12,30 +12,13 @@ use bevy_replicon::prelude::{LastChangeTick, SendMode, ToClients};
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Returns true if all clients are ready.
-fn clients_are_ready(client_readiness: &Query<&Readiness, With<ClientId>>) -> bool
-{
-    for readiness in client_readiness
-    {
-        if !readiness.is_ready() { return false; }
-    }
-
-    return true;
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Checks if init mode ended in the previous tick.
-fn init_mode_is_over(
-    max_init_ticks   : u32,
-    game_fw_tick     : Tick,
-    client_readiness : &Query<&Readiness, With<ClientId>>
-) -> bool
+fn init_mode_is_over(max_init_ticks: u32, game_fw_tick: Tick, client_readiness: &ClientReadiness) -> bool
 {
-    if *game_fw_tick > max_init_ticks     { return true; }
-    if clients_are_ready(client_readiness) { return true; }
-    return false;
+    if *game_fw_tick > max_init_ticks
+    || client_readiness.all_ready() { return true; }
+
+    false
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -66,7 +49,7 @@ pub(crate) fn reset_game_message_buffer(
 pub(crate) fn update_game_fw_mode(
     game_fw_config     : Res<GameFwConfig>,
     game_fw_tick       : Res<GameFwTick>,
-    client_readiness   : Query<&Readiness, With<ClientId>>,
+    client_readiness   : Res<ClientReadiness>,
     game_end_flag      : Res<GameEndFlag>,
     current_game_mode  : Res<State<GameFwMode>>,
     mut next_game_mode : ResMut<NextState<GameFwMode>>
@@ -105,23 +88,14 @@ pub(crate) fn update_game_fw_mode(
 
 /// Sets total initialization progress of the game.
 pub(crate) fn refresh_game_init_progress(
-    change_query      : Query<(), (With<ClientId>, Changed<Readiness>)>,
-    readiness_query   : Query<&Readiness, With<ClientId>>,
+    client_readiness  : Res<ClientReadiness>,
     mut init_progress : Query<&mut GameInitProgress>
 ){
     // check if any client's readiness changed
-    if change_query.is_empty() || readiness_query.is_empty() { return; }
+    if !client_readiness.is_changed() { return; }
 
     // update game init progress entity
-    let mut total = 0.0;
-    let mut count = 0;
-    for readiness in &readiness_query
-    {
-        total += readiness.value();
-        count += 1;
-    }
-
-    init_progress.single_mut().0 = total / (count as f32);
+    init_progress.single_mut().0 = client_readiness.total_progress();
 }
 
 //-------------------------------------------------------------------------------------------------------------------

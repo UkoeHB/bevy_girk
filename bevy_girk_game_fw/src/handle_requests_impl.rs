@@ -13,17 +13,10 @@ use bevy_kot_ecs::*;
 /// Mark a client as ready.
 pub(crate) fn handle_set_client_init_progress(
     In((client_id, init_progress)) : In<(ClientIdType, f32)>,
-    client_entity_map              : Res<ClientEntityMap>,
-    mut client_readiness           : Query<&mut Readiness, With<ClientId>>
+    mut readiness           : ResMut<ClientReadiness>,
 ){
-    // access client entity
-    let Some(client_entity) = client_entity_map.get_entity(client_id)
-    else { tracing::error!(client_id, "missing client id for init progress report"); return; };
-
     // update client readiness
-    let Ok(mut readiness) = client_readiness.get_component_mut::<Readiness>(client_entity)
-    else { tracing::error!(client_id, ?client_entity, "client entity is missing Readiness component"); return; };
-    *readiness = Readiness::new(init_progress);
+    readiness.set(ClientId::new(client_id), Readiness::new(init_progress));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

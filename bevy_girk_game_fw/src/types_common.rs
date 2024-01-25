@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 
 /// A game tick.
 ///
-/// Represents a span of time where events occurred and logic executed.
+/// Represents a span of time where events occurred and logic was executed.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Copy, Clone, Default, Debug, Serialize, Deserialize, Deref, DerefMut)]
 pub struct Tick(pub u32);
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Readiness of a client (on a scale of [0.0, 1.0])
-#[derive(Copy, Clone, Component, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct Readiness
 {
     readiness: f32

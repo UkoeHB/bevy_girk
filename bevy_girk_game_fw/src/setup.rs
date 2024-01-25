@@ -33,6 +33,7 @@ pub(crate) fn setup_game_fw_state(world: &mut World)
     // initialize clients
     // - client entity map
     // - client entity
+    let mut client_readiness = ClientReadiness::new();
     let mut client_entity_map = HashMap::<ClientIdType, Entity>::default();
 
     for client_state in game_fw_initializer.clients.drain(..)
@@ -44,9 +45,11 @@ pub(crate) fn setup_game_fw_state(world: &mut World)
         client_entity_map.insert(client_state.id.id(), entity_commands.id());
 
         // finish client entity
-        entity_commands.insert(ClientStateFull{ client_state, readiness: Readiness::default() });
+        client_readiness.set(client_state.id, Readiness::default());
+        entity_commands.insert(client_state);
     }
 
+    world.insert_resource(client_readiness);
     world.insert_resource(crate::ClientEntityMap::new(client_entity_map));
 
     // add misc resources

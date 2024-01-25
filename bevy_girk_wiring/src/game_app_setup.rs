@@ -47,17 +47,13 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
 
 fn reset_clients_on_disconnect(
     mut server_events : EventReader<bevy_renet::renet::ServerEvent>,
-    mut clients       : Query<(&ClientId, &mut Readiness)>
+    mut readiness     : ResMut<ClientReadiness>,
 ){
     for event in server_events.read()
     {
         let bevy_renet::renet::ServerEvent::ClientDisconnected{ client_id, .. } = event else { continue; };
 
-        for (id, mut readiness) in clients.iter_mut()
-        {
-            if id.id() as u64 != client_id.raw() { continue; }
-            *readiness = Readiness::new(0.0);
-        }
+        readiness.set(ClientId::new(client_id.raw() as u16), Readiness::default());
     }
 }
 

@@ -3,6 +3,7 @@
 
 //module tree
 mod client_fw_request;
+mod client_readiness;
 mod client_request_handler;
 mod client_state;
 mod game_end_flag;
@@ -23,6 +24,7 @@ mod types_game_fw;
 
 //API exports
 pub use crate::client_fw_request::*;
+pub use crate::client_readiness::*;
 pub use crate::client_request_handler::*;
 pub use crate::client_state::*;
 pub use crate::game_end_flag::*;

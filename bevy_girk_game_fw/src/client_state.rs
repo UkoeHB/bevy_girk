@@ -46,19 +46,6 @@ pub struct ClientState
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Client state with additional components that don't need to be initialized.
-#[derive(Bundle)]
-pub struct ClientStateFull
-{
-    /// Client state
-    pub client_state: ClientState,
-
-    /// Readiness tracker
-    pub readiness: Readiness,
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Map: [ client id : client entity ]
 #[derive(Resource)]
 pub struct ClientEntityMap
