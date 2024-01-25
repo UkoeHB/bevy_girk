@@ -53,7 +53,7 @@ fn reset_clients_on_disconnect(
     {
         let bevy_renet::renet::ServerEvent::ClientDisconnected{ client_id, .. } = event else { continue; };
 
-        readiness.set(ClientId::new(client_id.raw() as u16), Readiness::default());
+        readiness.set(*client_id, Readiness::default());
     }
 }
 

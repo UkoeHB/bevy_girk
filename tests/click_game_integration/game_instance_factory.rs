@@ -96,12 +96,12 @@ fn game_instance_factory_demo()
 
     for i in 0..num_players
     {
-        client_init_data.push(make_player_init_for_game(gen_rand128(), i as ClientIdType));
+        client_init_data.push(make_player_init_for_game(gen_rand128(), ClientId::from_raw(i as u64)));
     }
 
     for i in num_players..(num_players + num_watchers)
     {
-        client_init_data.push(make_watcher_init_for_game(gen_rand128(), i as ClientIdType));
+        client_init_data.push(make_watcher_init_for_game(gen_rand128(), ClientId::from_raw(i as u64)));
     }
 
 

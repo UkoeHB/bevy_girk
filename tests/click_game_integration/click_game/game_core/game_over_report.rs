@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub struct ClickPlayerReport
 {
     /// client id within the game
-    pub client_id: ClientIdType,
+    pub client_id: ClientId,
     /// Player score during the game.
     pub score: PlayerScore,
 }

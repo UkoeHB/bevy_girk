@@ -38,7 +38,7 @@ pub(crate) fn setup_game_state(world: &mut World)
     // players
     // - player map
     // - player entities
-    let mut client_entity_map = HashMap::<ClientIdType, Entity>::default();
+    let mut client_entity_map = HashMap::<ClientId, Entity>::default();
 
     for (_, player_state) in initializer.players
     {

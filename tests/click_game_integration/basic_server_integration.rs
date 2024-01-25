@@ -198,7 +198,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn check_game_over_report(expected_scores: &HashMap<ClientIdType, PlayerScore>, game_over_report: GameOverReport)
+fn check_game_over_report(expected_scores: &HashMap<ClientId, PlayerScore>, game_over_report: GameOverReport)
 {
     let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.serialized_game_over_data).unwrap();
     assert_eq!(expected_scores.len(), game_over_report.player_reports.len());
@@ -386,7 +386,7 @@ fn basic_server_integration()
 
 
     // validate game over reports
-    let mut expected_scores: HashMap<ClientIdType, PlayerScore> = HashMap::default();
+    let mut expected_scores: HashMap<ClientId, PlayerScore> = HashMap::default();
     let _ = expected_scores.insert(player1_id, PlayerScore{ score: 1 });
     let _ = expected_scores.insert(player2_id, PlayerScore{ score: 2 });
     check_game_over_report(&expected_scores, report1.unwrap());

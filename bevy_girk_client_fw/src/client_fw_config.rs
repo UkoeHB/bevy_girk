@@ -18,7 +18,7 @@ pub struct ClientFwConfig
     ticks_per_sec: u32,
 
     /// This client's id
-    client_id: ClientIdType,
+    client_id: ClientId,
 }
 
 impl ClientFwConfig
@@ -26,21 +26,18 @@ impl ClientFwConfig
     /// Makes a new game framework config.
     pub fn new(
         ticks_per_sec : u32,
-        client_id     : ClientIdType,
+        client_id     : ClientId,
     ) -> ClientFwConfig 
     {
         if ticks_per_sec == 0 { panic!("ClientFwConfig: tick rate must be > 0!"); }
-        ClientFwConfig{
-                ticks_per_sec,
-                client_id,
-            }
+        ClientFwConfig{ ticks_per_sec, client_id }
     }
 
     /// Gets the tick rate of the game.
     pub fn ticks_per_sec(&self) -> u32 { self.ticks_per_sec }
 
     /// Gets this client's id.
-    pub fn client_id(&self) -> ClientIdType { self.client_id }
+    pub fn client_id(&self) -> ClientId { self.client_id }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

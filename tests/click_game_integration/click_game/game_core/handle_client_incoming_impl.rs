@@ -12,7 +12,7 @@ use bevy_kot_ecs::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn notify_request_rejected(
-    In((client_id, request, reason)) : In<(ClientIdType, GameRequest, RejectionReason)>,
+    In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
     buffer                           : Res<GameMessageBuffer>
 ){
     buffer.send(
@@ -36,7 +36,7 @@ pub(crate) fn handle_player_click_button(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn handle_game_mode_request(In(client_id): In<ClientIdType>, world: &mut World)
+pub(crate) fn handle_game_mode_request(In(client_id): In<ClientId>, world: &mut World)
 {
     syscall(world, client_id, notify_game_mode_single);
 }

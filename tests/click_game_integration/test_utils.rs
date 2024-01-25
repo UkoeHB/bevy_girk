@@ -20,11 +20,11 @@ pub fn get_test_protocol_id() -> u64
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn make_player_init_for_game(user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
+pub fn make_player_init_for_game(user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     let init = ClickClientInit::Player{
             client_id,
-            player_name : String::from("player") + stringify!(client_id),
+            player_name : String::from("player") + stringify!(?client_id),
         };
 
         ClickClientInitDataForGame{
@@ -36,7 +36,7 @@ pub fn make_player_init_for_game(user_id: u128, client_id: ClientIdType) -> Clic
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn make_watcher_init_for_game(user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
+pub fn make_watcher_init_for_game(user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     let init = ClickClientInit::Watcher{ client_id };
 
@@ -55,16 +55,17 @@ pub fn prepare_game_initializer(
 ) -> ClickGameInitializer
 {
     // make player states
-    let mut players: HashMap<ClientIdType, PlayerState> = HashMap::default();
+    let mut players: HashMap<ClientId, PlayerState> = HashMap::default();
 
     for id in 0..num_players
     {
         players.insert(
-                id as ClientIdType,
+                ClientId::from_raw(id as u64),
                 PlayerState{
-                        id: PlayerId{ id: id as ClientIdType },
+                        id: PlayerId{ id: ClientId::from_raw(id as u64) },
                         name: PlayerName{ name: String::from("testname") },
-                        ..Default::default()
+                        score: Default::default(),
+                        replicate: Default::default(),
                     }
             );
     }

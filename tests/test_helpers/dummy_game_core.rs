@@ -48,7 +48,7 @@ pub fn DummyGameCorePlugin(app: &mut App)
 {
     // core request handler
     app.insert_resource(ClientRequestHandler::new(
-            | _: &mut World, id: ClientIdType, packet: &ClientPacket | -> Result<(), Option<ClientFwRequest>>
+            | _: &mut World, id: ClientId, packet: &ClientPacket | -> Result<(), Option<ClientFwRequest>>
             {
                 deserialize_client_request(id, packet)
             }

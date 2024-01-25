@@ -77,7 +77,7 @@ fn player_clicks()
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            0 as ClientIdType,
+            ClientId::from_raw(0),
             *game_initializer.game_context.duration_config()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -114,7 +114,7 @@ fn player_clicks()
         //game framework
         //client framework
         .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0 as ClientIdType ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::from_raw(0u64) ))
         //game
         .insert_resource(game_initializer)
         //client core

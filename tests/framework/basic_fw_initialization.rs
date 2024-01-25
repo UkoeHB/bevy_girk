@@ -52,7 +52,7 @@ fn basic_fw_initialization()
         .insert_resource(prepare_player_client_contexts(num_players))
         .insert_resource(GameMessageBuffer::new::<()>())
         //setup client framework
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0 as ClientIdType ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::from_raw(0u64) ))
         .insert_resource(client_fw_comand_reader)
         .insert_resource(ClientRequestType::new::<()>())
         //setup game core

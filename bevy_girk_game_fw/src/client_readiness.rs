@@ -12,6 +12,8 @@ use std::collections::HashMap;
 /// Tracks the readiness of each client.
 ///
 /// Readiness is used to set the [`GameInitProgress`].
+///
+/// This resource can be used to iterate all clients associated with this game.
 #[derive(Resource)]
 pub struct ClientReadiness
 {
@@ -35,6 +37,12 @@ impl ClientReadiness
     pub fn get(&self, client: ClientId) -> Option<Readiness>
     {
         self.clients.get(&client).copied()
+    }
+
+    /// Iterates the readiness of tracked clients.
+    pub fn iter(&self) -> impl Iterator<Item = (ClientId, Readiness)> + '_
+    {
+        self.clients.iter().map(|(c, r)| (*c, *r))
     }
 
     /// Calculates total readiness on a scale of \[0.0 - 1.0\].

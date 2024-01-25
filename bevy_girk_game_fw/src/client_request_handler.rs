@@ -13,7 +13,7 @@ use std::fmt::Debug;
 
 /// Deserializes bytes from a [`ClientPacket`] into a client request.
 pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEventType>(
-    client_id     : ClientIdType,
+    client_id     : ClientId,
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>
 {
@@ -25,17 +25,17 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEve
         AimedMsg::Fw(fw_request) =>
         {
             if fw_request.into_event_type() != send_policy
-            { tracing::trace!(client_id, "ignoring client fw request with invalid send policy"); return Err(None); }
+            { tracing::trace!(?client_id, "ignoring client fw request with invalid send policy"); return Err(None); }
 
-            tracing::trace!(client_id, ?send_policy, ?fw_request, "received client fw request");
+            tracing::trace!(?client_id, ?send_policy, ?fw_request, "received client fw request");
             return Err(Some(fw_request));
         }
         AimedMsg::Core(request) =>
         {
             if request.into_event_type() != send_policy
-            { tracing::trace!(client_id, "ignoring client request with invalid send policy"); return Err(None); }
+            { tracing::trace!(?client_id, "ignoring client request with invalid send policy"); return Err(None); }
 
-            tracing::trace!(client_id, ?send_policy, ?request, "received client request");
+            tracing::trace!(?client_id, ?send_policy, ?request, "received client request");
             return Ok(request);
         }
     }
@@ -57,7 +57,7 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEve
 # use bevy::prelude::*;
 # use bevy_girk_game_fw::*;
 # use std::vec::Vec;
-fn handler(world: &mut World, client_id: ClientIdType, client_packet: ClientPacket) -> Result<(), Option<ClientFwRequest>>
+fn handler(world: &mut World, client_id: ClientId, client_packet: ClientPacket) -> Result<(), Option<ClientFwRequest>>
 {
     let request = deserialize_client_request::<MyClientRequestType>(client_id, &client_packet)?;
 
@@ -69,13 +69,13 @@ fn handler(world: &mut World, client_id: ClientIdType, client_packet: ClientPack
 #[derive(Resource)]
 pub struct ClientRequestHandler
 {
-    handler: Box<dyn Fn(&mut World, ClientIdType, &ClientPacket) -> Result<(), Option<ClientFwRequest>> + Sync + Send>
+    handler: Box<dyn Fn(&mut World, ClientId, &ClientPacket) -> Result<(), Option<ClientFwRequest>> + Sync + Send>
 }
 
 impl ClientRequestHandler
 {
     pub fn new(
-        handler: impl Fn(&mut World, ClientIdType, &ClientPacket) -> Result<(), Option<ClientFwRequest>> + Sync + Send + 'static
+        handler: impl Fn(&mut World, ClientId, &ClientPacket) -> Result<(), Option<ClientFwRequest>> + Sync + Send + 'static
     ) -> ClientRequestHandler
     {
         ClientRequestHandler{ handler: Box::new(handler) }
@@ -83,7 +83,7 @@ impl ClientRequestHandler
 
     pub fn try_call(&self,
         world         : &mut World,
-        client_id     : ClientIdType,
+        client_id     : ClientId,
         client_packet : &ClientPacket
     ) -> Result<(), Option<ClientFwRequest>>
     {

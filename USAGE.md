@@ -51,6 +51,7 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 ### Game App
 
 - **`GameFactory`** (trait object): Consumes `GameLaunchPack`s to set up game apps, and produces `GameStartReport`s.
+    - Note that the client ids you write in the start report will be used in-game to interact with clients, so they should be mapped to player data correctly.
 - **`GameStartReport`** (data object): Produced by a `GameFactory`, used to orchestrate client setup by the game manager (for multiplayer games this is the host server).
     - Includes auth info for creating `ServerConnectToken`s, which are used by client apps to connect to the game app's `renet` server. Start reports include auth info instead of connect tokens so that tokens can be produced on-demand by the host server to support reconnects.
     - **`GameStartInfo`** (data object): Per-client custom data, used for client setup by `ClientFactory`. The start data field in this type should deserialize to game-specific initialization details for a client app.
@@ -124,10 +125,11 @@ The game framework exposes a small API to support your game logic.
     - `GameFwMode::End` -> `bevy::app::AppExit` occurs when `GameFwConfig::max_end_ticks()` have elapsed after entering `GameFwMode::End`. Not exiting immediately allows time to propagate the game end mode change to clients, and to allow custom app termination in game logic (i.e. by setting the max end ticks to infinite).
 - **`GameEndFlag`**: Bevy resource used to signal that a game is over. Insert a `GameOverReport` to this resource with `GameEndFlag::set()` to enter `GameFwMode::End`. The report will be automatically extracted if your game is managed by a `GameInstance`.
 - **`GameMessageBuffer`**: Bevy resource that you inserted to your app on app startup. All messages you want to send from the game to clients should be submitted to this buffer. Note that messages submitted to this buffer are ultimately treated as `bevy_replicon` events, which means they will synchronize with replication messages (component insertions/removals and spawns and despawns, but not component updates).
+- **`ClientReadiness`**: Bevy resource that tracks the readiness of clients (i.e. how close they are to being ready to play). This can be used to iterate over all clients tracked by the game framework. Note that client readiness logic is automatically handled by `bevy_girk` systems, so you should not need to use `ClientReadiness::set()`. Client readiness is reset when a client disconnects.
 
 **Client Connections**
 
-You can track and respond to client connection events with `EventReader<bevy_renet::renet::ServerEvent>`.
+You can track and respond to client connection events with `EventReader<bevy_renet::renet::ServerEvent>`. It is recommended to handle these events promptly every tick if you need client-specific state to synchronize with connection events.
 
 
 ### Client App

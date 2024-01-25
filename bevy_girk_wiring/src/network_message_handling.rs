@@ -152,14 +152,14 @@ pub(crate) fn receive_client_packets(
     unreliable_channel : Res<EventChannel<(ClientPacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(ClientPacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(ClientPacket, SendOrdered)>>,
-    registered_clients : Res<ClientEntityMap>
+    registered_clients : Res<ClientReadiness>
 ){
     for client_id in server.clients_id()
     {
         // ignore unregistered client ids
         // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
-        let Some(_) = registered_clients.get_entity(client_id.raw() as ClientIdType)
-        else { tracing::error!("ignoring renet server client with unknown id"); continue; };
+        let Some(_) = registered_clients.get(client_id)
+        else { tracing::error!(?client_id, "ignoring client with unknown id"); continue; };
 
         // receive ordered messages first since they are probably oldest
         let mut messages_count = 0;

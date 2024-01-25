@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 pub struct ClickPlayerContext
 {
     /// This client's id
-    client_id: ClientIdType,
+    client_id: ClientId,
     /// Game duration config.
     duration_config: GameDurationConfig,
 }
@@ -25,14 +25,14 @@ impl ClickPlayerContext
 {
     /// New context
     pub fn new(
-        client_id       : ClientIdType,
+        client_id       : ClientId,
         duration_config : GameDurationConfig,
     ) -> ClickPlayerContext 
     {
         ClickPlayerContext{ client_id, duration_config }
     }
 
-    pub fn id(&self) -> ClientIdType                     { self.client_id }
+    pub fn id(&self) -> ClientId                         { self.client_id }
     pub fn duration_config(&self) -> &GameDurationConfig { &self.duration_config }
 }
 

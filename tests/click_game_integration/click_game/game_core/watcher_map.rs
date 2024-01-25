@@ -13,17 +13,17 @@ use std::collections::HashSet;
 pub struct WatcherMap
 {
     /// [ client id  ]
-    watchers: HashSet<ClientIdType>,
+    watchers: HashSet<ClientId>,
 }
 
 impl WatcherMap
 {
-    pub fn new(watchers: HashSet<ClientIdType>) -> WatcherMap
+    pub fn new(watchers: HashSet<ClientId>) -> WatcherMap
     {
         WatcherMap{ watchers }
     }
 
-    pub fn is_watcher(&self, client_id: ClientIdType) -> bool
+    pub fn is_watcher(&self, client_id: ClientId) -> bool
     {
         self.watchers.contains(&client_id)
     }

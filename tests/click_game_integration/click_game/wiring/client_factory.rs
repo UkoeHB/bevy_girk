@@ -40,7 +40,7 @@ fn DummyClientCorePlugin(app: &mut App)
 pub struct ClickClientFactory
 {
     expected_protocol_id: u64,
-    pub player_id: Option<ClientIdType>,
+    pub player_id: Option<ClientId>,
     pub player_input: Option<Sender<PlayerInput>>,
 }
 

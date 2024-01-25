@@ -29,7 +29,7 @@ fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn check_game_over_report(expected_scores: &HashMap<ClientIdType, PlayerScore>, game_over_report: GameOverReport)
+fn check_game_over_report(expected_scores: &HashMap<ClientId, PlayerScore>, game_over_report: GameOverReport)
 {
     let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.serialized_game_over_data).unwrap();
     assert_eq!(expected_scores.len(), game_over_report.player_reports.len());
@@ -116,12 +116,12 @@ fn game_instance_launcher_demo()
 
     for i in 0..num_players
     {
-        client_init_data.push(make_player_init_for_game(gen_rand128(), i as ClientIdType));
+        client_init_data.push(make_player_init_for_game(gen_rand128(), ClientId::from_raw(i as u64)));
     }
 
     for i in num_players..(num_players + num_watchers)
     {
-        client_init_data.push(make_watcher_init_for_game(gen_rand128(), i as ClientIdType));
+        client_init_data.push(make_watcher_init_for_game(gen_rand128(), ClientId::from_raw(i as u64)));
     }
 
 
@@ -212,8 +212,8 @@ fn game_instance_launcher_demo()
     }
 
     // record expected final scores
-    let mut expected_scores: HashMap<ClientIdType, PlayerScore> = HashMap::default();
-    for i in 0..num_players { expected_scores.insert(i as ClientIdType, PlayerScore{ score: 1 }); }
+    let mut expected_scores: HashMap<ClientId, PlayerScore> = HashMap::default();
+    for i in 0..num_players { expected_scores.insert(ClientId::from_raw(i as u64), PlayerScore{ score: 1 }); }
 
     // tick until game over report received
     let game_over_report: Option<GameOverReport>;

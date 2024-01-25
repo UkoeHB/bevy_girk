@@ -82,7 +82,7 @@ fn raw_localhost_network_demo(num_players: usize)
         // set up client framework
         let client_fw_config = ClientFwConfig::new(
                 ticks_per_sec,
-                client_id as ClientIdType,
+                ClientId::from_raw(client_id as u64),
             );
 
         let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_fw_config);
@@ -93,7 +93,7 @@ fn raw_localhost_network_demo(num_players: usize)
 
         // prepare client initializer
         let player_context = ClickPlayerContext::new(
-            client_id as ClientIdType,
+            ClientId::from_raw(client_id as u64),
                 *game_initializer.game_context.duration_config()
             );
         let player_initializer = ClickPlayerInitializer{ player_context };
@@ -107,7 +107,7 @@ fn raw_localhost_network_demo(num_players: usize)
     // make watcher client to demo non-player client with no replication
     let client_fw_config = ClientFwConfig::new(
             ticks_per_sec,
-            num_players as ClientIdType,
+            ClientId::from_raw(num_players as u64),
         );
 
     let mut watcher_client_app = App::new();

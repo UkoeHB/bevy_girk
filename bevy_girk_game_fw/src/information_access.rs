@@ -17,7 +17,7 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn targeting_intersection(client_rights: &Option<ClientIdType>, constraints: &Vec<ClientIdType>) -> bool
+fn targeting_intersection(client_rights: &Option<ClientId>, constraints: &Vec<ClientId>) -> bool
 {
     // check if there are any client constraints
     if constraints.len() == 0 { return true; }
@@ -37,7 +37,7 @@ fn targeting_intersection(client_rights: &Option<ClientIdType>, constraints: &Ve
 pub enum InfoAccessConstraint
 {
     /// Targets specific clients
-    Targets(Vec<ClientIdType>),
+    Targets(Vec<ClientId>),
     /// Is global data
     Global,
 }
@@ -49,7 +49,7 @@ pub enum InfoAccessConstraint
 pub struct InfoAccessRights
 {
     /// Can access targeted client data
-    pub client: Option<ClientIdType>,
+    pub client: Option<ClientId>,
     /// Can access global data
     pub global: bool,
 }

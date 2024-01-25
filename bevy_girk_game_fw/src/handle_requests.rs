@@ -12,7 +12,7 @@ use bevy_replicon::prelude::FromClient;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_client_fw_request(world: &mut World, client_id: ClientIdType, request: ClientFwRequest)
+fn handle_client_fw_request(world: &mut World, client_id: ClientId, request: ClientFwRequest)
 {
     // Note: We log the framework request in [`deserialize_client_request()`].
     match request
@@ -34,12 +34,10 @@ pub(crate) fn handle_requests(world: &mut World)
 
     for FromClient{ client_id, event } in packets.drain()
     {
-        let client_id = client_id.raw() as ClientIdType;
-
         match handler.try_call(world, client_id, &event)
         {
              Err(Some(fw_request)) => handle_client_fw_request(world, client_id, fw_request),
-             Err(None)             => tracing::trace!(client_id, ?event, "failed to handle client packet"),
+             Err(None)             => tracing::trace!(?client_id, ?event, "failed to handle client packet"),
              Ok(())                => (),
         }
     }

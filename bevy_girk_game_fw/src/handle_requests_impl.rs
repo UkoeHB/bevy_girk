@@ -12,18 +12,18 @@ use bevy_kot_ecs::*;
 
 /// Mark a client as ready.
 pub(crate) fn handle_set_client_init_progress(
-    In((client_id, init_progress)) : In<(ClientIdType, f32)>,
-    mut readiness           : ResMut<ClientReadiness>,
+    In((client_id, init_progress)) : In<(ClientId, f32)>,
+    mut readiness                  : ResMut<ClientReadiness>,
 ){
     // update client readiness
-    readiness.set(ClientId::new(client_id), Readiness::new(init_progress));
+    readiness.set(client_id, Readiness::new(init_progress));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Send back ping response.
 pub(crate) fn handle_ping_request(
-    In((client_id, request)) : In<(ClientIdType, PingRequest)>,
+    In((client_id, request)) : In<(ClientId, PingRequest)>,
     buffer                   : Res<GameMessageBuffer>
 ){
     buffer.fw_send(
@@ -35,7 +35,7 @@ pub(crate) fn handle_ping_request(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Send game fw mode to the client.
-pub(crate) fn handle_game_fw_mode_request(In(client_id): In<ClientIdType>, world: &mut World)
+pub(crate) fn handle_game_fw_mode_request(In(client_id): In<ClientId>, world: &mut World)
 {
     syscall(world, client_id, notify_game_fw_mode_single);
 }

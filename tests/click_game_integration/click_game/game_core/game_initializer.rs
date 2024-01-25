@@ -18,9 +18,9 @@ pub struct ClickGameInitializer
     /// Game context.
     pub game_context: ClickGameContext,
     /// Player states.
-    pub players: HashMap<ClientIdType, PlayerState>,
+    pub players: HashMap<ClientId, PlayerState>,
     /// Watchers.
-    pub watchers: HashSet<ClientIdType>,
+    pub watchers: HashSet<ClientId>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

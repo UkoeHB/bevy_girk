@@ -107,7 +107,7 @@ pub(crate) fn refresh_game_init_progress(
 pub(crate) fn dispatch_messages_to_client(
     mut buffer       : ResMut<GameMessageBuffer>,
     mut game_packets : EventWriter<ToClients<GamePacket>>,
-    client_query     : Query<(&ClientId, &InfoAccessRights)>
+    client_query     : Query<(&ClientIdComponent, &InfoAccessRights)>
 ){
     while let Some(pending_game_message) = buffer.next()
     {
@@ -116,7 +116,7 @@ pub(crate) fn dispatch_messages_to_client(
             if !access_rights.can_access(&pending_game_message.access_constraints) { continue; }
 
             game_packets.send(ToClients{
-                    mode  : SendMode::Direct(renet::ClientId::from_raw(client_id.id() as u64)),
+                    mode  : SendMode::Direct(client_id.id()),
                     event : GamePacket{
                             send_policy : pending_game_message.send_policy,
                             message     : pending_game_message.message.clone()
@@ -130,7 +130,7 @@ pub(crate) fn dispatch_messages_to_client(
 
 /// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
-    In(client_id)     : In<ClientIdType>,
+    In(client_id)     : In<ClientId>,
     buffer            : Res<GameMessageBuffer>,
     current_game_mode : Res<State<GameFwMode>>,
 ){

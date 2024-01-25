@@ -88,7 +88,7 @@ impl GameFactoryImpl for DummyGameFactory
             .insert_resource(GameMessageBuffer::new::<()>())
             //setup client framework
             .insert_resource(
-                ClientFwConfig::new( pack.config.ticks_per_sec, 0 as ClientIdType )
+                ClientFwConfig::new( pack.config.ticks_per_sec, ClientId::from_raw(0u64) )
             )
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestType::new::<()>())

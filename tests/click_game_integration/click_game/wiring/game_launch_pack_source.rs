@@ -32,14 +32,14 @@ fn get_protocol_id() -> u64
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn make_player_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
+fn make_player_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
             env,
             user_id,
             init: ClickClientInit::Player{
                 client_id   : client_id,
-                player_name : String::from("player") + stringify!(client_id),
+                player_name : String::from("player") + stringify!(?client_id),
             },
         }
 }
@@ -47,14 +47,12 @@ fn make_player_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id:
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn make_watcher_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientIdType) -> ClickClientInitDataForGame
+fn make_watcher_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
             env,
             user_id,
-            init: ClickClientInit::Watcher{
-                client_id: client_id,
-            },
+            init: ClickClientInit::Watcher{ client_id },
         }
 }
 
@@ -84,13 +82,13 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
 
     for (idx, (env, player_user_id)) in players.iter().enumerate()
     {
-        client_init_data.push(make_player_init_data(*env, *player_user_id, idx as ClientIdType));
+        client_init_data.push(make_player_init_data(*env, *player_user_id, ClientId::from_raw(idx as u64)));
     }
 
     for (idx, (env, watcher_user_id)) in watchers.iter().enumerate()
     {
         let client_id = idx + num_players;
-        client_init_data.push(make_watcher_init_data(*env, *watcher_user_id, client_id as ClientIdType));
+        client_init_data.push(make_watcher_init_data(*env, *watcher_user_id, ClientId::from_raw(client_id as u64)));
     }
 
     // click launch pack
