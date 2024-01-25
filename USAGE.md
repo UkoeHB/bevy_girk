@@ -65,9 +65,9 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
 
 - **`ClientFactory`** (trait object): Consumes `ServerConnectToken`s and `GameStartInfo`s to set up client apps.
 - **`GameMessageHandler`** (trait object): Bevy resource inserted into client apps and used to handle incoming game-specific game messages.
-- **`ClientRequestBuffer`**: Bevy resource inserted into client apps and used to marshal client requests into the networking backend.
+- **`ClientRequestSender`**: Bevy resource inserted into client apps and used to marshal client requests into the networking backend.
     - `ClientRequest`: Type specified on construction, must equal the type for all client network requests to be sent to the game (it should probably be a big enum).
-    - *Note*: We use type id consistency checks in the `ClientRequestBuffer` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
+    - *Note*: We use type id consistency checks in the `ClientRequestSender` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
 
 
 
@@ -142,7 +142,7 @@ The client is a GUI app where you play a game. Clients communicate with the game
 
 - Insert a `GameMessageHandler` resource to your app with your desired message-handling callback.
     - The callback should use `deserialize_game_message()?` to extract messages. This function is exposed instead of used automatically in case you want to read `GameFwMsg`s sent by the game framework.
-- Insert a `ClientRequestBuffer` resource to your app with your desired client request type. The request type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
+- Insert a `ClientRequestType` resource to your app with your desired client request type. The request type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
 
@@ -160,8 +160,8 @@ The client framework exposes a small API to support your client logic.
     - `ClientFwMode::Syncing` is set when the client has connected to the `renet` server and is waiting for `bevy_replicon`'s first replication message. No server messages will be consumed in this mode, they will only be buffered until `ClientFwMode::Init` since `bevy_replicon` forces server messages to synchronize with replication state. This mode always runs for at least one tick during an initialization cycle, and in the first tick `renet`'s `client_just_connected()` run condition will be true.
     - `ClientFwMode::Init` is set when the client has synchronized with the server's replication state. The client may not be fully synchronized, however, if there are unreceived server messages required to fully initialize. This mode always runs for at least one tick during an initialization cycle.
     - `ClientFwMode::Init` -> `ClientFwMode::Game` occurs when the client is in state `ClientInitializationState::Done` and the client receives a `GameFwMode::Game` message from the game framework (the `GameFwMode` will be requested, sent by the server, and processed automatically by the client when `ClientInitializationState::Done` is entered).
-- **`ClientRequestBuffer`**: Bevy resource that you inserted to your app on app startup. All requests you want to send from the client to the game should be submitted to this buffer.
-    - *Note*: This is cleared in `PreUpdate` in order to synchronize with the networking framework. Any earlier-buffered requests will not be sent. This is relevant for e.g. GUI-based player inputs, which may be collected in an earlier schedule. It is recommended to cache player inputs in a custom buffer and marshal them into `ClientRequestBuffer` in `ClientFwSet` in `Update`. This indirection makes it easier to do headless testing of the client app's core (non-graphical) logic, and facilitates multiple client front-ends for different platforms.
+- **`ClientRequestSender`**: Bevy system parameter used to send client requests to the game. Uses `ClientRequestType` to validate client request types when `debug_assertions` are enabled.
+    - *Note*: This uses `bevy_replicon` events under the hood, which means client requests properly synchronize with client connection cycles. Client requests will be dropped between a disconnect and entering `ClientFwMode::Syncing`.
 - **`PingTracker`**: Bevy resource used to estimate the current game framework tick. (TODO: this is very rudimentary, it needs significant work to be production-grade)
 
 **Reconnecting**
@@ -175,7 +175,7 @@ When a disconnect is detected, there are a number of details to keep in mind.
     - *Client initialization types*: Usually multiplayer games are divided into an initial loading phase and then a game phase. The game phase can contain multiple reconnect cycles. You can track your game's state separately to distinguish between startup loading and reconnecting (which may require different loading screens and systems).
 - `ClientInitializationState::InProgress` will be set on disconnect, which means the `ClientFwLoadingSet` will run.
 - `bevy_replicon` replicated client state will be preserved across a reconnect if you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<GameInitProgress>()`). If you don't use `bevy_replicon_repair` then you need to manually repair your client state (e.g. by despawning and cleaning up all old replicated entities when entering `ClientFwMode::Syncing`, although note that this may cause a visual glitch for the duration of this mode).
-- Client requests submitted to the `ClientRequestBuffer` will fail to send while in `ClientFwMode::Connecting`. This ensures a clean start when you enter `ClientFwMode::Syncing`. Note that a disconnect event always occurs at an ambiguous point in time. In practice your client messages will fail to send from that ambiguous disconnect point until you enter `ClientFwMode::Syncing` for the reconnect cycle, and then will succeed until another disconnect occurs (which will trigger another reconnect cycle to repair the client).
+- Client requests submitted to the `ClientRequestSender` will fail to send while in `ClientFwMode::Connecting`. This ensures a clean start when you enter `ClientFwMode::Syncing`. Note that a disconnect event always occurs at an ambiguous point in time. In practice your client messages will fail to send from that ambiguous disconnect point until you enter `ClientFwMode::Syncing` for the reconnect cycle, and then will succeed until another disconnect occurs (which will trigger another reconnect cycle to repair the client).
 - Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism. This means you won't receive any server messages until you enter `ClientFwMode::Init`.
 
 

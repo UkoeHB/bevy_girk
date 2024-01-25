@@ -3,7 +3,7 @@
 
 //module tree
 mod client_fw_config;
-mod client_request_buffer;
+mod client_request_sender;
 mod commands;
 mod game_message_handler;
 mod handle_commands;
@@ -18,7 +18,7 @@ mod systems;
 
 //API exports
 pub use crate::client_fw_config::*;
-pub use crate::client_request_buffer::*;
+pub use crate::client_request_sender::*;
 pub use crate::game_message_handler::*;
 pub(crate) use crate::handle_commands::*;
 pub(crate) use crate::handle_game_incoming::*;

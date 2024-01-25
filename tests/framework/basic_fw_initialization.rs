@@ -54,7 +54,7 @@ fn basic_fw_initialization()
         //setup client framework
         .insert_resource(ClientFwConfig::new( ticks_per_sec, 0 as ClientIdType ))
         .insert_resource(client_fw_comand_reader)
-        .insert_resource(ClientRequestBuffer::new::<()>())
+        .insert_resource(ClientRequestType::new::<()>())
         //setup game core
         .insert_resource(DummyGameDurationConfig{ max_ticks: 1 })
         //add game framework

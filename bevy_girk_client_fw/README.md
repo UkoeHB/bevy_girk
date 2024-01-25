@@ -9,7 +9,7 @@ PRECONDITION: the following must be initialized by the client framework manager
 
 PRECONDITION: the following must be initialized by the client core that uses this client framework
 - `Res<GameMessageHandler>`
-- `Res<ClientRequestBuffer>`
+- `Res<ClientRequestType>`
 
 INTERFACE: for client framework manager
 - the `ClientFwCommand` channel may be used to control the client framework
@@ -19,7 +19,7 @@ INTERFACE: for client framework manager
 INTERFACE: for users of the framework (framework owners and client dependents)
 - game logic should be defined within system set `ClientFwSet`
 - `Res<PingTracker>` provides game-synchronization information
-- `Res<ClientRequestBuffer>` collects messages to be sent to the game
+- `ClientRequestSender` collects requests to be sent to the game
 - `Res<ClientFwConfig>` provides miscellaneous information about the client
 - `State<ClientFwMode>` tracks what mode the client is in
 - `Res<InitializationProgressCache>` may be used to track the progress of initialization

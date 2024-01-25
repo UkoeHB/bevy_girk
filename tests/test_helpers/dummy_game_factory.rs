@@ -91,7 +91,7 @@ impl GameFactoryImpl for DummyGameFactory
                 ClientFwConfig::new( pack.config.ticks_per_sec, 0 as ClientIdType )
             )
             .insert_resource(client_fw_comand_reader)
-            .insert_resource(ClientRequestBuffer::new::<()>())
+            .insert_resource(ClientRequestType::new::<()>())
             //setup game core
             .insert_resource(DummyGameDurationConfig{ max_ticks: pack.config.game_duration_ticks })
             //add game framework

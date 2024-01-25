@@ -30,7 +30,7 @@ pub(crate) fn setup_game_output_handler(mut commands: Commands)
 /// Initialize the client request handler.
 pub(crate) fn setup_client_request_buffer(mut commands: Commands)
 {
-    commands.insert_resource(ClientRequestBuffer::new::<GameRequest>());
+    commands.insert_resource(ClientRequestType::new::<GameRequest>());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

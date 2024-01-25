@@ -28,8 +28,8 @@ fn prestartup_check(world: &World)
 /// Validate resources that should exist after client startup.
 fn poststartup_check(world: &World)
 {
-    if !world.contains_resource::<GameMessageHandler>()  { panic!("GameMessageHandler is missing post startup!"); }
-    if !world.contains_resource::<ClientRequestBuffer>() { panic!("ClientRequestBuffer is missing post startup!"); }
+    if !world.contains_resource::<GameMessageHandler>() { panic!("GameMessageHandler is missing post startup!"); }
+    if !world.contains_resource::<ClientRequestType>()  { panic!("ClientRequestType is missing post startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -154,7 +154,6 @@ pub fn ClientFwTickPlugin(app: &mut App)
     // FWSTART
     app.add_systems(PreUpdate,
             (
-                reset_client_request_buffer,
                 handle_commands,
                 // The client may have been commanded to reinitialize.
                 apply_state_transition::<ClientInitializationState>,
@@ -185,7 +184,6 @@ pub fn ClientFwTickPlugin(app: &mut App)
                 apply_state_transition::<ClientInitializationState>,
                 update_initialization_cache.run_if(client_is_initializing()),
                 send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
-                dispatch_client_packets,
             ).chain()
                 .in_set(ClientFwTickSetPrivate::FwEnd)
                 .after(iyes_progress::CheckProgressSet)

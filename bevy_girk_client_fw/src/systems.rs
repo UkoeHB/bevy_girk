@@ -23,14 +23,6 @@ pub(crate) fn reset_init_progress(mut progress: Query<&mut GameInitProgress>)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Resets the game message buffer for a new tick.
-pub(crate) fn reset_client_request_buffer(mut buffer: ResMut<ClientRequestBuffer>)
-{
-    buffer.reset();
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Updates the client's intialization cache.
 ///
 /// Note: The `ProgressCounter` resource is removed when it reaches 100%, but we may still need the initialization cache.
@@ -49,14 +41,14 @@ pub(crate) fn update_initialization_cache(
 
 /// Sends client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
-    cache  : Res<InitializationProgressCache>,
-    buffer : Res<ClientRequestBuffer>
+    cache      : Res<InitializationProgressCache>,
+    mut sender : ClientRequestSender
 ){
     // don't send if no intialization progress has been made since last frame
     if !cache.progress_changed_last_update() { return; }
 
     // sent progress report
-    buffer.fw_request(ClientFwRequest::SetInitProgress(cache.progress().into()));
+    sender.fw_request(ClientFwRequest::SetInitProgress(cache.progress().into()));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -74,22 +66,9 @@ pub(crate) fn reinitialize_client_fw(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Requests the current game framework mode.
-pub(crate) fn request_game_fw_mode(buffer: Res<ClientRequestBuffer>)
+pub(crate) fn request_game_fw_mode(mut sender: ClientRequestSender)
 {
-    buffer.fw_request(ClientFwRequest::GetGameFwMode);
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Takes client messages and dispatches them to the game.
-pub(crate) fn dispatch_client_packets(
-    mut buffer         : ResMut<ClientRequestBuffer>,
-    mut client_packets : EventWriter<ClientPacket>,
-){
-    while let Some(pending_packet) = buffer.next()
-    {
-        client_packets.send(pending_packet);
-    }
+    sender.fw_request(ClientFwRequest::GetGameFwMode);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

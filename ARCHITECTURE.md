@@ -88,7 +88,7 @@ WORK IN PROGRESS
             - ClientFwSet
             - ClientFwLoadingSet
             - ClientFwMode
-            - ClientRequestBuffer
+            - ClientRequestSender
 
 
 - management
