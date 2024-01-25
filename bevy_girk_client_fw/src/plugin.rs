@@ -5,7 +5,6 @@ use crate::*;
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
 use bevy_kot_utils::*;
-use bevy_replicon::client_just_disconnected;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -155,7 +154,6 @@ pub fn ClientFwTickPlugin(app: &mut App)
     // FWSTART
     app.add_systems(PreUpdate,
             (
-                reset_init_progress.run_if(client_just_disconnected()),
                 reset_client_request_buffer,
                 handle_commands,
                 // The client may have been commanded to reinitialize.
@@ -196,12 +194,11 @@ pub fn ClientFwTickPlugin(app: &mut App)
 
     // MISC
 
+    // Handle just disconnected.
+    app.add_systems(OnEnter(ClientFwMode::Connecting), reset_init_progress);
+
     // Systems that should run when the client is fully initialized.
-    app.add_systems(OnEnter(ClientInitializationState::Done),
-            (
-                request_game_fw_mode,
-            ).chain()
-        );
+    app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_mode);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

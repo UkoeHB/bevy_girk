@@ -512,7 +512,7 @@ fn integration_reconnect_userclient_restart()
 
     // launch game hub server attached to host server
     let game_ticks_per_sec = 20;
-    let game_num_ticks     = 30;
+    let game_num_ticks     = 35;
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),

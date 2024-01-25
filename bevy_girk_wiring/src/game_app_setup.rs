@@ -25,7 +25,7 @@ fn dummy() {}
 
 fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEvent>)
 {
-   for event in server_events.read()
+    for event in server_events.read()
     {
         tracing::debug!(?event);
     }
@@ -39,6 +39,25 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
     for error in transport_errors.read()
     {
         tracing::debug!(?error);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn reset_clients_on_disconnect(
+    mut server_events : EventReader<bevy_renet::renet::ServerEvent>,
+    mut clients       : Query<(&ClientId, &mut Readiness)>
+){
+    for event in server_events.read()
+    {
+        let bevy_renet::renet::ServerEvent::ClientDisconnected{ client_id, .. } = event else { continue; };
+
+        for (id, mut readiness) in clients.iter_mut()
+        {
+            if id.id() as u64 != client_id.raw() { continue; }
+            *readiness = Readiness::new(0.0);
+        }
     }
 }
 
@@ -142,6 +161,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         //      the ordinal sets so the game tick and game mode updaters (and user-defined tick initialization logic) can
         //      run first
         //  <-- GameFwTickSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
+        .add_systems(Update, reset_clients_on_disconnect.in_set(GameFwTickSet::Admin))
 
         //# POSTUPDATE
         //<-- GameFwTickSetPrivate::FwEnd {girk}: dispatch server messages to replicon
