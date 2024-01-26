@@ -4,18 +4,18 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Mark a client as ready.
+/// Update client readiness.
 pub(crate) fn handle_set_client_init_progress(
     In((client_id, init_progress)) : In<(ClientId, f32)>,
     mut readiness                  : ResMut<ClientReadiness>,
 ){
-    // update client readiness
     readiness.set(client_id, Readiness::new(init_progress));
 }
 
@@ -24,12 +24,9 @@ pub(crate) fn handle_set_client_init_progress(
 /// Send back ping response.
 pub(crate) fn handle_ping_request(
     In((client_id, request)) : In<(ClientId, PingRequest)>,
-    buffer                   : Res<GameMessageBuffer>
+    mut server               : ServerManager,
 ){
-    buffer.fw_send(
-            GameFwMsg::PingResponse(PingResponse{ request }),
-            vec![InfoAccessConstraint::Targets(vec![client_id])]
-        );
+    server.fw_send(GameFwMsg::PingResponse(PingResponse{ request }), vis!(Client(client_id)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

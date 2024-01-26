@@ -78,10 +78,10 @@ fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupCo
 #[derive(Debug)]
 pub struct GirkServerConfig
 {
+    /// Client list for the game.
+    pub clients: GameFwClients,
     /// Config for the game framework.
-    pub game_fw_config: GameFwConfig,
-    /// Initializer for the game framework.
-    pub game_fw_initializer: GameFwInitializer,
+    pub config: GameFwConfig,
     /// Resend time for server messages within `renet`.
     pub resend_time: Duration,
     /// Config for setting up a game server.
@@ -95,18 +95,15 @@ pub struct GirkServerConfig
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up a game app with the `bevy_girk` game framework.
-pub fn prepare_game_app_framework(
-    game_app            : &mut App,
-    game_fw_config      : GameFwConfig,
-    game_fw_initializer : GameFwInitializer,
-){
+pub fn prepare_game_app_framework(game_app: &mut App, clients: GameFwClients, config: GameFwConfig)
+{
     // prepare server app
     game_app
         //setup components
         .add_plugins(GameFwPlugin)
         //game framework
-        .insert_resource(game_fw_config)
-        .insert_resource(game_fw_initializer);
+        .insert_resource(clients)
+        .insert_resource(config);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -129,6 +126,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                 .disable::<ClientPlugin>()
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
+                    visibility_policy: VisibilityPolicy::Whitelist,
                     update_timeout,
                 })
         )
@@ -246,7 +244,7 @@ pub fn prepare_girk_game_app(
     config   : GirkServerConfig
 ) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    prepare_game_app_framework(game_app, config.game_fw_config, config.game_fw_initializer);
+    prepare_game_app_framework(game_app, config.clients, config.config);
     prepare_game_app_replication(
         game_app,
         config.resend_time,

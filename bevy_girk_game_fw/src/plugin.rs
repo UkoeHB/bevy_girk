@@ -14,8 +14,8 @@ use bevy_fn_plugin::*;
 /// Validate resources that should exist before game startup.
 fn prestartup_check(world: &World)
 {
-    if !world.contains_resource::<GameFwConfig>()      { panic!("GameFwConfig is missing on startup!"); }
-    if !world.contains_resource::<GameFwInitializer>() { panic!("GameFwInitializer is missing on startup!"); }
+    if !world.contains_resource::<GameFwClients>() { panic!("GameFwClients is missing on startup!"); }
+    if !world.contains_resource::<GameFwConfig>()  { panic!("GameFwConfig is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ fn prestartup_check(world: &World)
 fn poststartup_check(world: &World)
 {
     if !world.contains_resource::<ClientRequestHandler>() { panic!("ClientRequestHandler is missing post startup!"); }
-    if !world.contains_resource::<GameMessageBuffer>()    { panic!("GameMessageBuffer is missing post startup!"); }
+    if !world.contains_resource::<GameMessageType>()      { panic!("GameMessageType is missing post startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -39,7 +39,6 @@ pub fn GameFwStartupPlugin(app: &mut App)
         .add_systems(PreStartup,
             (
                 prestartup_check,
-                //todo: set up basic replication rooms (client rooms, global room, ...?)
             ).chain()
         )
         .add_systems(Startup,
@@ -134,7 +133,6 @@ pub fn GameFwTickPlugin(app: &mut App)
             (
                 // begin the current tick
                 advance_game_fw_tick,
-                reset_game_message_buffer,
                 update_game_fw_mode,
                 apply_state_transition::<GameFwMode>,
             ).chain().in_set(GameFwTickSetPrivate::FwStart)
@@ -162,11 +160,6 @@ pub fn GameFwTickPlugin(app: &mut App)
     // END
 
     // FWEND
-    app.add_systems(PostUpdate,
-            (
-                dispatch_messages_to_client,
-            ).chain().in_set(GameFwTickSetPrivate::FwEnd)
-        );
 
 
     // MISC

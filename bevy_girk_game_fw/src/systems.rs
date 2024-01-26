@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy::app::AppExit;
-use bevy_replicon::prelude::{LastChangeTick, SendMode, ToClients};
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -28,17 +28,6 @@ fn init_mode_is_over(max_init_ticks: u32, game_fw_tick: Tick, client_readiness: 
 pub(crate) fn advance_game_fw_tick(mut game_fw_tick: ResMut<GameFwTick>)
 {
     *game_fw_tick.0 = game_fw_tick.0.checked_add(1).expect("GameFwTick exceeded max tick size");
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Resets the [`GameMessageBuffer`] for a new tick.
-pub(crate) fn reset_game_message_buffer(
-    mut buffer       : ResMut<GameMessageBuffer>,
-    last_change_tick : Res<LastChangeTick>,
-    game_fw_tick     : Res<GameFwTick>,
-){
-    buffer.reset(**last_change_tick, **game_fw_tick);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -100,57 +89,21 @@ pub(crate) fn refresh_game_init_progress(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Takes client messages, filters by information access rights, dispatches to clients.
-///
-/// Note: The `GamePacket` receiver may drop messages sent to disconnected clients.
-//todo: refactor to use bevy_replicon rooms
-pub(crate) fn dispatch_messages_to_client(
-    mut buffer       : ResMut<GameMessageBuffer>,
-    mut game_packets : EventWriter<ToClients<GamePacket>>,
-    client_query     : Query<(&ClientIdComponent, &InfoAccessRights)>
-){
-    while let Some(pending_game_message) = buffer.next()
-    {
-        for (client_id, access_rights) in &client_query
-        {
-            if !access_rights.can_access(&pending_game_message.access_constraints) { continue; }
-
-            game_packets.send(ToClients{
-                    mode  : SendMode::Direct(client_id.id()),
-                    event : GamePacket{
-                            send_policy : pending_game_message.send_policy,
-                            message     : pending_game_message.message.clone()
-                        }
-                });
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
-    In(client_id)     : In<ClientId>,
-    buffer            : Res<GameMessageBuffer>,
-    current_game_mode : Res<State<GameFwMode>>,
+    In(client_id) : In<ClientId>,
+    mut server    : ServerManager,
+    current_mode  : Res<State<GameFwMode>>,
 ){
-    buffer.fw_send(
-            GameFwMsg::CurrentMode(**current_game_mode),
-            vec![InfoAccessConstraint::Targets(vec![client_id])]
-        );
+    server.fw_send(GameFwMsg::CurrentMode(**current_mode), vis!(Client(client_id)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Notify all clients of the current game framework mode.
-pub(crate) fn notify_game_fw_mode_all(
-    buffer            : Res<GameMessageBuffer>,
-    current_game_mode : Res<State<GameFwMode>>,
-){
-    buffer.fw_send(
-            GameFwMsg::CurrentMode(**current_game_mode),
-            vec![]
-        );
+pub(crate) fn notify_game_fw_mode_all(mut server: ServerManager, current_mode: Res<State<GameFwMode>>)
+{
+    server.fw_send(GameFwMsg::CurrentMode(**current_mode), vis!(Global));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

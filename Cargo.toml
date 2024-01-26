@@ -25,18 +25,21 @@ members  = [
 ]
 
 [workspace.dependencies]
-bevy                 = { version = "0.12", default-features = false }
-bevy_kot_ecs         = { version = "0.11" }
-bevy_kot_utils       = { version = "0.11" }
-bevy_fn_plugin       = { version = "0.1" }
-bevy_renet           = { version = "0.0.10" }
+bevy                     = { version = "0.12", default-features = false }
+bevy_kot_ecs             = { version = "0.11" }
+bevy_kot_utils           = { version = "0.11" }
+bevy_fn_plugin           = { version = "0.1" }
+bevy_renet               = { version = "0.0.10" }
 #bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
-bevy_replicon        = { version = "0.19.0" }
-#bevy_replicon   = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "468d995" }
-bevy_replicon_repair = { version = "0.3" }
-bevy_simplenet       = { version = "0.7", default-features = false }
-iyes_progress        = { version = "0.10" , features = [ "assets" ] }
-renet                = { version = "0.0.14", default-features = false }
+#bevy_replicon  = { version = "0.21.1" }
+bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "0714f0d" }
+#bevy_replicon_attributes = { version = "0.1" }
+bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "67d27e1" }
+#bevy_replicon_repair = { version = "0.4" }
+bevy_replicon_repair = { git = "https://github.com/UkoeHB/bevy_replicon_repair", rev = "633b780" }
+bevy_simplenet           = { version = "0.7", default-features = false }
+iyes_progress            = { version = "0.10" , features = [ "assets" ] }
+renet                    = { version = "0.0.14", default-features = false }
 
 bincode            = { version = "1.3" }
 bytes              = { version = "1.1" }
@@ -48,9 +51,6 @@ serde_with         = { version = "3.0" }
 tracing            = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
 url                = { version = "2.4" }
-
-[patch.crates-io]
-bevy_replicon   = { git = "https://github.com/lifescapegame/bevy_replicon", rev = "8f5aa8f" }
 
 [profile.test]
 opt-level = 0  #no optimizations for local tests

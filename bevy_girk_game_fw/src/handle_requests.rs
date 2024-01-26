@@ -34,6 +34,8 @@ pub(crate) fn handle_requests(world: &mut World)
 
     for FromClient{ client_id, event } in packets.drain()
     {
+        // Note: We assume client ids have been pre-validated by the event sender.
+
         match handler.try_call(world, client_id, &event)
         {
              Err(Some(fw_request)) => handle_client_fw_request(world, client_id, fw_request),

@@ -45,8 +45,8 @@ impl GameFwConfig
         max_end_ticks  : u32,
     ) -> GameFwConfig 
     {
-        if ticks_per_sec == 0 { panic!("GameFwConfig: tick rate must be > 0!"); }
-        if max_init_ticks == 0 { panic!("GameFwConfig: max init ticks must be > 0!"); }
+        if ticks_per_sec == 0 { panic!("tick rate must be > 0!"); }
+        if max_init_ticks == 0 { panic!("max init ticks must be > 0!"); }
         GameFwConfig{
                 ticks_per_sec,
                 max_init_ticks,
@@ -54,8 +54,13 @@ impl GameFwConfig
             }
     }
 
+    /// Gets the tick rate of the game.
     pub fn ticks_per_sec(&self) -> u32 { self.ticks_per_sec }
+
+    /// Gets the maximum number of game-init ticks.
     pub fn max_init_ticks(&self) -> u32 { self.max_init_ticks }
+
+    /// Gets the maximum number of game-end ticks.
     pub fn max_end_ticks(&self) -> u32 { self.max_end_ticks }
 }
 

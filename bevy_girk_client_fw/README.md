@@ -24,3 +24,5 @@ INTERFACE: for users of the framework (framework owners and client dependents)
 - `State<ClientFwMode>` tracks what mode the client is in
 - `Res<InitializationProgressCache>` may be used to track the progress of initialization
 - `iyes_progress`: add `.track_progress().in_set(ClientFwLoadingSet)` to a system to track it during initialization
+
+See `USAGE.md` for more information.

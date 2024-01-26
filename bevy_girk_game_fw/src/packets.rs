@@ -47,7 +47,7 @@ pub struct ClientRequestData<T>
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A serialized message to send from the game to a client.
-#[derive(Debug, Event)]
+#[derive(Debug, Event, Clone)]
 pub struct GamePacket
 {
     /// Packet send policy (reliability and ordering guarantee).
