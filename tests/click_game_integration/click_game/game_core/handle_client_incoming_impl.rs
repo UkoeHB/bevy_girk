@@ -5,6 +5,7 @@ use crate::click_game_integration::click_game::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_kot_ecs::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -13,11 +14,11 @@ use bevy_kot_ecs::*;
 
 pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
-    buffer                           : Res<GameMessageBuffer>
+    mut server        : ServerManager,
 ){
-    buffer.send(
+    server.send(
             GameMsg::RequestRejected{reason, request},
-            vec![InfoAccessConstraint::Targets(vec![client_id])],
+            vis!(Client(client_id))
         );
 }
 

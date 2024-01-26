@@ -83,13 +83,13 @@ fn prepare_game_startup(
         // save user_id/client_id mapping
         clients.push((client_init.user_id, client_id));
     }
-    debug_assert_eq(client_set.len(), clients.len());
+    debug_assert_eq!(client_set.len(), clients.len());
 
     // finalize
     let game_context = ClickGameContext::new(gen_rand128(), game_duration_config);
 
     Ok(GameStartupHelper{
-        client_set,
+        client_set: GameFwClients::new(client_set),
         click_init : ClickGameInitializer{ game_context, players, watchers },
         clients,
         native_count,

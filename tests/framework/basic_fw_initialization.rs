@@ -8,6 +8,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -32,7 +33,7 @@ fn basic_fw_initialization()
 
     // make the client ready
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: renet::ClientId::from_raw(0u64),
+            client_id: SERVER_ID,
             event: ClientPacket{
                     send_policy : EventType::Ordered,
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -44,13 +45,22 @@ fn basic_fw_initialization()
     app
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
-        .init_resource::<bevy_replicon::prelude::LastChangeTick>()
+        .add_plugins(
+            ReplicationPlugins
+                .build()
+                .set(ServerPlugin{
+                    tick_policy: TickPolicy::EveryFrame,
+                    visibility_policy: VisibilityPolicy::Whitelist,
+                    ..Default::default()
+                })
+        )
+        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
-        .insert_resource(GameMessageBuffer::new::<()>())
+        .insert_resource(GameMessageType::new::<()>())
         //setup client framework
         .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::from_raw(0u64) ))
         .insert_resource(client_fw_comand_reader)

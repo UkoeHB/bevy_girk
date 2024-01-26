@@ -34,7 +34,7 @@ bevy_renet               = { version = "0.0.10" }
 #bevy_replicon  = { version = "0.21.1" }
 bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "0714f0d" }
 #bevy_replicon_attributes = { version = "0.1" }
-bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "67d27e1" }
+bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "3bb1322" }
 #bevy_replicon_repair = { version = "0.4" }
 bevy_replicon_repair = { git = "https://github.com/UkoeHB/bevy_replicon_repair", rev = "633b780" }
 bevy_simplenet           = { version = "0.7", default-features = false }

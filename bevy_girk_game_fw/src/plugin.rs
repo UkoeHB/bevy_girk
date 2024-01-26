@@ -178,7 +178,10 @@ pub fn GameFwTickPlugin(app: &mut App)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Main game framework plugin
+/// Main game framework plugin.
+///
+/// Requires `TimePlugin` (`bevy`), `ClientCache` (`bevy_replicon`), and `VisibilityAttributesPlugin`
+/// (`bevy_replicon_attributes`).
 #[bevy_plugin]
 pub fn GameFwPlugin(app: &mut App)
 {

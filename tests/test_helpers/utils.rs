@@ -8,7 +8,7 @@ use bevy_fn_plugin::*;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts
-
+use std::collections::HashSet;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -22,41 +22,25 @@ pub fn add_game_over_flag(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn add_client(client_id: ClientId, game_fw_initializer: &mut GameFwInitializer)
+pub fn append_client(clients: &mut GameFwClients)
 {
-    // make client state
-    let dummy_client_state =
-        ClientState{
-                id            : ClientIdComponent::new(client_id),
-                access_rights :
-                    InfoAccessRights{
-                            client : Some(client_id),
-                            global : true
-                        }
-            };
-
-    game_fw_initializer.clients.push(dummy_client_state);
+    let mut hashset = (**clients).clone();
+    hashset.insert(ClientId::from_raw(clients.len() as u64));
+    *clients = GameFwClients::new(hashset);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn append_client(game_fw_initializer: &mut GameFwInitializer)
+pub fn prepare_player_client_contexts(num_players: usize) -> GameFwClients
 {
-    add_client(ClientId::from_raw(game_fw_initializer.clients.len() as u64), game_fw_initializer);
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-pub fn prepare_player_client_contexts(num_players: usize) -> GameFwInitializer
-{
-    let mut game_fw_initializer = GameFwInitializer::default();
+    let mut clients = HashSet::default();
 
     for client_id in 0..num_players
     {
-        add_client(ClientId::from_raw(client_id as u64), &mut game_fw_initializer);
+        clients.insert(ClientId::from_raw(client_id as u64));
     }
 
-    game_fw_initializer
+    GameFwClients::new(clients)
 }
 
 //-------------------------------------------------------------------------------------------------------------------

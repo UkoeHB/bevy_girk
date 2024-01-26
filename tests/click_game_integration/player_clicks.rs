@@ -9,6 +9,7 @@ use crate::test_helpers::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -77,7 +78,7 @@ fn player_clicks()
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            ClientId::from_raw(0),
+            SERVER_ID,
             *game_initializer.game_context.duration_config()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -86,7 +87,9 @@ fn player_clicks()
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .init_resource::<bevy_replicon::prelude::LastChangeTick>()
+        .init_resource::<bevy_replicon::prelude::ClientCache>()
+        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+        .add_event::<renet::ServerEvent>()
         //setup game framework
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))

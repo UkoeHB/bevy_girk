@@ -6,6 +6,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
 
@@ -130,6 +131,8 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                     update_timeout,
                 })
         )
+        //enable visibility attributes
+        .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Repair })
         //enable replication repair for client reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ServerPlugin)

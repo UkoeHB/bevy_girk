@@ -121,12 +121,12 @@ fn raw_localhost_network_demo(num_players: usize)
     client_apps.push(watcher_client_app);
 
     // client initializers for server
-    let mut game_fw_initializer = prepare_player_client_contexts(num_players);
-    append_client(&mut game_fw_initializer);
+    let mut game_fw_clients = prepare_player_client_contexts(num_players);
+    append_client(&mut game_fw_clients);
 
     // prepare game server app
     let mut game_server_app = App::new();
-    prepare_game_app_framework(&mut game_server_app, game_fw_config, game_fw_initializer);
+    prepare_game_app_framework(&mut game_server_app, game_fw_clients, game_fw_config);
     prepare_game_app_replication(&mut game_server_app, std::time::Duration::from_millis(100), std::time::Duration::from_secs(10));
     prepare_game_app_core(&mut game_server_app, game_initializer);
 
@@ -231,6 +231,12 @@ fn raw_localhost_network()
         .with_env_filter(filter)
         .with_writer(std::io::stderr)
         .init();
+    */
+    /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     */
 
     raw_localhost_network_demo(1usize);

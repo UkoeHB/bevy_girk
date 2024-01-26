@@ -4,6 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -51,11 +52,24 @@ impl GameInitProgress
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct GameInitProgressEntity
 {
     progress    : GameInitProgress,
-    replication : Replication
+    replication : Replication,
+    visibility  : Visibility,
+}
+
+impl Default for GameInitProgressEntity
+{
+    fn default() -> Self
+    {
+        Self {
+            progress    : GameInitProgress::default(),
+            replication : Replication,
+            visibility  : vis!(Global),
+         }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

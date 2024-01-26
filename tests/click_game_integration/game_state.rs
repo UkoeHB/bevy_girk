@@ -5,6 +5,8 @@ use crate::test_helpers::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -56,9 +58,11 @@ fn test_game_setup(num_players: usize)
 
     // setup game (no client fw or client core)
     App::new()
-        //bevy plugins
+        //requirements
         .add_plugins(bevy::time::TimePlugin)
-        .init_resource::<bevy_replicon::prelude::LastChangeTick>()
+        .init_resource::<bevy_replicon::prelude::ClientCache>()
+        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+        .add_event::<renet::ServerEvent>()
         //setup app
         .set_runner(make_test_runner(2))
         .add_plugins(AddMockMessageChannelsPlugin)

@@ -9,6 +9,7 @@ use crate::test_helpers::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -78,12 +79,12 @@ fn basic_game_and_client()
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
             num_players,
-            GameDurationConfig::new(0, 0),
+            GameDurationConfig::new(0, 2),
         );
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            ClientId::from_raw(0),
+            SERVER_ID,
             *game_initializer.game_context.duration_config()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -91,13 +92,21 @@ fn basic_game_and_client()
     app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
-        .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .init_resource::<LastChangeTick>()
+        .add_plugins(
+            ReplicationPlugins
+                .build()
+                .set(ServerPlugin{
+                    tick_policy: TickPolicy::EveryFrame,
+                    visibility_policy: VisibilityPolicy::Whitelist,
+                    ..Default::default()
+                })
+        )
+        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
         //setup game framework
         .insert_resource(GameFwConfig::new(ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
-        .set_runner(make_test_runner(3))
+        .set_runner(make_test_runner(5))
         .add_plugins(GameFwPlugin)
         .add_plugins(ClientFwPlugin)
         .add_plugins(GamePlugins)
@@ -134,7 +143,7 @@ fn basic_game_and_client()
         .insert_resource(PanicOnDrop::default())
         .add_systems(Last, check_client_ping_tracker.run_if(
                 |game_fw_tick: Res<GameFwTick>|
-                ***game_fw_tick >= 2
+                ***game_fw_tick >= 4
             )
         )
         .run();

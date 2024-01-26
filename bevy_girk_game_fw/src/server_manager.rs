@@ -39,7 +39,6 @@ pub struct ServerManager<'w>
 {
     message_id  : Res<'w, GameMessageType>,
     tick        : Res<'w, GameFwTick>,
-    renet       : ResMut<'w, RenetServer>,
     sender      : ServerEventSender<'w, GamePacket>,
     attributes  : ClientAttributes<'w>,
 }
@@ -49,7 +48,8 @@ impl<'w> ServerManager<'w>
     /// Sends a game framework message to clients that match the visibility condition.
     pub fn fw_send(&mut self, message: GameFwMsg, condition: Visibility)
     {
-        tracing::trace!(?self.tick, ?message, ?condition, "sending fw message");
+        let tick = ***self.tick;
+        tracing::trace!(tick, ?message, ?condition, "sending fw message");
 
         let send_policy = message.into_event_type();
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, ()>::Fw(message) };
@@ -65,7 +65,8 @@ impl<'w> ServerManager<'w>
         T: Serialize + for<'de> Deserialize<'de> + Debug + IntoEventType + 'static
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.message_id);
-        tracing::trace!(?self.tick, ?message, ?condition, "sending core message");
+        let tick = ***self.tick;
+        tracing::trace!(tick, ?message, ?condition, "sending core message");
 
         let send_policy = message.into_event_type();
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, _>::Core(message) };
@@ -81,15 +82,6 @@ impl<'w> ServerManager<'w>
         &mut self.attributes
     }
 
-    /// Gets a mutable reference to `RenetServer`.
-    ///
-    /// This should generally not be used since `bevy_girk` abstracts away message sending, but it does let you
-    /// disconnect clients.
-    pub fn server(&mut self) -> &mut RenetServer
-    {
-        &mut self.renet
-    }
-
     /// Sends a game packet to the appropriate clients.
     fn send_game_packet<T: Serialize + for<'de> Deserialize<'de>>(
         &mut self,
@@ -102,9 +94,34 @@ impl<'w> ServerManager<'w>
         {
             bincode::DefaultOptions::new().serialize_into(cursor, data)
         };
-        let producer = |client_state: &ClientState| -> GamePacket
+        let producer = |client_state: Option<&ClientState>| -> GamePacket
         {
-            let message = serialize_with(client_state, previous_message.take(), serialize_fn).unwrap();
+            let message = match client_state
+            {
+                Some(client_state) => serialize_with(client_state, previous_message.take(), serialize_fn).unwrap(),
+                None =>
+                {
+                    if let Some(previous) = previous_message.take()
+                    {
+                        // If we can reuse the previous message then do so. We assume no client state means the change
+                        // tick will be discarded.
+                        previous
+                    }
+                    else
+                    {
+                        // This branch most likely executes when doing local singleplayer with the server-as-client.
+                        let mut cursor = Cursor::new(Vec::new());
+                        bincode::DefaultOptions::new().serialize_into(&mut cursor, &RepliconTick::default()).unwrap();
+                        let tick_size = cursor.get_ref().len();
+                        (serialize_fn)(&mut cursor).unwrap();
+                        SerializedMessage {
+                            tick: RepliconTick::default(),
+                            tick_size,
+                            bytes: cursor.into_inner().into(),
+                        }
+                    }
+                }
+            };
             let packet = GamePacket{ message: message.bytes.clone(), send_policy };
             previous_message = Some(message);
             packet
@@ -112,7 +129,6 @@ impl<'w> ServerManager<'w>
 
         self.sender.send_with(&self.attributes, condition, producer);
     }
-
 }
 
 //-------------------------------------------------------------------------------------------------------------------

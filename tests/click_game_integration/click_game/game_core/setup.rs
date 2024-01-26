@@ -4,6 +4,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -47,7 +48,7 @@ pub(crate) fn setup_game_state(world: &mut World)
         client_entity_map.insert(player_state.id.id, entity_commands.id());
 
         // add player entity
-        entity_commands.insert(player_state);
+        entity_commands.insert((player_state, vis!(Global)));
     }
 
     world.insert_resource(PlayerMap::new(client_entity_map));
@@ -70,7 +71,7 @@ pub(crate) fn setup_game_input_handler(mut commands: Commands)
 /// Initializes the game message buffer.
 pub(crate) fn setup_game_message_buffer(mut commands: Commands)
 {
-    commands.insert_resource(GameMessageBuffer::new::<GameMsg>());
+    commands.insert_resource(GameMessageType::new::<GameMsg>());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -8,18 +8,19 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy                 = { version = "0.12", default-features = false }
-bevy_kot_utils       = { workspace = true }
-bevy_renet           = { workspace = true }
-bevy_replicon        = { workspace = true }
-bevy_replicon_repair = { workspace = true }
-bincode              = { workspace = true }
-bytes                = { workspace = true }
-iyes_progress        = { workspace = true }
-serde                = { workspace = true }
-renet                = { workspace = true, features = ["transport"] }  #todo: want this feature on wasm?
-tracing              = { workspace = true }
-wasm-timer           = { version = "0.2" }
+bevy                     = { version = "0.12", default-features = false }
+bevy_kot_utils           = { workspace = true }
+bevy_renet               = { workspace = true }
+bevy_replicon            = { workspace = true }
+bevy_replicon_attributes = { workspace = true }
+bevy_replicon_repair     = { workspace = true }
+bincode                  = { workspace = true }
+bytes                    = { workspace = true }
+iyes_progress            = { workspace = true }
+serde                    = { workspace = true }
+renet                    = { workspace = true, features = ["transport"] }  #todo: want this feature on wasm?
+tracing                  = { workspace = true }
+wasm-timer               = { version = "0.2" }
 
 bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }

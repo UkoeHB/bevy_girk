@@ -5,6 +5,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -46,7 +47,7 @@ pub(crate) fn advance_game_over_tick(mut game_over_tick : ResMut<GameOverTick>)
 /// Check the game duration conditions and update the game mode.
 pub(crate) fn update_game_mode(
     game_ctx           : Res<ClickGameContext>,
-    game_tick         : Res<GameTick>,
+    game_tick          : Res<GameTick>,
     current_game_mode  : Res<State<GameMode>>,
     mut next_game_mode : ResMut<NextState<GameMode>>
 ){
@@ -74,12 +75,12 @@ pub(crate) fn get_current_game_mode(current_game_mode: Res<State<GameMode>>) -> 
 /// Notify a single client of the current game mode.
 pub(crate) fn notify_game_mode_single(
     In(client_id)     : In<ClientId>,
-    buffer            : Res<GameMessageBuffer>,
+    mut server        : ServerManager,
     current_game_mode : Res<State<GameMode>>,
 ){
-    buffer.send(
+    server.send(
             GameMsg::CurrentGameMode(**current_game_mode),
-            vec![InfoAccessConstraint::Targets(vec![client_id])]
+            vis!(Client(client_id))
         );
 }
 
@@ -87,12 +88,12 @@ pub(crate) fn notify_game_mode_single(
 
 /// Notify all clients of the current game mode.
 pub(crate) fn notify_game_mode_all(
-    buffer            : Res<GameMessageBuffer>,
+    mut server        : ServerManager,
     current_game_mode : Res<State<GameMode>>,
 ){
-    buffer.send(
+    server.send(
             GameMsg::CurrentGameMode(**current_game_mode),
-            vec![]
+            vis!(Global)
         );
 }
 

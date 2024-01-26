@@ -9,6 +9,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
+use bevy_replicon_attributes::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -68,7 +69,7 @@ impl GameFactoryImpl for DummyGameFactory
 
         // make the client ready
         app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: renet::ClientId::from_raw(0u64),
+                client_id: SERVER_ID,
                 event: ClientPacket{
                         send_policy : SendOrdered.into(),
                         request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -81,14 +82,24 @@ impl GameFactoryImpl for DummyGameFactory
         app
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
-            .init_resource::<bevy_replicon::prelude::LastChangeTick>()
+            .add_plugins(
+                ReplicationPlugins
+                    .build()
+                    .disable::<ClientPlugin>()
+                    .set(ServerPlugin{
+                        tick_policy: TickPolicy::EveryFrame,
+                        visibility_policy: VisibilityPolicy::Whitelist,
+                        ..Default::default()
+                    })
+            )
+            .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
             //setup game framework
             .insert_resource(GameFwConfig::new( pack.config.ticks_per_sec, 1, 0 ))
-            .insert_resource(prepare_player_client_contexts(player_ids.len()))
-            .insert_resource(GameMessageBuffer::new::<()>())
+            .insert_resource(prepare_player_client_contexts(player_ids.len() + 1))
+            .insert_resource(GameMessageType::new::<()>())
             //setup client framework
             .insert_resource(
-                ClientFwConfig::new( pack.config.ticks_per_sec, ClientId::from_raw(0u64) )
+                ClientFwConfig::new( pack.config.ticks_per_sec, SERVER_ID )
             )
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestType::new::<()>())
