@@ -31,12 +31,12 @@ bevy_kot_utils           = { version = "0.11" }
 bevy_fn_plugin           = { version = "0.1" }
 bevy_renet               = { version = "0.0.10" }
 #bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542" }
-#bevy_replicon  = { version = "0.21.1" }
-bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "2971100" }
-#bevy_replicon_attributes = { version = "0.1" }
-bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
-#bevy_replicon_repair = { version = "0.4" }
-bevy_replicon_repair = { git = "https://github.com/UkoeHB/bevy_replicon_repair", rev = "b0ee869" }
+bevy_replicon  = { version = "0.21" }
+#bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "2971100" }
+bevy_replicon_attributes = { version = "0.2" }
+#bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
+bevy_replicon_repair = { version = "0.4" }
+#bevy_replicon_repair = { git = "https://github.com/UkoeHB/bevy_replicon_repair", rev = "b0ee869" }
 bevy_simplenet           = { version = "0.7", default-features = false }
 iyes_progress            = { version = "0.10" , features = [ "assets" ] }
 renet                    = { version = "0.0.14", default-features = false }
