@@ -99,7 +99,7 @@ The game app is a single-threaded authoritative server where game logic is execu
 
 **Replication**
 
-- Use [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair) to register replicated components. No components are registered by default.
+- Use [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair) to register replicated components. Only the `GameInitProgress` component is registered by default. Note that components must be registered in the same order in the game and client. This means you should always call `prepare_girk_game_app()` and `prepare_girk_client_app()` before your core app logic in your game/client factories (otherwise `GameInitProgress` may be registered out of order).
 - Include a [bevy_replicon](https://github.com/lifescapegame/bevy_replicon) `Replication` component in entities that should be replicated.
 
 **Visibility Control**
@@ -119,9 +119,10 @@ Visibility of entities and game messages is controlled by [bevy_replicon_attribu
 
 The game framework exposes a small API to support your game logic.
 
-- **`GameFwConfig`**: Bevy resource created by your `GameFactory`. Can be used to iterate the client list within the game.
+- **`GameFwConfig`**: Bevy resource that can be used to get the game's tick rate.
+- **`GameFwClients`**: Bevy resource that can be used to iterate the client list within the game.
 - **`GameFwTick`**: Bevy resource that records the current game tick. See the `GameFwTickPlugin` code docs for more details.
-- **`GameInitProgress`**: Bevy component on an entity spawned by the framework at startup. It tracks the total initialization progress of all clients while the game is initializing. The entity includes `Replication` and `vis!(Global)` by default but `GameInitProgress` is *not* registered for replication. If you register `GameInitProgress` for replication then clients can use this entity to track global loading progress. If replicated, the client framework will automatically reset the progress when the client disconnects.
+- **`GameInitProgress`**: Bevy component on a replicated entity spawned by the framework at startup with global visibility. It tracks the total initialization progress of all clients while the game is initializing. The client framework will automatically reset the replicated progress when the client disconnects.
 - **`GameFwSet`**: Ordinal system set that runs in `Update`. It contains all `GameFwTickSet`s.
     - **`GameFwTickSet`**: Ordinal system sets for game app logic. All game code should go in these sets.
     - Client requests are handled by `ClientRequestHandler` between `GameFwTickSet::Start` and `GameFwTickSet::PreLogic`. We consider request handling to be *within* the game app tick protocol, so we allow logic to be inserted before it.

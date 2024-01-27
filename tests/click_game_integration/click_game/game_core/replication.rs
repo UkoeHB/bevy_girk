@@ -1,5 +1,4 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -19,8 +18,7 @@ pub fn GameReplicationPlugin(app: &mut App)
 {
     app.replicate_repair::<PlayerId>()
         .replicate_repair::<PlayerName>()
-        .replicate_repair::<PlayerScore>()
-        .replicate_repair::<GameInitProgress>();
+        .replicate_repair::<PlayerScore>();
 }
 
 //-------------------------------------------------------------------------------------------------------------------

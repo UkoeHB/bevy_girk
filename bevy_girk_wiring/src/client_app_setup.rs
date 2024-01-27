@@ -10,6 +10,7 @@ use bevy_kot_utils::*;
 use bevy_replicon::prelude::{
     ClientEventAppExt, ClientSet, EventType, ReplicationPlugins, RepliconTick, ServerPlugin, ServerEventAppExt
 };
+use bevy_replicon_repair::AppReplicationRepairExt;
 use iyes_progress::*;
 
 //standard shortcuts
@@ -186,6 +187,8 @@ pub fn prepare_client_app_replication(
 
     // setup client with bevy_replicon (includes bevy_renet)
     client_app
+        //add framework command endpoint for use by connection controls
+        .insert_resource(command_sender)
         //add bevy_replicon client
         .add_plugins(ReplicationPlugins
             .build()
@@ -197,8 +200,8 @@ pub fn prepare_client_app_replication(
         //- note: the event types specified here do nothing
         .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, dummy, receive_server_packets)
         .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, send_client_packets, dummy)
-        //add framework command endpoint for use by connection controls
-        .insert_resource(command_sender)
+        //register GameInitProgress for replication
+        .replicate_repair::<GameInitProgress>()
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: collects network packets

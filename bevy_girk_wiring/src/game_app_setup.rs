@@ -6,7 +6,8 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_replicon_attributes::*;
+use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
+use bevy_replicon_repair::AppReplicationRepairExt;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
 
@@ -140,6 +141,8 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         //- note: the event types specified here do nothing
         .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, send_server_packets, dummy)
         .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, dummy, receive_client_packets)
+        //register GameInitProgress for replication
+        .replicate_repair::<GameInitProgress>()
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: receive network packets from clients
