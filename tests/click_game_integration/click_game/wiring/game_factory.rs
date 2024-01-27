@@ -89,7 +89,7 @@ fn prepare_game_startup(
     let game_context = ClickGameContext::new(gen_rand128(), game_duration_config);
 
     Ok(GameStartupHelper{
-        client_set: GameFwClients::new(client_set),
+        client_set : GameFwClients::new(client_set),
         click_init : ClickGameInitializer{ game_context, players, watchers },
         clients,
         native_count,

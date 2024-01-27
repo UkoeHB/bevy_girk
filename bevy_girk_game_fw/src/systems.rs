@@ -92,9 +92,9 @@ pub(crate) fn refresh_game_init_progress(
 /// Notifies a single client of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_single(
     In(client_id) : In<ClientId>,
-    mut sender    : GameMessageSender,
-    attributes    : Res<ClientAttributes>,
-    current_mode  : Res<State<GameFwMode>>,
+    mut sender   : GameMessageSender,
+    attributes   : ClientAttributes,
+    current_mode : Res<State<GameFwMode>>,
 ){
     sender.fw_send(&attributes, GameFwMsg::CurrentMode(**current_mode), vis!(Client(client_id)));
 }
@@ -104,7 +104,7 @@ pub(crate) fn notify_game_fw_mode_single(
 /// Notify all clients of the current game framework mode.
 pub(crate) fn notify_game_fw_mode_all(
     mut sender   : GameMessageSender,
-    attributes   : Res<ClientAttributes>,
+    attributes   : ClientAttributes,
     current_mode : Res<State<GameFwMode>>,
 ){
     sender.fw_send(&attributes, GameFwMsg::CurrentMode(**current_mode), vis!(Global));

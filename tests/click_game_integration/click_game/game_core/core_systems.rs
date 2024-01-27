@@ -76,7 +76,7 @@ pub(crate) fn get_current_game_mode(current_game_mode: Res<State<GameMode>>) -> 
 pub(crate) fn notify_game_mode_single(
     In(client_id)     : In<ClientId>,
     mut sender        : GameMessageSender,
-    attributes        : Res<ClientAttributes>,
+    attributes        : ClientAttributes,
     current_game_mode : Res<State<GameMode>>,
 ){
     sender.send(
@@ -91,7 +91,7 @@ pub(crate) fn notify_game_mode_single(
 /// Notify all clients of the current game mode.
 pub(crate) fn notify_game_mode_all(
     mut sender        : GameMessageSender,
-    attributes        : Res<ClientAttributes>,
+    attributes        : ClientAttributes,
     current_game_mode : Res<State<GameMode>>,
 ){
     sender.send(

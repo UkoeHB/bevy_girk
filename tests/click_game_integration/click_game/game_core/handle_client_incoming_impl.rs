@@ -15,7 +15,7 @@ use bevy_replicon_attributes::*;
 pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
     mut sender                       : GameMessageSender,
-    attributes                       : Res<ClientAttributes>,
+    attributes                       : ClientAttributes,
 ){
     sender.send(
             &attributes,
