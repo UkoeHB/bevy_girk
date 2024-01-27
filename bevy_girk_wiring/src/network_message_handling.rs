@@ -141,7 +141,7 @@ pub(crate) fn send_server_packets(
         else { tracing::debug!(?client_id, "ignoring game packet sent to disconnected client"); continue; };
 
         // construct the final message, using the cached bytes if possible
-        let Ok(message) = serialize_bytes_with_change_tick(cached, client.change_tick, &packet.event.message)
+        let Ok(message) = serialize_bytes_with_change_tick(cached, client.change_tick(), &packet.event.message)
         else { tracing::error!(?client_id, "failed serializing game packet for client"); continue; };
 
         match packet.event.send_policy
