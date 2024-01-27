@@ -166,7 +166,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     loop
     {
         // wait a bit for the game to update
-        std::thread::sleep(Duration::from_millis(100));
+        std::thread::sleep(Duration::from_millis(50));
 
         // update clients
         let mut num_inits = 0;
@@ -379,7 +379,7 @@ fn integration_reconnect_gameclient_restart()
 
     // launch game hub server attached to host server
     let game_ticks_per_sec = 20;
-    let game_num_ticks     = 50;
+    let game_num_ticks     = 30;  //may need to increase this if test is failing
     let (_hub_command_sender, mut hub_server) = make_test_game_hub_server(
             host_hub_url,
             make_hub_server_test_configs(),

@@ -129,12 +129,9 @@ pub fn forward_game_packets(
     mut to_clients : ResMut<Events<ToClients<GamePacket>>>,
     mut packets    : EventWriter<GamePacket>,
 ){
-    for mut packet in to_clients.drain()
+    for packet in to_clients.drain()
     {
-        // remove the layered-in replicon change tick
-        let _ = deser_bytes_partial::<RepliconTick>(&mut packet.event.message).expect("failed deserializing change tick");
         let packet = GamePacket{ send_policy: packet.event.send_policy, message: packet.event.message };
-
         packets.send(packet);
     }
 }

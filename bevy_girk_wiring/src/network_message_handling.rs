@@ -6,7 +6,11 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_renet::renet::{RenetClient, RenetServer, SendType};
 use bevy_replicon::network_event::EventType;
-use bevy_replicon::prelude::{FromClient, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients};
+use bevy_replicon::prelude::{
+    ClientCache, FromClient, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients
+};
+use bincode::Options;
+use bytes::Bytes;
 
 //standard shortcuts
 use std::marker::PhantomData;
@@ -28,6 +32,43 @@ impl<T> EventChannel<T>
     {
         Self{ id, marker: PhantomData::default() }
     }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+struct SerializedGamePacket
+{
+    change_tick: RepliconTick,
+    bytes: Bytes,
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Serializes change ticks into a message.
+fn serialize_bytes_with_change_tick(
+    cached      : Option<SerializedGamePacket>,
+    change_tick : RepliconTick,
+    data        : &[u8],
+) -> bincode::Result<SerializedGamePacket>
+{
+    if let Some(cached) = cached
+    {
+        if cached.change_tick == change_tick
+        {
+            return Ok(cached);
+        }
+    }
+
+    let tick_size = bincode::DefaultOptions::new().serialized_size(&change_tick)? as usize;
+    let mut bytes = Vec::with_capacity(tick_size + data.len());
+    bincode::DefaultOptions::new().serialize_into(&mut bytes, &change_tick)?;
+    bytes.extend_from_slice(data);
+    Ok(SerializedGamePacket {
+        change_tick,
+        bytes: bytes.into(),
+    })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -68,22 +109,50 @@ pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 /// Server -> Client
 pub(crate) fn send_server_packets(
     mut game_packets   : ResMut<Events<ToClients<GamePacket>>>,
+    client_cache       : Res<ClientCache>,
     mut server         : ResMut<RenetServer>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
 ){
-    for game_packet in game_packets.drain()
-    {
-        let SendMode::Direct(client_id) = game_packet.mode else { panic!("invalid game packet send mode"); };
+    let mut prev: Option<*const u8> = None;
+    let mut buffer: Option<SerializedGamePacket> = None;
 
-        // note: the replicon change tick is prepended to the game packet message (we overload to reduce allocations)
-        match game_packet.event.send_policy
+    for packet in game_packets.drain()
+    {
+        let SendMode::Direct(client_id) = packet.mode else { panic!("invalid game packet send mode"); };
+
+        // if sending a different message than the previous packet, clear the buffer
+        let this_packet = packet.event.message.as_ptr();
+        if let Some(prev) = prev.take()
         {
-            EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, game_packet.event.message),
-            EventType::Unordered  => server.send_message(client_id, unordered_channel.id, game_packet.event.message),
-            EventType::Ordered    => server.send_message(client_id, ordered_channel.id, game_packet.event.message)
+            if !std::ptr::eq(prev, this_packet)
+            {
+                buffer = None;
+            }
         }
+        prev = Some(this_packet);
+
+        // extract the buffered state before the early-outs
+        let cached = buffer.take();
+
+        // access this client's replicon state
+        let Some(client) = client_cache.get_client(client_id)
+        else { tracing::debug!(?client_id, "ignoring game packet sent to disconnected client"); continue; };
+
+        // construct the final message, using the cached bytes if possible
+        let Ok(message) = serialize_bytes_with_change_tick(cached, client.change_tick, &packet.event.message)
+        else { tracing::error!(?client_id, "failed serializing game packet for client"); continue; };
+
+        match packet.event.send_policy
+        {
+            EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, message.bytes.clone()),
+            EventType::Unordered  => server.send_message(client_id, unordered_channel.id, message.bytes.clone()),
+            EventType::Ordered    => server.send_message(client_id, ordered_channel.id, message.bytes.clone())
+        }
+
+        // cache this message for possible re-use with the next client
+        buffer = Some(message);
     }
 }
 
@@ -110,7 +179,8 @@ pub(crate) fn receive_server_packets(
         while let Some(mut message) = client.receive_message(channel_id)
         {
             // extract the layered-in replicon change tick
-            let change_tick = deser_bytes_partial::<RepliconTick>(&mut message).expect("failed deserializing change tick");
+            let Some(change_tick) = deser_bytes_partial::<RepliconTick>(&mut message)
+            else { tracing::error!("failed deserializing change tick, ignoring server message"); continue; };
             let packet = GamePacket{ send_policy, message };
 
             match change_tick <= *replicon_tick

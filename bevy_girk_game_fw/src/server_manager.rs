@@ -5,15 +5,12 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::{ClientAttributes, ServerEventSender, Visibility};
-use bincode::Options;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
 use std::any::TypeId;
 use std::fmt::Debug;
-use std::io::Cursor;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +31,7 @@ impl GameMessageType
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Uses server resources to expose a concise API.
+//todo: rename to ClientManager
 #[derive(SystemParam)]
 pub struct ServerManager<'w>
 {
@@ -54,7 +52,8 @@ impl<'w> ServerManager<'w>
         let send_policy = message.into_event_type();
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, ()>::Fw(message) };
 
-        self.send_game_packet(condition, &data, send_policy);
+        let packet = GamePacket{ message: ser_msg(&data).into(), send_policy };
+        self.sender.send(&self.attributes, packet, condition);
     }
 
     /// Sends a user-defined message to clients that match the visibility condition.
@@ -66,12 +65,13 @@ impl<'w> ServerManager<'w>
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.message_id);
         let tick = ***self.tick;
-        tracing::trace!(tick, ?message, ?condition, "sending core message");
+        tracing::trace!(tick, ?message, ?condition, "sending message");
 
         let send_policy = message.into_event_type();
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, _>::Core(message) };
 
-        self.send_game_packet(condition, &data, send_policy);
+        let packet = GamePacket{ message: ser_msg(&data).into(), send_policy };
+        self.sender.send(&self.attributes, packet, condition);
     }
 
     /// Gets a mutable reference to `ClientAttributes`.
@@ -80,54 +80,6 @@ impl<'w> ServerManager<'w>
     pub fn attributes<'a: 'w>(&'a mut self) -> &'a mut ClientAttributes
     {
         &mut self.attributes
-    }
-
-    /// Sends a game packet to the appropriate clients.
-    fn send_game_packet<T: Serialize + for<'de> Deserialize<'de>>(
-        &mut self,
-        condition   : Visibility,
-        data        : &GameMessageData<T>,
-        send_policy : EventType,
-    ){
-        let mut previous_message = None;
-        let serialize_fn = |cursor: &mut Cursor<Vec<u8>>| -> bincode::Result<()>
-        {
-            bincode::DefaultOptions::new().serialize_into(cursor, data)
-        };
-        let producer = |client_state: Option<&ClientState>| -> GamePacket
-        {
-            let message = match client_state
-            {
-                Some(client_state) => serialize_with(client_state, previous_message.take(), serialize_fn).unwrap(),
-                None =>
-                {
-                    if let Some(previous) = previous_message.take()
-                    {
-                        // If we can reuse the previous message then do so. We assume no client state means the change
-                        // tick will be discarded.
-                        previous
-                    }
-                    else
-                    {
-                        // This branch most likely executes when doing local singleplayer with the server-as-client.
-                        let mut cursor = Cursor::new(Vec::new());
-                        bincode::DefaultOptions::new().serialize_into(&mut cursor, &RepliconTick::default()).unwrap();
-                        let tick_size = cursor.get_ref().len();
-                        (serialize_fn)(&mut cursor).unwrap();
-                        SerializedMessage {
-                            tick: RepliconTick::default(),
-                            tick_size,
-                            bytes: cursor.into_inner().into(),
-                        }
-                    }
-                }
-            };
-            let packet = GamePacket{ message: message.bytes.clone(), send_policy };
-            previous_message = Some(message);
-            packet
-        };
-
-        self.sender.send_with(&self.attributes, condition, producer);
     }
 }
 
