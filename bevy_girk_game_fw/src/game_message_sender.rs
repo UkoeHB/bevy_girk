@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_replicon_attributes::{ClientAttributes, ServerEventSender, Visibility};
+use bevy_replicon_attributes::{ClientAttributes, ServerEventSender, VisibilityCondition};
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -45,7 +45,7 @@ pub struct GameMessageSender<'w>
 impl<'w> GameMessageSender<'w>
 {
     /// Sends a game framework message to clients that match the visibility condition.
-    pub fn fw_send(&mut self, attributes: &ClientAttributes, message: GameFwMsg, condition: Visibility)
+    pub fn fw_send(&mut self, attributes: &ClientAttributes, message: GameFwMsg, condition: VisibilityCondition)
     {
         let tick = ***self.tick;
         tracing::trace!(tick, ?message, ?condition, "sending fw message");
@@ -60,7 +60,7 @@ impl<'w> GameMessageSender<'w>
     /// Sends a user-defined message to clients that match the visibility condition.
     ///
     /// Panics when `debug_assertions` are enabled if `T` does not match the type specified in [`GameMessageType`].
-    pub fn send<T>(&mut self, attributes: &ClientAttributes, message: T, condition: Visibility)
+    pub fn send<T>(&mut self, attributes: &ClientAttributes, message: T, condition: VisibilityCondition)
     where
         T: Serialize + for<'de> Deserialize<'de> + Debug + IntoEventType + 'static
     {

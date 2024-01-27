@@ -57,7 +57,7 @@ pub struct GameInitProgressEntity
 {
     progress    : GameInitProgress,
     replication : Replication,
-    visibility  : Visibility,
+    visibility  : VisibilityCondition,
 }
 
 impl Default for GameInitProgressEntity
