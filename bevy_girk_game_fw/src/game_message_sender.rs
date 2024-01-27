@@ -30,21 +30,22 @@ impl GameMessageType
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Uses server resources to expose a concise API.
-//todo: rename to ClientManager
+/// Sends game messages to clients based on specified visibility conditions.
+///
+/// Messages are sent via `bevy_replicon`, which means sent messages will synchronize with spawns/despawns/etc. of
+/// replicated entities.
 #[derive(SystemParam)]
-pub struct ServerManager<'w>
+pub struct GameMessageSender<'w>
 {
     message_id  : Res<'w, GameMessageType>,
     tick        : Res<'w, GameFwTick>,
     sender      : ServerEventSender<'w, GamePacket>,
-    attributes  : ClientAttributes<'w>,
 }
 
-impl<'w> ServerManager<'w>
+impl<'w> GameMessageSender<'w>
 {
     /// Sends a game framework message to clients that match the visibility condition.
-    pub fn fw_send(&mut self, message: GameFwMsg, condition: Visibility)
+    pub fn fw_send(&mut self, attributes: &ClientAttributes, message: GameFwMsg, condition: Visibility)
     {
         let tick = ***self.tick;
         tracing::trace!(tick, ?message, ?condition, "sending fw message");
@@ -53,13 +54,13 @@ impl<'w> ServerManager<'w>
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, ()>::Fw(message) };
 
         let packet = GamePacket{ message: ser_msg(&data).into(), send_policy };
-        self.sender.send(&self.attributes, packet, condition);
+        self.sender.send(&attributes, packet, condition);
     }
 
     /// Sends a user-defined message to clients that match the visibility condition.
     ///
     /// Panics when `debug_assertions` are enabled if `T` does not match the type specified in [`GameMessageType`].
-    pub fn send<T>(&mut self, message: T, condition: Visibility)
+    pub fn send<T>(&mut self, attributes: &ClientAttributes, message: T, condition: Visibility)
     where
         T: Serialize + for<'de> Deserialize<'de> + Debug + IntoEventType + 'static
     {
@@ -71,15 +72,7 @@ impl<'w> ServerManager<'w>
         let data = GameMessageData{ tick: **self.tick, msg: AimedMsg::<GameFwMsg, _>::Core(message) };
 
         let packet = GamePacket{ message: ser_msg(&data).into(), send_policy };
-        self.sender.send(&self.attributes, packet, condition);
-    }
-
-    /// Gets a mutable reference to `ClientAttributes`.
-    ///
-    /// This can be used to add/remove attributes from clients.
-    pub fn attributes<'a: 'w>(&'a mut self) -> &'a mut ClientAttributes
-    {
-        &mut self.attributes
+        self.sender.send(&attributes, packet, condition);
     }
 }
 

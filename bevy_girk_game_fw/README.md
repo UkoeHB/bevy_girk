@@ -6,7 +6,7 @@ PRECONDITION: the following must be initialized by the user
 
 PRECONDITION: the following must be initialized by the game core that uses this game framework
 - `Res<ClientRequestHandler>`
-- `Res<GameMessageBuffer>`
+- `Res<GameMessageType>`
 
 INTERFACE: for game framework manager
 - the client message channels should be connected in some way to the corresponding channels in the client framework
@@ -16,7 +16,7 @@ INTERFACE: for game framework manager
 INTERFACE: for game core
 - game logic should be defined within system set `GameFwSet`
 - `Res<GameEndFlag>` must be set with a game over report to terminate the game
-- `ServerManager` allows game messages to be sent to clients
+- `GameMessageSender` allows game messages to be sent to clients
 - `Res<GameFwClients>` provides the game's client list
 - `Res<GameFwConfig>` provides setup information about the game
 - `State<GameFwMode>` tracks what mode the game framework is in

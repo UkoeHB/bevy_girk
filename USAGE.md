@@ -57,17 +57,15 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
     - **`GameStartInfo`** (data object): Per-client custom data, used for client setup by `ClientFactory`. The start data field in this type should deserialize to game-specific initialization details for a client app.
 - **`GameOverReport`** (data object): A report that is submitted by custom game logic to the `GameEndFlag` resource. It will be extracted by systems inserted by `game_instance_setup()`. For multiplayer games, the report will ultimately be forward to the user client in a `HostToUserMsg::GameOver` message. The game over data field in this type should deserialize to a game-specific game over report.
 - **`ClientRequestHandler`** (trait object): Bevy resource inserted into game apps and used to handle incoming game-specific client requests.
-- **`GameMessageBuffer`**: Bevy resource inserted into game apps and used to marshal game messages into the networking backend.
-    - `GameMessage`: Type specified on construction, must equal the type for all game network messages to be sent to the client (it should probably be a big enum).
-    - *Note*: We use type id consistency checks in the `GameMessageBuffer` instead of making it generic so the game framework doesn't need to have generic functions and types everywhere.
+- **`GameMessageType`**: Bevy resource inserted into game apps and used to validate the type of game messages submitted to `GameMessageSender`.
+    - *Note*: We use type id consistency checks in the `GameMessageSender` instead of making it generic so the game framework doesn't need to have generic functions and types everywhere.
 
 
 ### Client App
 
 - **`ClientFactory`** (trait object): Consumes `ServerConnectToken`s and `GameStartInfo`s to set up client apps.
 - **`GameMessageHandler`** (trait object): Bevy resource inserted into client apps and used to handle incoming game-specific game messages.
-- **`ClientRequestSender`**: Bevy resource inserted into client apps and used to marshal client requests into the networking backend.
-    - `ClientRequest`: Type specified on construction, must equal the type for all client network requests to be sent to the game (it should probably be a big enum).
+- **`ClientRequestType`**: Bevy resource inserted into client apps and used to validate the type of game messages submitted to `ClientRequestSender`.
     - *Note*: We use type id consistency checks in the `ClientRequestSender` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
 
 
@@ -95,6 +93,13 @@ Your game infrastructure will be implemented in a set of Bevy apps.
 
 The game is a single-threaded authoritative app where game logic is executed. Clients communicate with the game app via a `renet` server/client relationship, and game state is replicated to clients with `bevy_replicon`/`bevy_replicon_repair`. Networking details are mostly hidden by `bevy_girk` APIs.
 
+**Visibility Control**
+
+Game apps use `bevy_replicon_attributes` to control visibility of entities and game messages.
+- Game entities *will not replicate* if you do not give them a `Visibility` component. Use `vis!(Global)` if you want all clients to see an entity. See `bevy_replicon_attributes` for more details.
+- Use `bevy_replicon_attributes::ClientAttributes` for adding/removing client attributes (to control which visibility conditions each client satisfies).
+- Use `GameMessageSender` to send game messages filtered by visibility conditions.
+
 **Setup**
 
 - Implement a `GameFactory` for making game apps. Your factory should use `prepare_girk_game_app()` to set up `bevy_girk`-related systems and resources (if you don't use that helper than none of the information below will be accurate).
@@ -108,7 +113,7 @@ The game is a single-threaded authoritative app where game logic is executed. Cl
 
 - Insert a `ClientRequestHandler` resource to the app with your desired request-handling callback.
     - The callback should use `deserialize_client_request()?` to extract requests. This function is exposed in case you want to read `ClientFwRequest`s sent by the client framework.
-- Insert a `GameMessageBuffer` resource to the app with your desired game message type. The message type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
+- Insert a `GameMessageType` resource to the app with your desired game message type. The message type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
 
@@ -125,8 +130,8 @@ The game framework exposes a small API to support your game logic.
     - `GameFwMode::Game` -> `GameFwMode::End` occurs when the `GameEndFlag` is set.
     - `GameFwMode::End` -> `bevy::app::AppExit` occurs when `GameFwConfig::max_end_ticks()` have elapsed after entering `GameFwMode::End`. Not exiting immediately allows time to propagate the game end mode change to clients, and to allow custom app termination in game logic (i.e. by setting the max end ticks to infinite).
 - **`GameEndFlag`**: Bevy resource used to signal that a game is over. Insert a `GameOverReport` to this resource with `GameEndFlag::set()` to enter `GameFwMode::End`. The report will be automatically extracted if your game is managed by a `GameInstance`.
-- **`GameMessageBuffer`**: Bevy resource that you inserted to your app on app startup. All messages you want to send from the game to clients should be submitted to this buffer. Note that messages submitted to this buffer are ultimately treated as `bevy_replicon` events, which means they will synchronize with replication messages (component insertions/removals and spawns and despawns, but not component updates).
 - **`ClientReadiness`**: Bevy resource that tracks the readiness of clients (i.e. how close they are to being ready to play). Note that client readiness logic is automatically handled by `bevy_girk` systems, so you should not need to use `ClientReadiness::set()`. Client readiness is reset when a client disconnects.
+- **`GameMessageSender`**: Bevy system parameter that allows you to send game messages to clients. Note that messages submitted to this buffer are ultimately treated as `bevy_replicon` events, which means they will synchronize with replication messages (component insertions/removals and spawns and despawns, but not component updates).
 
 **Client Connections**
 

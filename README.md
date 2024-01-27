@@ -9,7 +9,7 @@ For details about this project, see `USAGE.md` and `ARCHITECTURE.md`.
 
 ### Networking
 
-- In-game networking is implemented with [bevy_replicon](https://github.com/lifescapegame/bevy_replicon), [bevy_renet](https://github.com/lucaspoffo/renet), and [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair).
+- In-game networking is implemented with [bevy_replicon](https://github.com/lifescapegame/bevy_replicon), [bevy_renet](https://github.com/lucaspoffo/renet), [bevy_replicon_repair](https://github.com/UkoeHB/bevy_replicon_repair), and [bevy_replicon_attributes](https://github.com/UkoeHB/bevy_replicon_attributes).
 - Backend networking is implemented with [bevy_simplenet](https://github.com/UkoeHB/bevy_simplenet).
 
 Native/WASM compatibility is a big goal of this project, however WASM is not yet supported pending a `bevy_renet` WASM transport.
@@ -25,7 +25,9 @@ There may be limits to how far `bevy_girk` can go while remaining generic, so th
 ### Major TODOs
 
 - Redesign framework system sets to incorporate `FixedUpdate`.
+- Implement a comprehensive replay tool.
 - Flesh out `ARCHITECTURE.md`.
 - Add an authentication server so `bevy_girk` games can plausibly be deployed in production (or at least alpha nets).
-- Refactor everything to use generics to eliminate multi-layered serialization/deserialization. Alternatively, write custom serializers/deserializers for data objects that reuse existing allocations (via `Bytes`).
-- Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees.
+- Optimizations
+    - Refactor everything to use generics to eliminate multi-layered serialization/deserialization. Alternatively, write custom serializers/deserializers for data objects that reuse existing allocations (via `Bytes`).
+    - Improve host server design to increase capacity. The logic loop is currently single-threaded, but maybe some work can be offloaded to other threads (e.g. lobby searches). It's important to maintain synchronization guarantees.

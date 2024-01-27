@@ -24,9 +24,10 @@ pub(crate) fn handle_set_client_init_progress(
 /// Send back ping response.
 pub(crate) fn handle_ping_request(
     In((client_id, request)) : In<(ClientId, PingRequest)>,
-    mut server               : ServerManager,
+    mut manager              : GameMessageSender,
+    attributes               : Res<ClientAttributes>,
 ){
-    server.fw_send(GameFwMsg::PingResponse(PingResponse{ request }), vis!(Client(client_id)));
+    manager.fw_send(&attributes, GameFwMsg::PingResponse(PingResponse{ request }), vis!(Client(client_id)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

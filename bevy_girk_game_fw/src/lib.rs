@@ -4,6 +4,7 @@
 //module tree
 mod basic_types;
 mod client_fw_request;
+mod client_manager;
 mod client_readiness;
 mod client_request_handler;
 mod fw_types;
@@ -15,7 +16,6 @@ mod handle_requests;
 mod handle_requests_impl;
 mod packets;
 mod plugin;
-mod server_manager;
 mod setup;
 mod states;
 mod systems;
@@ -23,6 +23,7 @@ mod systems;
 //API exports
 pub use crate::basic_types::*;
 pub use crate::client_fw_request::*;
+pub use crate::client_manager::*;
 pub use crate::client_readiness::*;
 pub use crate::client_request_handler::*;
 pub use crate::fw_types::*;
@@ -34,7 +35,6 @@ pub(crate) use crate::handle_requests::*;
 pub(crate) use crate::handle_requests_impl::*;
 pub use crate::packets::*;
 pub use crate::plugin::*;
-pub use crate::server_manager::*;
 pub(crate) use crate::setup::*;
 pub use crate::states::*;
 pub(crate) use crate::systems::*;
