@@ -80,9 +80,9 @@ fn test_game_setup(num_players: usize)
         .add_plugins(GameFwPlugin)
         //add game
         .add_plugins(GameStartupPlugin)
-        .add_systems(Update, end_game.in_set(GameFwTickSet::End))
+        .add_systems(Update, end_game.in_set(GameFwSet::End))
         //configure execution flow
-        .configure_sets(Update, (GameFwSet,).chain())
+        .configure_sets(Update, (GameFwSet::End,).chain())
         //testing
         .insert_resource(PanicOnDrop::default())
         .insert_resource(NumPlayers(num_players))

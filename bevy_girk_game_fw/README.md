@@ -9,12 +9,12 @@ PRECONDITION: the following must be initialized by the game core that uses this 
 - `Res<GameMessageType>`
 
 INTERFACE: for game framework manager
-- the client message channels should be connected in some way to the corresponding channels in the client framework
-- the system set `GameFwSet` should be configured to run at the appropriate time in the bevy scheduling context
-- the state `GameFwMode` may be read to track progress through the game `(Init -> Game -> End)`
+- The client message channels should be connected in some way to the corresponding channels in the client framework.
+- The `GameFwSet` system sets should be configured to run at the appropriate time in the bevy scheduling context.
+- The state `GameFwMode` may be read to track progress through the game `(Init -> Game -> End)`.
 
 INTERFACE: for game core
-- game logic should be defined within system set `GameFwSet`
+- Game logic should be defined within the `GameFwSet` system sets.
 - `Res<GameEndFlag>` must be set with a game over report to terminate the game
 - `GameMessageSender` allows game messages to be sent to clients
 - `Res<GameFwClients>` provides the game's client list

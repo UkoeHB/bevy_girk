@@ -114,7 +114,7 @@ pub fn GameTickPlugin(app: &mut App)
                 advance_prep_tick.in_set(GameSet::Prep),
                 advance_play_tick.in_set(GameSet::Play),
                 advance_game_over_tick.in_set(GameSet::GameOver),
-            ).chain().in_set(GameFwTickSet::Admin)
+            ).chain().in_set(GameFwSet::Admin)
         );
 
 

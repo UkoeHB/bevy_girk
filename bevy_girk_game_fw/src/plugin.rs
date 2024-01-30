@@ -55,21 +55,15 @@ pub fn GameFwStartupPlugin(app: &mut App)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Umbrella set for game fw sets.
-///
-/// This set is ordinal in schedule `Update`.
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct GameFwSet;
-
 /// Private game fw sets, these sandwich the public sets.
 ///
 /// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GameFwTickSetPrivate
+pub enum GameFwSetPrivate
 {
     /// In schedule `PreUpdate`.
     FwStart,
-    /// In schedule `Update`. Runs between [`GameFwTickSet::Start`] and [`GameFwTickSet::PreLogic`].
+    /// In schedule `Update`. Runs between [`GameFwSet::Start`] and [`GameFwSet::PreLogic`].
     FwHandleRequests,
     /// In schedule `PostUpdate`.
     FwEnd
@@ -81,7 +75,7 @@ pub enum GameFwTickSetPrivate
 ///
 /// These sets are ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GameFwTickSet
+pub enum GameFwSet
 {
     Admin,
     Start,
@@ -118,14 +112,14 @@ pub fn GameFwTickPlugin(app: &mut App)
 {
     app.configure_sets(Update,
             (
-                GameFwTickSet::Admin,
-                GameFwTickSet::Start,
-                GameFwTickSetPrivate::FwHandleRequests,
-                GameFwTickSet::PreLogic,
-                GameFwTickSet::Logic,
-                GameFwTickSet::PostLogic,
-                GameFwTickSet::End,
-            ).chain().in_set(GameFwSet)
+                GameFwSet::Admin,
+                GameFwSet::Start,
+                GameFwSetPrivate::FwHandleRequests,
+                GameFwSet::PreLogic,
+                GameFwSet::Logic,
+                GameFwSet::PostLogic,
+                GameFwSet::End,
+            ).chain()
         );
 
     // FWSTART
@@ -135,7 +129,7 @@ pub fn GameFwTickPlugin(app: &mut App)
                 advance_game_fw_tick,
                 update_game_fw_mode,
                 apply_state_transition::<GameFwMode>,
-            ).chain().in_set(GameFwTickSetPrivate::FwStart)
+            ).chain().in_set(GameFwSetPrivate::FwStart)
         );
 
     // ADMIN
@@ -148,7 +142,7 @@ pub fn GameFwTickPlugin(app: &mut App)
             (
                 handle_requests,
                 refresh_game_init_progress,
-            ).chain().in_set(GameFwTickSetPrivate::FwHandleRequests)
+            ).chain().in_set(GameFwSetPrivate::FwHandleRequests)
         );
 
     // PRELOGIC

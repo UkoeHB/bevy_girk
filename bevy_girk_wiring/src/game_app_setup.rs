@@ -148,27 +148,26 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         //<-- RenetReceive {renet}: receive network packets from clients
         //<-- ServerSet::Receive {replicon}: process client acks and connection events
         //<-- ServerRepairSet {replicon repair}: repairs replicon server internal trackers for reconnected clients
-        //<-- GameFwTickSetPrivate::FwStart {girk}: prepares the app for this tick
+        //<-- GameFwSetPrivate::FwStart {girk}: prepares the app for this tick
         .configure_sets(PreUpdate,
-            GameFwTickSetPrivate::FwStart
+            GameFwSetPrivate::FwStart
                 .after(bevy_replicon_repair::ServerRepairSet)
         )
 
         //# UPDATE #
-        //<-- GameFwSet {girk}: contains user logic
-        //  <-- GameFwTickSet::{Admin, Start} {girk}: ordinal sets for user logic
-        //  <-- GameFwTickSetPrivate::FwHandleRequests {girk}: handle client requests; we do this in the middle of
+        //<-- GameFwSet::{Admin, Start} {girk}: ordinal sets for user logic
+        //<-- GameFwSetPrivate::FwHandleRequests {girk}: handle client requests; we do this in the middle of
         //      the ordinal sets so the game tick and game mode updaters (and user-defined tick initialization logic) can
         //      run first
-        //  <-- GameFwTickSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
-        .add_systems(Update, reset_clients_on_disconnect.in_set(GameFwTickSet::Admin))
+        //<-- GameFwSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
+        .add_systems(Update, reset_clients_on_disconnect.in_set(GameFwSet::Admin))
 
         //# POSTUPDATE
-        //<-- GameFwTickSetPrivate::FwEnd {girk}: dispatch server messages to replicon
+        //<-- GameFwSetPrivate::FwEnd {girk}: dispatch server messages to replicon
         //<-- ServerSet::Send {replicon}: dispatch replication messages and server messages to renet
         //<-- RenetSend {renet}: dispatch network packets to clients
         .configure_sets(PostUpdate,
-            GameFwTickSetPrivate::FwEnd
+            GameFwSetPrivate::FwEnd
                 .before(bevy_replicon::prelude::ServerSet::Send)
         )
         //log server events and errors

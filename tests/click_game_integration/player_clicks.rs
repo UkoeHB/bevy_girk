@@ -101,19 +101,19 @@ fn player_clicks()
         .add_plugins(ClientPlugins.build().disable::<GameReplicationPlugin>())
         .configure_sets(PreUpdate,
             (
-                GameFwTickSetPrivate::FwStart,
+                GameFwSetPrivate::FwStart,
                 ClientFwSetPrivate::FwStart
             ).chain()
         )
-        .configure_sets(Update, (GameFwSet, ClientFwSet::Admin).chain())
+        .configure_sets(Update, (GameFwSet::End, ClientFwSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
-                GameFwTickSetPrivate::FwEnd,
+                GameFwSetPrivate::FwEnd,
                 ClientFwSetPrivate::FwEnd,
             ).chain()
         )
-        .add_systems(PreUpdate, forward_client_packets.before(GameFwTickSetPrivate::FwStart))
-        .add_systems(PostUpdate, forward_game_packets.after(GameFwTickSetPrivate::FwEnd))
+        .add_systems(PreUpdate, forward_client_packets.before(GameFwSetPrivate::FwStart))
+        .add_systems(PostUpdate, forward_game_packets.after(GameFwSetPrivate::FwEnd))
         //game framework
         //client framework
         .insert_resource(client_fw_command_reader)

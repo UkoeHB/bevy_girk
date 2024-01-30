@@ -113,23 +113,23 @@ fn basic_game_and_client()
         .add_plugins(ClientPlugins.build().disable::<GameReplicationPlugin>())
         .configure_sets(PreUpdate,
             (
-                GameFwTickSetPrivate::FwStart,
+                GameFwSetPrivate::FwStart,
                 ClientFwSetPrivate::FwStart
             )
                 .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
         )
-        .configure_sets(Update, (GameFwSet, ClientFwSet::Admin).chain())
+        .configure_sets(Update, (GameFwSet::End, ClientFwSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
-                GameFwTickSetPrivate::FwEnd,
+                GameFwSetPrivate::FwEnd,
                 ClientFwSetPrivate::FwEnd,
             )
                 .chain()
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
-        .add_systems(PreUpdate, forward_client_packets.before(GameFwTickSetPrivate::FwStart))
-        .add_systems(PostUpdate, forward_game_packets.after(GameFwTickSetPrivate::FwEnd))
+        .add_systems(PreUpdate, forward_client_packets.before(GameFwSetPrivate::FwStart))
+        .add_systems(PostUpdate, forward_game_packets.after(GameFwSetPrivate::FwEnd))
         //game framework
         //client framework
         .insert_resource(client_fw_command_reader)

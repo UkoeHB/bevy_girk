@@ -70,7 +70,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         //add game
         .add_plugins(GamePlugins)
         //configure execution flow
-        .configure_sets(Update, (GameFwSet,).chain())
+        .configure_sets(Update, (GameFwSet::End,).chain())
         //testing
         .insert_resource(PanicOnDrop::default())
         .insert_resource( TestContext{ num_prep_ticks, num_game_ticks } )

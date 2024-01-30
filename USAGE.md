@@ -123,9 +123,8 @@ The game framework exposes a small API to support your game logic.
 - **`GameFwClients`**: Bevy resource that can be used to iterate the client list within the game.
 - **`GameFwTick`**: Bevy resource that records the current game tick. See the `GameFwTickPlugin` code docs for more details.
 - **`GameInitProgress`**: Bevy component on a replicated entity spawned by the framework at startup with global visibility. It tracks the total initialization progress of all clients while the game is initializing. The client framework will automatically reset the replicated progress when the client disconnects.
-- **`GameFwSet`**: Ordinal system set that runs in `Update`. It contains all `GameFwTickSet`s.
-    - **`GameFwTickSet`**: Ordinal system sets for game app logic. All game code should go in these sets.
-    - Client requests are handled by `ClientRequestHandler` between `GameFwTickSet::Start` and `GameFwTickSet::PreLogic`. We consider request handling to be *within* the game app tick protocol, so we allow logic to be inserted before it.
+- **`GameFwSet`**: Ordinal system sets for game app logic. All game code should go in these sets.
+    - Client requests are handled by `ClientRequestHandler` in a private set that runs between `GameFwSet::Start` and `GameFwSet::PreLogic`. We consider request handling to be *within* the game app tick protocol, so we allow logic to be inserted before it.
 - **`GameFwMode`**: Bevy state that tracks the game framework lifecycle.
     - `GameFwMode::Init` -> `GameFwMode::Game` occurs when `GameInitProgress` reaches `1.0` (i.e. all clients report they are fully initialized), or on timeout.
     - `GameFwMode::Game` -> `GameFwMode::End` occurs when the `GameEndFlag` is set.
