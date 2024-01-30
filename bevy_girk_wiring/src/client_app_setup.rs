@@ -210,7 +210,7 @@ pub fn prepare_client_app_replication(
         //<-- ClientSet::Receive {replicon}: collects replication messages
         //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
         //    disconnect
-        //<-- ClientFwTickSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
+        //<-- ClientFwSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
         //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
@@ -223,7 +223,7 @@ pub fn prepare_client_app_replication(
                 .run_if(not(bevy_renet::client_just_connected()))
         )
         .configure_sets(PreUpdate,
-            ClientFwTickSetPrivate::FwStart
+            ClientFwSetPrivate::FwStart
                 .after(bevy_replicon_repair::ClientRepairSet)
         )
         .add_systems(PreUpdate,
@@ -234,7 +234,7 @@ pub fn prepare_client_app_replication(
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
                 //   the server sends an End mode message, but this will only be called in a tick where we are disconnected
-                //   and hence won't receive a game End mode message in `ClientFwTickSetPrivate::FwStart` after this
+                //   and hence won't receive a game End mode message in `ClientFwSetPrivate::FwStart` after this
                 reinitialize_client
                     .run_if(bevy_renet::client_just_disconnected())
                     .run_if(not(in_state(ClientFwMode::End))),
@@ -254,14 +254,13 @@ pub fn prepare_client_app_replication(
             )
                 .chain()
                 .after(bevy_replicon_repair::ClientRepairSet)
-                .before(ClientFwTickSetPrivate::FwStart),
+                .before(ClientFwSetPrivate::FwStart),
         )
 
         //# UPDATE #
-        //<-- ClientFwSet {girk}: contains user logic
-        //  <-- ClientFwLoadingSet (in state ClientInitializationState::InProgress) {girk}: should contain all user
-        //      loading systems (systems with `.track_progress()`)
-        //  <-- ClientFwTickSet::{Admin, Start, PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
+        //<-- ClientFwSet::{Admin, Start, PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
+        //<-- ClientFwLoadingSet (in state ClientInitializationState::InProgress) {girk}: should contain all user
+        //    loading systems (systems with `.track_progress()`)
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .add_systems(Update,
             (
@@ -285,14 +284,14 @@ pub fn prepare_client_app_replication(
             )
                 .in_set(ClientFwLoadingSet)
         )
-        .configure_sets(Update, ClientFwSet.before(iyes_progress::prelude::AssetsTrackProgress))
+        .configure_sets(Update, ClientFwSet::End.before(iyes_progress::prelude::AssetsTrackProgress))
 
         //# POSTUPDATE #
-        //<-- ClientFwTickSetPrivate::FwEnd {girk}: disatches messages to replicon, performs final tick cleanup
+        //<-- ClientFwSetPrivate::FwEnd {girk}: disatches messages to replicon, performs final tick cleanup
         //<-- ClientSet::Send (if connected) {replicon}: dispatches messages to renet (`send_client_packets`)
         //<-- RenetSend {renet}: dispatches packets to the server
         .configure_sets(PostUpdate,
-            ClientFwTickSetPrivate::FwEnd
+            ClientFwSetPrivate::FwEnd
                 .before(ClientSet::Send)
         )
 

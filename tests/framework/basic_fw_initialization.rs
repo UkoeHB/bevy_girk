@@ -76,7 +76,7 @@ fn basic_fw_initialization()
         //add client
         .add_plugins(DummyClientCorePlugin)
         //configure execution flow
-        .configure_sets(Update, (GameFwSet, ClientFwSet).chain())
+        .configure_sets(Update, (GameFwSet, ClientFwSet::Admin).chain())
         .run();
 
     //todo: validate initialization worked?

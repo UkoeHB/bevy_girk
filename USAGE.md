@@ -159,9 +159,8 @@ The client app is a GUI where you play a game. Clients communicate with the game
 The client framework exposes a small API to support your client logic.
 
 - Game messages are handled by `GameMessageHandler` at the end of `PreUpdate` after the networking backend is done, but before any client logic has run. We consider game messages to be *authoritative* over the client app, so we handle them as soon as possible.
-- **`ClientFwSet`**: Ordinal system set that runs in `Update` and contains all `ClientFwTickSet`s and `ClientFwLoadingSet`.
-    - **`ClientFwTickSet`**: Ordinal system sets for client logic. All client code should go in these sets.
-    - **`ClientFwLoadingSet`**: Modal system set that runs if the client is in mode `ClientInitializationState::InProgress`. This should contain all systems that use `iyes_progress` to track initialization progress.
+- **`ClientFwSet`**: Ordinal system sets that run in `Update` and should contain all client logic.
+- **`ClientFwLoadingSet`**: Modal system set in `Update` that runs if the client is in mode `ClientInitializationState::InProgress`. This should contain all systems that use `iyes_progress` to track initialization progress.
 - **`ClientInitializationState`**: Bevy state that tracks whether the client is initializing or not.
     - `ClientInitializationState::InProgress` -> `ClientInitializationState::Done` is controlled by `iyes_progress`. It will only happen when all `.track_progress()` systems return 100\%.
     - `ClientInitializationState::InProgress` will be set when the client disconnects. The `prepare_girk_client_app()` helper adds initialization-tracking systems to your app that prevent full initialization until after the first tick of `ClientFwMode::Init`. This means your app will be in `ClientInitializationState::InProgress` for the entirety of `ClientFwMode::Connecting` and `ClientFwMode::Syncing`, plus at least one tick of `ClientFwMode::Init`.

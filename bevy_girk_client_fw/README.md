@@ -12,12 +12,12 @@ PRECONDITION: the following must be initialized by the client core that uses thi
 - `Res<ClientRequestType>`
 
 INTERFACE: for client framework manager
-- the `ClientFwCommand` channel may be used to control the client framework
-- the client message channels should be connected in some way to the corresponding channels in the game framework
-- the system set `ClientFwSet` should be configured to run at the appropriate time in the bevy scheduling context
+- The `ClientFwCommand` channel may be used to control the client framework.
+- The client message channels should be connected in some way to the corresponding channels in the game framework.
+- The `ClientFwSet` system sets should be configured to run at the appropriate time in the bevy scheduling context.
 
 INTERFACE: for users of the framework (framework owners and client dependents)
-- game logic should be defined within system set `ClientFwSet`
+- Game logic should be defined within the `ClientFwSet` system sets.
 - `Res<PingTracker>` provides game-synchronization information
 - `ClientRequestSender` collects requests to be sent to the game
 - `Res<ClientFwConfig>` provides miscellaneous information about the client

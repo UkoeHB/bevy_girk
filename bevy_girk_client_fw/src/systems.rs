@@ -14,6 +14,11 @@ use iyes_progress::prelude::*;
 /// Resets the [`GameInitProgress`] component if it exists.
 /// 
 /// Runs when the client has just disconnected.
+///
+// Note: Does not interfere with `bevy_replicon_repair` because:
+// A) This runs in [`ClientFwMode::Connecting`] and repair runs in the first tick of [`ClientFwMode::Init`].
+// B) This component should never be removed by the server, so it should always show up in the replicon sync message
+//    regardless of possible conflict with repair.
 pub(crate) fn reset_init_progress(mut progress: Query<&mut GameInitProgress>)
 {
     let Ok(mut progress) = progress.get_single_mut() else { return; };

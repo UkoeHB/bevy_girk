@@ -152,7 +152,7 @@ pub fn new_connect_token_native(
     client_id    : u64,
 ) -> Result<ServerConnectToken, ()>
 {
-    let token =  ConnectToken::generate(
+    let token = ConnectToken::generate(
         current_time,
         meta.server_config.protocol_id,
         meta.server_config.expire_secs,

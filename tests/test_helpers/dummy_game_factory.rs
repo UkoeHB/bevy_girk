@@ -114,7 +114,7 @@ impl GameFactoryImpl for DummyGameFactory
             //add client
             .add_plugins(DummyClientCorePlugin)
             //configure execution flow
-            .configure_sets(Update, (GameFwSet, ClientFwSet).chain());
+            .configure_sets(Update, (GameFwSet, ClientFwSet::Admin).chain());
 
         // prepare dummy token meta
         let native_meta = Some(ConnectMetaNative::dummy());

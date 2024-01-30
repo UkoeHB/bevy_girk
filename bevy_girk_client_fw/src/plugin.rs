@@ -80,17 +80,11 @@ pub fn ClientFwStartupPlugin(app: &mut App)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Umbrella set for client fw sets.
-///
-/// This set is ordinal in schedule `Update`.
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct ClientFwSet;
-
 /// Private client fw sets, these sandwich the public sets.
 ///
 /// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ClientFwTickSetPrivate
+pub enum ClientFwSetPrivate
 {
     /// In schedule `PreUpdate`.
     FwStart,
@@ -104,7 +98,7 @@ pub enum ClientFwTickSetPrivate
 ///
 /// These sets are ordinal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ClientFwTickSet
+pub enum ClientFwSet
 {
     Admin,
     Start,
@@ -137,18 +131,17 @@ pub fn ClientFwTickPlugin(app: &mut App)
 
     app.configure_sets(Update,
             (
-                ClientFwTickSet::Admin,
-                ClientFwTickSet::Start,
-                ClientFwTickSet::PreLogic,
-                ClientFwTickSet::Logic,
-                ClientFwTickSet::PostLogic,
-                ClientFwTickSet::End,
-            ).chain().in_set(ClientFwSet)
+                ClientFwSet::Admin,
+                ClientFwSet::Start,
+                ClientFwSet::PreLogic,
+                ClientFwSet::Logic,
+                ClientFwSet::PostLogic,
+                ClientFwSet::End,
+            ).chain()
         );
     app.configure_sets(Update,
             ClientFwLoadingSet
                 .run_if(in_state(ClientInitializationState::InProgress))
-                .in_set(ClientFwSet)
         );
 
     // FWSTART
@@ -163,7 +156,7 @@ pub fn ClientFwTickPlugin(app: &mut App)
                 handle_game_incoming,
                 // The game may have caused a mode change (will be ignored if in the middle of initializing).
                 apply_state_transition::<ClientFwMode>,
-            ).chain().in_set(ClientFwTickSetPrivate::FwStart)
+            ).chain().in_set(ClientFwSetPrivate::FwStart)
         );
 
     // ADMIN
@@ -185,7 +178,7 @@ pub fn ClientFwTickPlugin(app: &mut App)
                 update_initialization_cache.run_if(client_is_initializing()),
                 send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
             ).chain()
-                .in_set(ClientFwTickSetPrivate::FwEnd)
+                .in_set(ClientFwSetPrivate::FwEnd)
                 .after(iyes_progress::CheckProgressSet)
         );
 

@@ -114,16 +114,16 @@ fn basic_game_and_client()
         .configure_sets(PreUpdate,
             (
                 GameFwTickSetPrivate::FwStart,
-                ClientFwTickSetPrivate::FwStart
+                ClientFwSetPrivate::FwStart
             )
                 .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
         )
-        .configure_sets(Update, (GameFwSet, ClientFwSet).chain())
+        .configure_sets(Update, (GameFwSet, ClientFwSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
                 GameFwTickSetPrivate::FwEnd,
-                ClientFwTickSetPrivate::FwEnd,
+                ClientFwSetPrivate::FwEnd,
             )
                 .chain()
                 .before(bevy_replicon::prelude::ClientSet::Send)

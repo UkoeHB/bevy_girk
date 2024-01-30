@@ -150,7 +150,7 @@ pub fn ClientCoreTickPlugin(app: &mut App)
                     handle_player_inputs_prep.in_set(ClientSet::Prep),
                     handle_player_inputs_play.in_set(ClientSet::Play),
                     handle_player_inputs_gameover.in_set(ClientSet::GameOver),
-                ).chain().in_set(ClientFwTickSet::Admin)
+                ).chain().in_set(ClientFwSet::Admin)
             );
 
     // Misc
