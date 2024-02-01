@@ -22,8 +22,7 @@ pub(crate) fn clean_pending_games(
         tracing::warn!(game_id, "removed expired pending game");
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-        { tracing::error!(game_id, "failed sending abort game to host"); }
+        host_client.send(HubToHostMsg::Abort{ id: game_id });
     }
 }
 
@@ -48,8 +47,7 @@ pub(crate) fn clean_running_games(
         { tracing::error!(game_id, "failed sending abort game command to game instance"); }
 
         // notify the host the game was aborted
-        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-        { tracing::error!(game_id, "failed sending abort game to host"); }
+        host_client.send(HubToHostMsg::Abort{ id: game_id });
     }
 }
 

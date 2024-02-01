@@ -48,7 +48,7 @@ fn game_lifecycle()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -81,7 +81,7 @@ fn game_lifecycle()
     // request game start
     let game_id = 0u64;
     let start_request = GameStartRequest{ lobby_data: LobbyData{ id: game_id, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request)).expect("send failed");
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -110,7 +110,7 @@ fn game_lifecycle()
             code   : ezsockets::CloseCode::Normal,
             reason : String::from("test")
         };
-    host_hub_server.close_session(connected_hub_id, Some(closure_frame)).unwrap();
+    host_hub_server.close_session(connected_hub_id, Some(closure_frame));
 
     std::thread::sleep(std::time::Duration::from_millis(25));  //wait for async machinery
 

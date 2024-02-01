@@ -54,9 +54,7 @@ pub(crate) fn user_get_lobby(
     let result = get_searched_lobbies(&*lobbies_cache, request);
 
     // send result to user
-    let user_id = token.client_id();
-    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbySearchResult(result))
-    { tracing::error!(user_id, "failed sending lobby request response"); }
+    user_server.respond(token, HostToUserResponse::LobbySearchResult(result));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -228,8 +226,7 @@ pub(crate) fn user_get_connect_token(
     else { tracing::error!(user_id, "user is missing in ongoing games cache on get connect token"); return; };
 
     // send game connect info to user
-    if let Err(_) = user_server.respond(token, HostToUserResponse::ConnectToken{ id: game_id, connect })
-    { tracing::error!(user_id, "failed responding with connect token"); }
+    user_server.respond(token, HostToUserResponse::ConnectToken{ id: game_id, connect });
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -66,11 +66,11 @@ fn game_hub_reconnects()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs());
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client_with_id(0u128, host_hub_url.clone());
+    let (_, mut hub) = make_test_host_hub_client_with_id(0u128, host_hub_url.clone());
 
     // make user clients
-    let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
-    let (user2_id, user2) = make_test_host_user_client(host_user_url);
+    let (user1_id, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (user2_id, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -80,7 +80,7 @@ fn game_hub_reconnects()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(2))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(2)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -91,7 +91,7 @@ fn game_hub_reconnects()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -103,7 +103,7 @@ fn game_hub_reconnects()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -119,7 +119,7 @@ fn game_hub_reconnects()
 
 
     // user 1 sends ack
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -132,7 +132,7 @@ fn game_hub_reconnects()
 
     // game hub sends game start
     hub.send(HubToHostMsg::GameStart{ id: made_lobby_id1, request, report: dummy_game_start_report(vec![user1_id]) })
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -162,7 +162,7 @@ fn game_hub_reconnects()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -174,7 +174,7 @@ fn game_hub_reconnects()
 
 
     // user 2 launches lobby
-    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -190,7 +190,7 @@ fn game_hub_reconnects()
 
 
     // user 2 sends ack
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -202,21 +202,21 @@ fn game_hub_reconnects()
 
 
     // reconnect the game hub
-    let (_, hub) = make_test_host_hub_client_with_id(0u128, host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client_with_id(0u128, host_hub_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
     let HostHubClientEvent::Report(_) = hub.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
 
 
     // user 2 launches lobby (try again now that hub is reconnected with non-zero capacity)
-    user2.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -232,7 +232,7 @@ fn game_hub_reconnects()
 
 
     // user 2 sends ack
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -245,7 +245,7 @@ fn game_hub_reconnects()
 
     // game hub sends game start
     hub.send(HubToHostMsg::GameStart{ id: made_lobby_id2, request, report: dummy_game_start_report(vec![user2_id]) })
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -256,8 +256,8 @@ fn game_hub_reconnects()
 
 
     // hub sends game over reports
-    hub.send(HubToHostMsg::GameOver{ id: made_lobby_id1, report: GameOverReport::default() }).expect("send failed");
-    hub.send(HubToHostMsg::GameOver{ id: made_lobby_id2, report: GameOverReport::default() }).expect("send failed");
+    hub.send(HubToHostMsg::GameOver{ id: made_lobby_id1, report: GameOverReport::default() });
+    hub.send(HubToHostMsg::GameOver{ id: made_lobby_id2, report: GameOverReport::default() });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

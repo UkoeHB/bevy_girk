@@ -92,8 +92,7 @@ pub(crate) fn update_capacity(
     if prev_capacity == current_capacity { return; }
 
     // send new capacity to host server
-    if let Err(_) = host_client.send(HubToHostMsg::Capacity(current_capacity))
-    { tracing::error!("failed sending game hub capacity to host"); }
+    host_client.send(HubToHostMsg::Capacity(current_capacity));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

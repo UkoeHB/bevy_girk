@@ -65,11 +65,11 @@ fn client_leaves_lobby()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(3u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -79,7 +79,7 @@ fn client_leaves_lobby()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -90,7 +90,7 @@ fn client_leaves_lobby()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -103,7 +103,7 @@ fn client_leaves_lobby()
 
     // user 2 accesses lobby info
     user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -123,7 +123,7 @@ fn client_leaves_lobby()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -144,7 +144,7 @@ fn client_leaves_lobby()
 
 
     // user 2 leaves lobby
-    user2.request(UserToHostRequest::LeaveLobby{ id: lobby.id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -170,7 +170,7 @@ fn client_leaves_lobby()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -191,7 +191,7 @@ fn client_leaves_lobby()
 
 
     // user 1 leaves lobby (user 1 is the owner so the lobby should be removed)
-    user1.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LeaveLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -212,7 +212,7 @@ fn client_leaves_lobby()
 
     // user 1 requests lobby list
     user1.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -255,11 +255,11 @@ fn client_leaves_pending_lobby()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(2u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -269,7 +269,7 @@ fn client_leaves_pending_lobby()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -280,7 +280,7 @@ fn client_leaves_pending_lobby()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -293,7 +293,7 @@ fn client_leaves_pending_lobby()
 
     // user 2 accesses lobby info
     user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -313,7 +313,7 @@ fn client_leaves_pending_lobby()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -334,7 +334,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -354,7 +354,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 2 leaves lobby
-    user2.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -389,7 +389,7 @@ fn client_leaves_pending_lobby()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -410,7 +410,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 1 launches the lobby again
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -430,8 +430,8 @@ fn client_leaves_pending_lobby()
 
 
     // users 1, 2 ack the lobby
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -443,7 +443,7 @@ fn client_leaves_pending_lobby()
 
 
     // user 2 leaves the lobby
-    user2.request(UserToHostRequest::LeaveLobby{ id }).expect("send failed");
+    user2.request(UserToHostRequest::LeaveLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

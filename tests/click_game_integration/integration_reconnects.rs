@@ -203,8 +203,8 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
 fn launch_game(
     host_server: &mut App,
     hub_server: &mut App,
-    user1: &HostUserClient,
-    user2: &HostUserClient,
+    user1: &mut HostUserClient,
+    user2: &mut HostUserClient,
 ) -> (u64, App, App, GameStartInfo, GameStartInfo)
 {
     // wait for everything to start up
@@ -220,7 +220,7 @@ fn launch_game(
             mcolor : ClickLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -235,7 +235,7 @@ fn launch_game(
             id     : made_lobby_id,
             mcolor : ClickLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -256,7 +256,7 @@ fn launch_game(
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -275,8 +275,8 @@ fn launch_game(
 
 
     // users 1, 2 send acks
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -315,8 +315,8 @@ fn launch_game(
 fn game_end_cleanup(
     mut host_server: App,
     mut hub_server: App,
-    user1: HostUserClient,
-    user2: HostUserClient,
+    mut user1: HostUserClient,
+    mut user2: HostUserClient,
     mut client_app1: App,
     mut client_app2: App,
     game_id: u64,
@@ -389,12 +389,12 @@ fn integration_reconnect_gameclient_restart()
     // make user clients
     let user1_id = 0u128;
     let user2_id = 1u128;
-    let (_, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
-    let (_, user2) = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
+    let (_, mut user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
 
 
     // launch game
-    let (game_id, client_app1, mut client_app2, start1, _) = launch_game(&mut host_server, &mut hub_server, &user1, &user2);
+    let (game_id, client_app1, mut client_app2, start1, _) = launch_game(&mut host_server, &mut hub_server, &mut user1, &mut user2);
 
 
     // disconnect game client 1
@@ -402,7 +402,7 @@ fn integration_reconnect_gameclient_restart()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
 
     // request new connect token for client 1
-    user1.request(UserToHostRequest::GetConnectToken{ id: game_id }).expect("send failed");
+    user1.request(UserToHostRequest::GetConnectToken{ id: game_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -454,12 +454,12 @@ fn integration_reconnect_gameclient_reconnect()
     // make user clients
     let user1_id = 0u128;
     let user2_id = 1u128;
-    let (_, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
-    let (_, user2) = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
+    let (_, mut user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
 
 
     // launch game
-    let (game_id,mut client_app1,mut client_app2, _, _) = launch_game(&mut host_server, &mut hub_server, &user1, &user2);
+    let (game_id,mut client_app1,mut client_app2, _, _) = launch_game(&mut host_server, &mut hub_server, &mut user1, &mut user2);
 
 
     // disconnect game client 1 from renet server
@@ -471,7 +471,7 @@ fn integration_reconnect_gameclient_reconnect()
     assert_eq!(*client_app1.world.resource::<State<ClientInitializationState>>().get(), ClientInitializationState::InProgress);
 
     // request new connect token for client 1
-    user1.request(UserToHostRequest::GetConnectToken{ id: game_id }).expect("send failed");
+    user1.request(UserToHostRequest::GetConnectToken{ id: game_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -522,12 +522,12 @@ fn integration_reconnect_userclient_restart()
     // make user clients
     let user1_id = 0u128;
     let user2_id = 1u128;
-    let (user1_id, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
-    let (_, user2)        = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
+    let (user1_id, mut user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    let (_, mut user2)        = make_test_host_user_client_with_id(user2_id, host_user_url.clone());
 
 
     // launch game
-    let (game_id, _, mut client_app2, _, _) = launch_game(&mut host_server, &mut hub_server, &user1, &user2);
+    let (game_id, _, mut client_app2, _, _) = launch_game(&mut host_server, &mut hub_server, &mut user1, &mut user2);
 
 
     // disconnect client 1
@@ -536,7 +536,7 @@ fn integration_reconnect_userclient_restart()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
 
     // reconnect client 1
-    let (user1_id, user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
+    let (user1_id, mut user1) = make_test_host_user_client_with_id(user1_id, host_user_url.clone());
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
 

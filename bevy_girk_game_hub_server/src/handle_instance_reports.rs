@@ -27,14 +27,13 @@ fn instance_report_game_start(
 
     // forward game start report to host server
     // - we include the game start request so the server can check for consistency with its local records
-    if let Err(_) = host_client.send(
+    host_client.send(
             HubToHostMsg::GameStart{
                     id      : game_id,
                     request : game_start_request.clone(),
                     report  : game_start_report 
                 }
-        )
-    { tracing::error!(game_id, "failed sending game start report to host"); return; }
+        );
 
     // log game start
     tracing::trace!(game_id, "game start report handled");
@@ -49,8 +48,7 @@ fn instance_report_game_over(
     host_client                     : Res<HostHubClient>,
 ){
     // forward game over report to host server
-    if let Err(_) = host_client.send(HubToHostMsg::GameOver{ id: game_id, report: game_over_report })
-    { tracing::error!(game_id, "failed sending game over report to host"); }
+    host_client.send(HubToHostMsg::GameOver{ id: game_id, report: game_over_report });
 
     // try to remove instance
     if let Some(_) = running_games_cache.extract_instance(game_id)
@@ -75,8 +73,7 @@ fn instance_report_game_aborted(
     // notify host server
     // - only notify if the aborted game was removed; we assume the host server was already notified if the game isn't
     //   present
-    if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-    { tracing::error!(game_id, "failed sending abort game to host"); }
+    host_client.send(HubToHostMsg::Abort{ id: game_id });
 }
 
 //-------------------------------------------------------------------------------------------------------------------

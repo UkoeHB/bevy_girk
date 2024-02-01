@@ -237,8 +237,8 @@ fn basic_server_integration()
         );
 
     // make user clients
-    let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
-    let (user2_id, user2) = make_test_host_user_client(host_user_url);
+    let (user1_id, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (user2_id, mut user2) = make_test_host_user_client(host_user_url);
 
 
     // wait for everything to start up
@@ -254,7 +254,7 @@ fn basic_server_integration()
             mcolor : ClickLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -269,7 +269,7 @@ fn basic_server_integration()
             id     : made_lobby_id,
             mcolor : ClickLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -290,7 +290,7 @@ fn basic_server_integration()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -309,8 +309,8 @@ fn basic_server_integration()
 
 
     // users 1, 2 send acks
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 

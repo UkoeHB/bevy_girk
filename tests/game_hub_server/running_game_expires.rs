@@ -48,7 +48,7 @@ fn running_game_expires()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -81,7 +81,7 @@ fn running_game_expires()
     // request game start
     let game_id_1 = 1u64;
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));

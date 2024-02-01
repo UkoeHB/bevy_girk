@@ -65,11 +65,11 @@ fn client_nacks_pending_lobby()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(2u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (user1_id, user1) = make_test_host_user_client(host_user_url.clone());
-    let (user2_id, user2) = make_test_host_user_client(host_user_url);
+    let (user1_id, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (user2_id, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -79,7 +79,7 @@ fn client_nacks_pending_lobby()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -90,7 +90,7 @@ fn client_nacks_pending_lobby()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -103,7 +103,7 @@ fn client_nacks_pending_lobby()
 
     // user 2 accesses lobby info
     user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -123,7 +123,7 @@ fn client_nacks_pending_lobby()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -144,7 +144,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -164,14 +164,14 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 acks the lobby
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
 
 
     // user 2 nacks the lobby
-    user2.send(UserToHostMsg::NackPendingLobby{ id }).expect("send failed");
+    user2.send(UserToHostMsg::NackPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -188,7 +188,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby again
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -208,7 +208,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 nacks the lobby (the owner nacks it)
-    user1.send(UserToHostMsg::NackPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::NackPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -225,7 +225,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 launches lobby again (third time)
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -245,8 +245,8 @@ fn client_nacks_pending_lobby()
 
 
     // users 1, 2 ack the lobby
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -258,7 +258,7 @@ fn client_nacks_pending_lobby()
 
 
     // user 1 nacks the lobby (after fully acked)
-    user1.send(UserToHostMsg::NackPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::NackPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -270,7 +270,7 @@ fn client_nacks_pending_lobby()
 
     // game hub sends game start
     hub.send(HubToHostMsg::GameStart{ id: made_lobby_id, request, report: dummy_game_start_report(vec![user1_id, user2_id]) })
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

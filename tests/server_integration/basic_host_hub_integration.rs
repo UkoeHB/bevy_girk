@@ -95,7 +95,7 @@ fn basic_host_hub_integration()
         );
 
     // make user client
-    let (_user1_id, user1) = make_test_host_user_client(host_user_url);
+    let (_user1_id, mut user1) = make_test_host_user_client(host_user_url);
 
 
     // wait for everything to start up
@@ -110,7 +110,7 @@ fn basic_host_hub_integration()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -121,7 +121,7 @@ fn basic_host_hub_integration()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
@@ -136,7 +136,7 @@ fn basic_host_hub_integration()
 
 
     // user 1 sends ack
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
 

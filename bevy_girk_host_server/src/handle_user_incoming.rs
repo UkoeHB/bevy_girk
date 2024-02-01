@@ -55,7 +55,7 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
 pub(crate) fn handle_user_incoming(world: &mut World)
 {
     // handle user events
-    while let Some((user_id, server_event)) = world.resource::<HostUserServer>().next()
+    while let Some((user_id, server_event)) = world.resource_mut::<HostUserServer>().next()
     {
         // handle the event
         match server_event

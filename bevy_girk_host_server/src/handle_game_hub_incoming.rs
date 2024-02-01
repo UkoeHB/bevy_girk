@@ -40,7 +40,7 @@ fn handle_game_hub_message(world: &mut World, game_hub_id: u128, game_hub_msg: H
 pub(crate) fn handle_game_hub_incoming(world: &mut World)
 {
     // handle game hub events
-    while let Some((game_hub_id, server_event)) = world.resource::<HostHubServer>().next()
+    while let Some((game_hub_id, server_event)) = world.resource_mut::<HostHubServer>().next()
     {
         // handle the event
         match server_event

@@ -48,7 +48,7 @@ fn reject_duplicate_game()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -81,7 +81,7 @@ fn reject_duplicate_game()
     // request game start
     let game_id_1 = 1u64;
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -108,7 +108,7 @@ fn reject_duplicate_game()
 
     // request game start for game 1 again
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -120,7 +120,7 @@ fn reject_duplicate_game()
     // request game start for game 2
     let game_id_2 = 2u64;
     let start_request_2 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_2, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -198,7 +198,7 @@ fn reject_no_capacity()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -231,7 +231,7 @@ fn reject_no_capacity()
     // request game start
     let game_id_1 = 1u64;
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -259,7 +259,7 @@ fn reject_no_capacity()
     // request game start for game 2
     let game_id_2 = 2u64;
     let start_request_2 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_2, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -289,7 +289,7 @@ fn reject_no_capacity()
     // request game start for game 2
     let game_id_2 = 2u64;
     let start_request_2 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_2, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_2));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -359,7 +359,7 @@ fn reject_launch_pack_fail()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -392,7 +392,7 @@ fn reject_launch_pack_fail()
     // request game start
     let game_id_1 = 1u64;
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -446,7 +446,7 @@ fn reject_hub_shutdown()
     */
 
     // make a websocket host server
-    let host_hub_server = make_test_host_hub_server();
+    let mut host_hub_server = make_test_host_hub_server();
 
     // make a game hub server
     let (hub_command_sender, mut hub_server_app) = make_test_game_hub_server(
@@ -479,7 +479,7 @@ fn reject_hub_shutdown()
     // request game start
     let game_id_1 = 1u64;
     let start_request_1 = GameStartRequest{ lobby_data: LobbyData{ id: game_id_1, ..Default::default() } };
-    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1)).unwrap();
+    host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request_1));
     std::thread::sleep(Duration::from_millis(15));
     hub_server_app.update();
     std::thread::sleep(Duration::from_millis(15));

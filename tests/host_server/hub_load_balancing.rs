@@ -67,14 +67,14 @@ fn host_load_balancing()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs());
 
     // make game hub clients
-    let (_, hub1) = make_test_host_hub_client_with_id(0u128, host_hub_url.clone());
-    let (_, hub2) = make_test_host_hub_client_with_id(1u128, host_hub_url);  //with id to ensure sort order for hub selection
+    let (_, mut hub1) = make_test_host_hub_client_with_id(0u128, host_hub_url.clone());
+    let (_, mut hub2) = make_test_host_hub_client_with_id(1u128, host_hub_url);  //with id to ensure sort order for hub selection
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url.clone());
-    let (_, user3) = make_test_host_user_client(host_user_url.clone());
-    let (_, user4) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user3) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user4) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -87,8 +87,8 @@ fn host_load_balancing()
     let HostUserClientEvent::Report(_) = user4.next().unwrap() else { unimplemented!(); };
 
     // hubs initialize their capacity
-    hub1.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");  // 1 capacity
-    hub2.send(HubToHostMsg::Capacity(GameHubCapacity(2))).expect("send failed");  // 2 capacity
+    hub1.send(HubToHostMsg::Capacity(GameHubCapacity(1)));  // 1 capacity
+    hub2.send(HubToHostMsg::Capacity(GameHubCapacity(2)));  // 2 capacity
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -99,22 +99,22 @@ fn host_load_balancing()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     user2.request(UserToHostRequest::MakeLobby{
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     user3.request(UserToHostRequest::MakeLobby{
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     user4.request(UserToHostRequest::MakeLobby{
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -134,10 +134,10 @@ fn host_load_balancing()
     let made_lobby_id4 = lobby.id;
 
     // users launch lobbies
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 }).expect("send failed");
-    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 }).expect("send failed");
-    user3.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id3 }).expect("send failed");
-    user4.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id4 }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id1 });
+    user2.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id2 });
+    user3.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id3 });
+    user4.request(UserToHostRequest::LaunchLobbyGame{ id: made_lobby_id4 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -168,7 +168,7 @@ fn host_load_balancing()
 
 
     // user 1 sends ack
-    user1.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id1 }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id1 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -180,7 +180,7 @@ fn host_load_balancing()
 
 
     // user 2 sends ack
-    user2.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id2 }).expect("send failed");
+    user2.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id2 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -192,7 +192,7 @@ fn host_load_balancing()
 
 
     // user 3 sends ack
-    user3.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id3 }).expect("send failed");
+    user3.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id3 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -204,7 +204,7 @@ fn host_load_balancing()
 
 
     // user 4 sends ack
-    user4.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id4 }).expect("send failed");
+    user4.send(UserToHostMsg::AckPendingLobby{ id: made_lobby_id4 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -216,7 +216,7 @@ fn host_load_balancing()
 
 
     // hub 2 sends reject game
-    hub2.send(HubToHostMsg::Abort{ id: made_lobby_id1 }).expect("send failed");
+    hub2.send(HubToHostMsg::Abort{ id: made_lobby_id1 });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

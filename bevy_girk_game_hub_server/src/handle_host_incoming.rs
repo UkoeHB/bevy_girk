@@ -46,8 +46,7 @@ fn host_start_game(
     // send 'abort game' if no capacity
     if capacity_tracker.capacity() == GameHubCapacity(0u16)
     {
-        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-        { tracing::error!(game_id, "failed sending abort game to host"); }
+        host_client.send(HubToHostMsg::Abort{ id: game_id });
         return;
     }
 
@@ -72,8 +71,7 @@ fn host_abort_game(
     if let Some(_) = pending_games_cache.extract_game(game_id)
     {
         // notify host server
-        if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-        { tracing::error!(game_id, "failed sending abort game to host"); }
+        host_client.send(HubToHostMsg::Abort{ id: game_id });
         return;
     }
 
@@ -86,8 +84,7 @@ fn host_abort_game(
     // notify host server
     // - if the game was not available then we don't notify the server, because we assume it was notified by another
     //   process in the hub
-    if let Err(_) = host_client.send(HubToHostMsg::Abort{ id: game_id })
-    { tracing::error!(game_id, "failed sending abort game to host"); }
+    host_client.send(HubToHostMsg::Abort{ id: game_id });
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -95,7 +92,7 @@ fn host_abort_game(
 
 pub(crate) fn handle_host_incoming(world: &mut World)
 {
-    while let Some(client_event) = world.resource::<HostHubClient>().next()
+    while let Some(client_event) = world.resource_mut::<HostHubClient>().next()
     {
         match client_event
         {

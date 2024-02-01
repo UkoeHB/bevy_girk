@@ -41,8 +41,7 @@ pub(crate) fn send_lobby_join_message_and_update_state(
     // send lobby join message
     let user_id = token.client_id();
     let lobby_id = lobby.id;
-    if let Err(_) = user_server.respond(token, HostToUserResponse::LobbyJoin{ lobby: lobby.clone() })
-    { tracing::error!(lobby_id, user_id, "failed sending lobby join notification"); }
+    user_server.respond(token, HostToUserResponse::LobbyJoin{ lobby: lobby.clone() });
 
     // update user state
     if let Err(_) = users_cache.update_user_state(user_id, UserState::InLobby(lobby_id))
@@ -59,8 +58,7 @@ pub(crate) fn send_lobby_leave_messages_and_update_states(
     for (user_id, _) in lobby_data.members.iter()
     {
         // send leave lobby message
-        if let Err(_) = user_server.send(*user_id, HostToUserMsg::LobbyLeave{ id: lobby_data.id })
-        { tracing::error!(user_id, "failed sending lobby leave notification"); }
+        user_server.send(*user_id, HostToUserMsg::LobbyLeave{ id: lobby_data.id });
 
         // update user state
         if let Err(_) = users_cache.update_user_state(*user_id, UserState::Idle)
@@ -77,8 +75,7 @@ pub(crate) fn send_lobby_state_messages(
     for (user_id, _) in lobby_data.members.iter()
     {
         // send lobby state message
-        if let Err(_) = user_server.send(*user_id, HostToUserMsg::LobbyState{ lobby: lobby_data.clone() })
-        { tracing::error!(user_id, "failed sending lobby state notification"); }
+        user_server.send(*user_id, HostToUserMsg::LobbyState{ lobby: lobby_data.clone() });
     }
 }
 
@@ -92,8 +89,7 @@ pub(crate) fn send_pending_lobby_ack_requests_and_update_states(
     for (user_id, _) in lobby_data.members.iter()
     {
         // send pending lobby ack request
-        if let Err(_) = user_server.send(*user_id, HostToUserMsg::PendingLobbyAckRequest{ id: lobby_data.id })
-        { tracing::error!(user_id, lobby_data.id, "failed sending lobby ack request"); }
+        user_server.send(*user_id, HostToUserMsg::PendingLobbyAckRequest{ id: lobby_data.id });
 
         // update user state
         if let Err(_) = users_cache.update_user_state(*user_id, UserState::InPendingLobby(lobby_data.id))
@@ -111,8 +107,7 @@ pub(crate) fn send_pending_lobby_ack_fails_and_update_states(
     for (user_id, _) in lobby_data.members.iter()
     {
         // send pending lobby ack fail
-        if let Err(_) = user_server.send(*user_id, HostToUserMsg::PendingLobbyAckFail{ id: lobby_data.id })
-        { tracing::error!(user_id, "failed sending lobby ack fail notification"); }
+        user_server.send(*user_id, HostToUserMsg::PendingLobbyAckFail{ id: lobby_data.id });
 
         // update user states
         if let Err(_) = users_cache.update_user_state(*user_id, UserState::InLobby(lobby_data.id))
@@ -131,8 +126,7 @@ pub(crate) fn send_game_abort_messages_and_update_states(
     for user_info in user_infos.iter()
     {
         // send lobby state message
-        if let Err(_) = user_server.send(user_info.user_id, HostToUserMsg::GameAborted{ id: aborted_lobby_id })
-        { tracing::error!(user_info.user_id, aborted_lobby_id, "failed sending game aborted notification"); }
+        user_server.send(user_info.user_id, HostToUserMsg::GameAborted{ id: aborted_lobby_id });
 
         // update user state
         if let Err(_) = users_cache.update_user_state(user_info.user_id, UserState::Idle)
@@ -165,11 +159,7 @@ pub(crate) fn send_game_over_messages_and_update_states(
         }
 
         // send game over report to user
-        if let Err(_) = user_server.send(
-                user_id,
-                HostToUserMsg::GameOver{ id: game_id, report: game_over_report.clone() }
-            )
-        { tracing::error!(user_id, game_id, "failed sending game over report"); }
+        user_server.send(user_id, HostToUserMsg::GameOver{ id: game_id, report: game_over_report.clone() });
 
         // update user state
         if let Err(_) = users_cache.update_user_state(user_id, UserState::Idle)
@@ -234,8 +224,7 @@ pub(crate) fn try_connect_user_to_game(
     else { tracing::trace!(user_id, "trying to connect a user, user is not in a game"); return false; };
 
     // send game start info to user
-    if let Err(_) = user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect, start: start.clone() })
-    { tracing::error!(user_id, "failed sending game start notification"); }
+    user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect, start: start.clone() });
 
     // update user state
     if let Err(_) = users_cache.update_user_state(user_id, UserState::InGame(game_id))
@@ -411,8 +400,7 @@ pub(crate) fn try_remove_user_from_lobby(
             { tracing::error!(user_id, "failed setting user state to idle"); }
 
             // notify clent who left the lobby
-            if let Err(_) = user_server.send(user_id, HostToUserMsg::LobbyLeave{ id: lobby_id })
-            { tracing::error!(user_id, "failed sending lobby leave notification"); }
+            user_server.send(user_id, HostToUserMsg::LobbyLeave{ id: lobby_id });
 
             // notify members of new lobby state
             send_lobby_state_messages(&lobby_ref.data, &user_server);
@@ -498,11 +486,7 @@ pub(crate) fn try_request_game_start(
     { tracing::warn!(game_hub_id, lobby_id, "skipped sending game start request, hub already has game"); return Ok(true); };
 
     // send request to game hub
-    if let Err(_) = hub_server.send(
-            game_hub_id,
-            HostToHubMsg::StartGame(GameStartRequest{ lobby_data: lobby_data_ref.clone() })
-        )
-    { tracing::error!(game_hub_id, "failed sending game start request to game hub"); return Err(()); }
+    hub_server.send(game_hub_id, HostToHubMsg::StartGame(GameStartRequest{ lobby_data: lobby_data_ref.clone() }));
 
     // add pending game to game hub
     // - we assume the game hub is running this lobby's game until the hub explicitly notifies us otherwise

@@ -52,8 +52,7 @@ pub(crate) fn clean_ongoing_games(
             );
 
         // tell game hub to abort the game
-        if let Err(_) = hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id })
-        { tracing::error!(game_hub_id, game_id, "failed sending game abort message to game hub"); }
+        hub_server.send(game_hub_id, HostToHubMsg::Abort{ id: game_id });
 
         // remove game from game hub
         if let Err(_) = game_hubs_cache.remove_game(game_hub_id, game_id)

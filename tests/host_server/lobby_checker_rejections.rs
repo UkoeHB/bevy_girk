@@ -65,10 +65,10 @@ fn lobby_owner_invalid()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(0u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -77,7 +77,7 @@ fn lobby_owner_invalid()
     let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -88,7 +88,7 @@ fn lobby_owner_invalid()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -120,10 +120,10 @@ fn lobby_data_invalid()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(1u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user client
-    let (_, user1) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -132,7 +132,7 @@ fn lobby_data_invalid()
     let HostUserClientEvent::Report(_) = user1.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -143,7 +143,7 @@ fn lobby_data_invalid()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : vec![1u8]   //invalid data
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -175,11 +175,11 @@ fn lobby_member_invalid_type()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(10u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -189,7 +189,7 @@ fn lobby_member_invalid_type()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -200,7 +200,7 @@ fn lobby_member_invalid_type()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default(),
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -216,7 +216,7 @@ fn lobby_member_invalid_type()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Watcher.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -248,11 +248,11 @@ fn lobby_member_invalid_password()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs(10u16));
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -262,7 +262,7 @@ fn lobby_member_invalid_password()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -273,7 +273,7 @@ fn lobby_member_invalid_password()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default(),
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -289,7 +289,7 @@ fn lobby_member_invalid_password()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("invalid")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));

@@ -37,7 +37,7 @@ bevy_replicon_attributes = { version = "0.2" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
 bevy_replicon_repair = { version = "0.5" }
 #bevy_replicon_repair = { git = "https://github.com/UkoeHB/bevy_replicon_repair", rev = "b0ee869" }
-bevy_simplenet           = { version = "0.7", default-features = false }
+bevy_simplenet           = { version = "0.8", default-features = false }
 iyes_progress            = { version = "0.10" , features = [ "assets" ] }
 renet                    = { version = "0.0.14", default-features = false }
 

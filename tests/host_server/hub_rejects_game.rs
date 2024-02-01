@@ -65,11 +65,11 @@ fn host_rejects_game()
     let (mut host_server, host_hub_url, host_user_url) = make_test_host_server(make_configs());
 
     // make a game hub client
-    let (_, hub) = make_test_host_hub_client(host_hub_url);
+    let (_, mut hub) = make_test_host_hub_client(host_hub_url);
 
     // make user clients
-    let (_, user1) = make_test_host_user_client(host_user_url.clone());
-    let (_, user2) = make_test_host_user_client(host_user_url);
+    let (_, mut user1) = make_test_host_user_client(host_user_url.clone());
+    let (_, mut user2) = make_test_host_user_client(host_user_url);
 
     // clients connected
     std::thread::sleep(Duration::from_millis(15));
@@ -79,7 +79,7 @@ fn host_rejects_game()
     let HostUserClientEvent::Report(_) = user2.next().unwrap() else { unimplemented!(); };
 
     // hub initializes its capacity
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(1)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -90,7 +90,7 @@ fn host_rejects_game()
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test"),
             data   : Vec::default()
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -103,7 +103,7 @@ fn host_rejects_game()
 
     // user 2 accesses lobby info
     user2.request(UserToHostRequest::LobbySearch(LobbySearchRequest::PageOlder{ youngest_id: u64::MAX, num: 1 }))
-        .expect("send failed");
+        ;
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -123,7 +123,7 @@ fn host_rejects_game()
             id     : made_lobby_id,
             mcolor : BasicLobbyMemberType::Player.into(),
             pwd    : String::from("test")
-        }).expect("send failed");
+        });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -144,7 +144,7 @@ fn host_rejects_game()
 
 
     // user 1 launches lobby
-    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id }).expect("send failed");
+    user1.request(UserToHostRequest::LaunchLobbyGame{ id: lobby.id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -163,8 +163,8 @@ fn host_rejects_game()
     else { panic!("client did not receive server msg"); };
 
     // users 1, 2 send acks
-    user1.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
-    user2.send(UserToHostMsg::AckPendingLobby{ id }).expect("send failed");
+    user1.send(UserToHostMsg::AckPendingLobby{ id });
+    user2.send(UserToHostMsg::AckPendingLobby{ id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -176,7 +176,7 @@ fn host_rejects_game()
 
 
     // game hub sends reject game
-    hub.send(HubToHostMsg::Abort{ id: made_lobby_id }).expect("send failed");
+    hub.send(HubToHostMsg::Abort{ id: made_lobby_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
@@ -188,14 +188,14 @@ fn host_rejects_game()
 
 
     // game hub updates capacity to zero
-    hub.send(HubToHostMsg::Capacity(GameHubCapacity(0))).expect("send failed");
+    hub.send(HubToHostMsg::Capacity(GameHubCapacity(0)));
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
 
 
     // game hub sends reject game again
-    hub.send(HubToHostMsg::Abort{ id: made_lobby_id }).expect("send failed");
+    hub.send(HubToHostMsg::Abort{ id: made_lobby_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update();
     std::thread::sleep(Duration::from_millis(15));
