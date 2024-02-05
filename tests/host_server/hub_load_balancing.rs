@@ -68,7 +68,7 @@ fn host_load_balancing()
 
     // make game hub clients
     let (_, mut hub1) = make_test_host_hub_client_with_id(0u128, host_hub_url.clone());
-    let (_, mut hub2) = make_test_host_hub_client_with_id(1u128, host_hub_url);  //with id to ensure sort order for hub selection
+    let (_, mut hub2) = make_test_host_hub_client_with_id(1u128, host_hub_url);//with id to ensure sort order for hub selection
 
     // make user clients
     let (_, mut user1) = make_test_host_user_client(host_user_url.clone());

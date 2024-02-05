@@ -111,8 +111,7 @@ fn game_instance_launcher_demo()
 
 
     // make init data for the clients
-    let mut client_init_data = Vec::<ClickClientInitDataForGame>::new();
-    client_init_data.reserve(num_players + num_watchers);
+    let mut client_init_data = Vec::<ClickClientInitDataForGame>::with_capacity(num_players + num_watchers);
 
     for i in 0..num_players
     {

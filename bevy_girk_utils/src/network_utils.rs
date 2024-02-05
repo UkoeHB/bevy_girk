@@ -170,8 +170,7 @@ pub fn new_connect_token_native(
 
 pub fn connect_token_to_bytes(connect_token: &ConnectToken) -> Result<Vec<u8>, ()>
 {
-    let mut bytes = Vec::<u8>::new();
-    bytes.reserve(std::mem::size_of::<ConnectToken>());
+    let mut bytes = Vec::<u8>::with_capacity(std::mem::size_of::<ConnectToken>());
     connect_token.write(&mut bytes).map_err(|_| ())?;
     Ok(bytes)
 }

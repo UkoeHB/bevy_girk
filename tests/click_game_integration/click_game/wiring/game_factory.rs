@@ -36,16 +36,12 @@ fn prepare_game_startup(
 ) -> Result<GameStartupHelper, ()>
 {
     // prepare each client
-    let mut client_set    = HashSet::<ClientId>::new();
-    let mut players       = HashMap::<ClientId, PlayerState>::new();
-    let mut watchers      = HashSet::<ClientId>::new();
-    let mut clients       = Vec::<(u128, ClientId)>::new();
+    let mut client_set    = HashSet::<ClientId>::with_capacity(client_init_data.len());
+    let mut players       = HashMap::<ClientId, PlayerState>::with_capacity(client_init_data.len());
+    let mut watchers      = HashSet::<ClientId>::with_capacity(client_init_data.len());
+    let mut clients       = Vec::<(u128, ClientId)>::with_capacity(client_init_data.len());
     let mut native_count  = 0;
     let mut wasm_count    = 0;
-    client_set.reserve(client_init_data.len());
-    players.reserve(client_init_data.len());
-    watchers.reserve(client_init_data.len());
-    clients.reserve(client_init_data.len());
 
     for client_init in client_init_data
     {
@@ -180,8 +176,7 @@ fn get_game_start_infos(
     let ticks_per_sec = app.world.resource::<GameFwConfig>().ticks_per_sec();
 
     // make start infos for each client
-    let mut start_infos = Vec::<GameStartInfo>::new();
-    start_infos.reserve(user_clients.len());
+    let mut start_infos = Vec::<GameStartInfo>::with_capacity(user_clients.len());
 
     for (user_id, client_id) in user_clients.iter()
     {

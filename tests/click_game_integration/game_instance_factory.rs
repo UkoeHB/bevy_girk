@@ -91,8 +91,7 @@ fn game_instance_factory_demo()
 
 
     // make init data for the clients
-    let mut client_init_data = Vec::<ClickClientInitDataForGame>::new();
-    client_init_data.reserve(num_players + num_watchers);
+    let mut client_init_data = Vec::<ClickClientInitDataForGame>::with_capacity(num_players + num_watchers);
 
     for i in 0..num_players
     {
@@ -120,10 +119,8 @@ fn game_instance_factory_demo()
         .unwrap();
 
     // make clients
-    let mut client_apps          = Vec::<App>::default();
-    let mut player_input_senders = Vec::<Sender<PlayerInput>>::default();
-    client_apps.reserve(num_players + num_watchers);
-    player_input_senders.reserve(num_players);
+    let mut client_apps          = Vec::<App>::with_capacity(num_players + num_watchers);
+    let mut player_input_senders = Vec::<Sender<PlayerInput>>::with_capacity(num_players);
 
     for start_info in game_start_report.start_infos.drain(..)
     {

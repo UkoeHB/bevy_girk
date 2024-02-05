@@ -77,8 +77,7 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
     }
 
     // make init data for the clients
-    let mut client_init_data = Vec::<ClickClientInitDataForGame>::new();
-    client_init_data.reserve(num_players + num_watchers);
+    let mut client_init_data = Vec::<ClickClientInitDataForGame>::with_capacity(num_players + num_watchers);
 
     for (idx, (env, player_user_id)) in players.iter().enumerate()
     {

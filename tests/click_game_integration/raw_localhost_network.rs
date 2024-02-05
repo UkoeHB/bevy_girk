@@ -70,10 +70,8 @@ fn raw_localhost_network_demo(num_players: usize)
         );
 
     // prepare player clients
-    let mut client_apps          = Vec::<App>::default();
-    let mut player_input_senders = Vec::<Sender<PlayerInput>>::default();
-    client_apps.reserve(num_players);
-    player_input_senders.reserve(num_players);
+    let mut client_apps          = Vec::<App>::with_capacity(num_players);
+    let mut player_input_senders = Vec::<Sender<PlayerInput>>::with_capacity(num_players);
 
     for client_id in 0..num_players
     {
