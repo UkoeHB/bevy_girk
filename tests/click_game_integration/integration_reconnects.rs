@@ -397,8 +397,11 @@ fn integration_reconnect_gameclient_restart()
 
 
     // disconnect game client 1
+    //TODO: This DOES NOT WORK unless the delay after disconnecting is large enough, because server and client currently
+    //      have the same connection timeout, so the server will timeout the old connect at the same time the new
+    //      connection attempt times out.
     std::mem::drop(client_app1);
-    host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
+    host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(145));
 
     // request new connect token for client 1
     user1.request(UserToHostRequest::GetConnectToken{ id: game_id });
