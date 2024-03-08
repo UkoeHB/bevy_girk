@@ -4,7 +4,7 @@ use bevy_girk_game_instance::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
+use bevy_girk_utils::*;
 
 //standard shortcuts
 use std::collections::HashMap;

@@ -4,7 +4,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_ecs::*;
+use bevy_cobweb::prelude::*;
 use bevy_replicon_attributes::*;
 
 //standard shortcuts
@@ -31,10 +31,10 @@ pub(crate) fn handle_player_click_button(
     In((player_entity, _)) : In<(Entity, ())>,
     mut players            : Query<&mut PlayerScore, With<PlayerId>>,
 ){
-    let Ok(player_score) = players.get_component_mut::<PlayerScore>(player_entity)
+    let Ok(mut player_score) = players.get_mut(player_entity)
     else { tracing::error!("handle player click button: unknown player entity"); return; };
 
-    player_score.into_inner().increment();
+    player_score.increment();
 }
 
 //-------------------------------------------------------------------------------------------------------------------

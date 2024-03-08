@@ -5,7 +5,6 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 use bevy_renet::{renet::RenetClient, RenetReceive};
 
 //standard shortcuts

@@ -6,8 +6,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::bevy_plugin;
-use bevy_kot_ecs::*;
-use bevy_kot_utils::*;
+use bevy_cobweb::prelude::*;
 
 //standard shortcuts
 
@@ -28,7 +27,7 @@ fn cleanup_game_monitor(mut rcommands: ReactCommands, mut monitor: ReactResMut<C
     if let Some(report) = result
     {
         tracing::info!("received game over report from client monitor");
-        rcommands.send(report);
+        rcommands.broadcast(report);
     }
 
     // clear the monitor

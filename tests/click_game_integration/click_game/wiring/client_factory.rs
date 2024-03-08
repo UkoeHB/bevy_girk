@@ -10,7 +10,6 @@ use crate::click_game_integration::click_game::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
-use bevy_kot_utils::*;
 
 //standard shortcuts
 

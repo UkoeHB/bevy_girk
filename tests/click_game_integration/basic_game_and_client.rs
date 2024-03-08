@@ -7,7 +7,6 @@ use crate::test_helpers::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::*;
 

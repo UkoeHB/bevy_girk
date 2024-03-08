@@ -3,7 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use enfync::{AdoptOrDefault, Handle};
-use bevy_kot_utils::*;
+use bevy_girk_utils::*;
 
 //standard shortcuts
 

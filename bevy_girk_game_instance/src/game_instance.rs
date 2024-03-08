@@ -2,7 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
-use bevy_kot_utils::*;
+use bevy_girk_utils::*;
 
 //standard shortcuts
 

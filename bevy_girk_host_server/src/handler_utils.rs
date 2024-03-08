@@ -6,7 +6,7 @@ use bevy_girk_game_instance::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_ecs::*;
+use bevy_cobweb::prelude::*;
 
 //standard shortcuts
 

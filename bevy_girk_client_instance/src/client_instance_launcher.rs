@@ -4,7 +4,6 @@ use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_kot_utils::*;
 
 //standard shortcuts
 use std::fmt::Debug;

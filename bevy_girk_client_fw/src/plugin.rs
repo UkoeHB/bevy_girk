@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
-use bevy_kot_utils::*;
+use bevy_girk_utils::*;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -59,8 +59,8 @@ pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwMode>>) -> bool 
 #[bevy_plugin]
 pub fn ClientFwStartupPlugin(app: &mut App)
 {
-    app.add_state::<ClientInitializationState>()
-        .add_state::<ClientFwMode>()
+    app.init_state::<ClientInitializationState>()
+        .init_state::<ClientFwMode>()
         .add_systems(PreStartup,
             (
                 prestartup_check,

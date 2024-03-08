@@ -3,7 +3,6 @@ use crate::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_kot_utils::*;
 use clap::Parser;
 
 //standard shortcuts

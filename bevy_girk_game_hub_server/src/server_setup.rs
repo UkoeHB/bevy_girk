@@ -8,7 +8,6 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::app::*;
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 
 //standard shortcuts
 

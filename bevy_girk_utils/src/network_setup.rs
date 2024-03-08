@@ -3,7 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_ecs::syscall;
+use bevy_cobweb::prelude::syscall;
 use bevy_renet::renet::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
 use bevy_renet::renet::transport::{
     ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,

@@ -8,8 +8,8 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.12", default-features = false }
-bevy_kot_ecs   = { workspace = true }
+bevy           = { version = "0.13", default-features = false }
+bevy_cobweb    = { workspace = true }
 bevy_simplenet = { workspace = true, features = ["client", "server", "bevy"] }
 serde          = { workspace = true }
 tracing        = { workspace = true }

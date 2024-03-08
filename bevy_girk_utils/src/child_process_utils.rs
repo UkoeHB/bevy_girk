@@ -1,8 +1,8 @@
 //local shortcuts
+use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_utils::*;
 use serde::{Serialize, Deserialize};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 

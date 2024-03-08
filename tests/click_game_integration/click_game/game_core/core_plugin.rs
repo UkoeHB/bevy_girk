@@ -38,7 +38,7 @@ fn prestartup_check(world: &World)
 #[bevy_plugin]
 pub fn GameStartupPlugin(app: &mut App)
 {
-    app.add_state::<GameMode>()
+    app.init_state::<GameMode>()
         .add_systems(PreStartup,
             (
                 prestartup_check,

@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy_fn_plugin::bevy_plugin;
 use bevy_girk_utils::*;
-use bevy_kot_ecs::*;
+use bevy_cobweb::prelude::*;
 
 //standard shortcuts
 

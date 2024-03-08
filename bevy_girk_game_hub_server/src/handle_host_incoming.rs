@@ -6,7 +6,7 @@ use bevy_girk_host_server::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_ecs::*;
+use bevy_cobweb::prelude::*;
 use bevy_simplenet::ClientReport;
 
 //standard shortcuts

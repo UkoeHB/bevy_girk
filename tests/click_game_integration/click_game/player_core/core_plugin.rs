@@ -15,7 +15,7 @@ use crate::click_game_integration::click_game::*;
 //third-party shortcuts
 use bevy::{prelude::*, app::PluginGroupBuilder};
 use bevy_fn_plugin::*;
-use bevy_kot_utils::*;
+use bevy_girk_utils::*;
 
 //standard shortcuts
 
@@ -77,7 +77,7 @@ pub enum ClientSet
 #[bevy_plugin]
 pub fn ClientCoreStartupPlugin(app: &mut App)
 {
-    app.add_state::<ClientCoreMode>()
+    app.init_state::<ClientCoreMode>()
         .add_systems(PreStartup,
             (
                 prestartup_check,

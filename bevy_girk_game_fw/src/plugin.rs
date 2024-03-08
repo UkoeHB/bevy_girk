@@ -35,7 +35,7 @@ fn poststartup_check(world: &World)
 #[bevy_plugin]
 pub fn GameFwStartupPlugin(app: &mut App)
 {
-    app.add_state::<GameFwMode>()
+    app.init_state::<GameFwMode>()
         .add_systems(PreStartup,
             (
                 prestartup_check,

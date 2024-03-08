@@ -185,8 +185,8 @@ pub(crate) fn receive_server_packets(
 
             match change_tick <= *replicon_tick
             {
-                true  => game_packets.send(packet),
-                false => event_queue.insert(change_tick, packet),
+                true  => { game_packets.send(packet); }
+                false => { event_queue.insert(change_tick, packet); }
             }
         }
     }

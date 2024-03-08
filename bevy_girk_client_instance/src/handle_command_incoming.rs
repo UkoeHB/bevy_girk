@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy_kot_ecs::*;
+use bevy_cobweb::prelude::*;
 
 //standard shortcuts
 

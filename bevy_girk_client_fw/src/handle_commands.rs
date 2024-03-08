@@ -3,8 +3,8 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_kot_ecs::*;
-use bevy_kot_utils::*;
+use bevy_cobweb::prelude::*;
+use bevy_girk_utils::*;
 
 //standard shortcuts
 

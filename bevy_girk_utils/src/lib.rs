@@ -1,5 +1,7 @@
 //module tree
+mod channel;
 mod cli;
+mod io_channel;
 mod misc_utils;
 mod network_setup;
 mod network_utils;
@@ -11,7 +13,9 @@ mod tick_counter;
 mod child_process_utils;
 
 //API exports
+pub use crate::channel::*;
 pub use crate::cli::*;
+pub use crate::io_channel::*;
 pub use crate::misc_utils::*;
 pub use crate::network_setup::*;
 pub use crate::network_utils::*;

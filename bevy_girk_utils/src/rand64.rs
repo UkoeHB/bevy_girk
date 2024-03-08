@@ -17,7 +17,7 @@ pub struct Rand64
 
 impl Rand64
 {
-    /// New generator. Domain separator and seed are required.
+    /// Makes a new PRNG.
     pub fn new(domain_sep: &str, seed: u128) -> Rand64
     {
         let mut hasher = SipHasher24::new_with_key(&seed.to_le_bytes());
@@ -29,14 +29,14 @@ impl Rand64
             }
     }
 
-    /// Get the next random number.
+    /// Gets the next random number.
     pub fn next(&mut self) -> u64
     {
         self.advance_state();
         self.state.h2
     }
 
-    /// Inject additional entropy
+    /// Injects additional entropy.
     pub fn inject(&mut self, extra_entropy: u128)
     {
         let mut hasher = self.cached_hasher.clone();
@@ -45,7 +45,7 @@ impl Rand64
         self.state = hasher.finish128();
     }
 
-    /// Hash the state to advance it.
+    /// Hashes the state to advance it.
     fn advance_state(&mut self)
     {
         // [new prefix || new value] = H([old prefix || old value])
@@ -57,7 +57,7 @@ impl Rand64
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Generate a random seed for [`Rand64`].
+/// Generates a random seed for [`Rand64`].
 #[cfg(not(target_arch = "wasm32"))]
 pub fn gen_rand64_seed() -> u128
 {
@@ -69,7 +69,7 @@ pub fn gen_rand64_seed() -> u128
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Generate a random 64-bit integer
+/// Generates a random 64-bit integer.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn gen_rand64() -> u64
 {
@@ -81,7 +81,7 @@ pub fn gen_rand64() -> u64
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Generate a random 128-bit integer
+/// Generates a random 128-bit integer.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn gen_rand128() -> u128
 {
