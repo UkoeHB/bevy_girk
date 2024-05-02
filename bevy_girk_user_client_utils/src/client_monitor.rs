@@ -15,23 +15,23 @@ use bevy_cobweb::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Clear the client monitor when the monitor has a result.
-fn cleanup_game_monitor(mut rcommands: ReactCommands, mut monitor: ReactResMut<ClientMonitor>)
+fn cleanup_game_monitor(mut c: Commands, mut monitor: ReactResMut<ClientMonitor>)
 {
     // check if the monitor may have a result
     if monitor.is_running() || !monitor.has_client() { return; }
 
     // try to extract the game over report
-    let Ok(result) = monitor.get_mut_noreact().take_result() else { return; };
+    let Ok(result) = monitor.get_noreact().take_result() else { return; };
 
     // send game over report to the app
     if let Some(report) = result
     {
         tracing::info!("received game over report from client monitor");
-        rcommands.broadcast(report);
+        c.react().broadcast(report);
     }
 
     // clear the monitor
-    monitor.get_mut(&mut rcommands).clear();
+    monitor.get_mut(&mut c).clear();
 }
 
 //-------------------------------------------------------------------------------------------------------------------

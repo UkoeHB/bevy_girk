@@ -120,7 +120,7 @@ pub(crate) fn send_server_packets(
 
     for packet in game_packets.drain()
     {
-        let SendMode::Direct(client_id) = packet.mode else { panic!("invalid game packet send mode"); };
+        let SendMode::Direct(client_id) = packet.mode else { panic!("invalid game packet send mode {:?}", packet.mode); };
 
         // if sending a different message than the previous packet, clear the buffer
         let this_packet = packet.event.message.as_ptr();

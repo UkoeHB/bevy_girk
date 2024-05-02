@@ -110,7 +110,7 @@ fn game_lifecycle()
             code   : ezsockets::CloseCode::Normal,
             reason : String::from("test")
         };
-    host_hub_server.close_session(connected_hub_id, Some(closure_frame));
+    host_hub_server.disconnect_client(connected_hub_id, Some(closure_frame));
 
     std::thread::sleep(std::time::Duration::from_millis(25));  //wait for async machinery
 
