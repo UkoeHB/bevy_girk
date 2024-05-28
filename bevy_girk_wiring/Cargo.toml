@@ -13,6 +13,7 @@ bevy_renet               = { workspace = true }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
 bevy_replicon_repair     = { workspace = true }
+bevy_replicon_renet      = { workspace = true }
 bincode                  = { workspace = true }
 bytes                    = { workspace = true }
 iyes_progress            = { workspace = true }

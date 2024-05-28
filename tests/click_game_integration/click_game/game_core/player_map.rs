@@ -1,8 +1,8 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientId;
 
 //standard shortcuts
 use std::collections::HashMap;

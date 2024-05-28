@@ -3,7 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::network_event::EventType;
+use bevy_replicon::prelude::ChannelKind;
 use bytes::Bytes;
 use serde::{Serialize, Deserialize};
 
@@ -51,7 +51,7 @@ pub struct ClientRequestData<T>
 pub struct GamePacket
 {
     /// Packet send policy (reliability and ordering guarantee).
-    pub send_policy: EventType,
+    pub send_policy: ChannelKind,
     /// The message.
     /// - On the server this equals: `(replicon change tick, message)`.
     /// - On the client this equals: `message`.
@@ -65,7 +65,7 @@ pub struct GamePacket
 pub struct ClientPacket
 {
     /// Packet send policy (reliability and ordering guarantee).
-    pub send_policy: EventType,
+    pub send_policy: ChannelKind,
     /// The request.
     pub request: Bytes,
 }

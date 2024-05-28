@@ -12,7 +12,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`GamePacket`] into a specified game message type.
-pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoEventType>(
+pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
     game_packet: &GamePacket,
 ) -> Result<(Tick, T), Option<(Tick, GameFwMsg)>>
 {

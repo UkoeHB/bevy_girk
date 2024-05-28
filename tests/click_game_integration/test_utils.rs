@@ -1,9 +1,9 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
 use bevy::utils::AHasher;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 use std::collections::{HashMap, HashSet};
@@ -60,9 +60,9 @@ pub fn prepare_game_initializer(
     for id in 0..num_players
     {
         players.insert(
-                ClientId::from_raw(id as u64),
+                ClientId::new(id as u64),
                 PlayerState{
-                        id: PlayerId{ id: ClientId::from_raw(id as u64) },
+                        id: PlayerId{ id: ClientId::new(id as u64) },
                         name: PlayerName{ name: String::from("testname") },
                         score: Default::default(),
                         replicate: Default::default(),

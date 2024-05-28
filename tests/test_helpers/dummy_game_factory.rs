@@ -68,7 +68,7 @@ impl GameFactoryImpl for DummyGameFactory
 
         // make the client ready
         app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: SERVER_ID,
+                client_id: ClientId::SERVER,
                 event: ClientPacket{
                         send_policy : SendOrdered.into(),
                         request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -82,7 +82,7 @@ impl GameFactoryImpl for DummyGameFactory
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
             .add_plugins(
-                ReplicationPlugins
+                RepliconPlugins
                     .build()
                     .disable::<ClientPlugin>()
                     .set(ServerPlugin{
@@ -91,14 +91,17 @@ impl GameFactoryImpl for DummyGameFactory
                         ..Default::default()
                     })
             )
-            .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+            .add_plugins(VisibilityAttributesPlugin{
+                server_id: Some(ClientId::SERVER),
+                reconnect_policy: ReconnectPolicy::Reset
+            })
             //setup game framework
             .insert_resource(GameFwConfig::new( pack.config.ticks_per_sec, 1, 0 ))
             .insert_resource(prepare_player_client_contexts(player_ids.len() + 1))
             .insert_resource(GameMessageType::new::<()>())
             //setup client framework
             .insert_resource(
-                ClientFwConfig::new( pack.config.ticks_per_sec, SERVER_ID )
+                ClientFwConfig::new( pack.config.ticks_per_sec, ClientId::SERVER )
             )
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestType::new::<()>())

@@ -49,9 +49,12 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .init_resource::<bevy_replicon::prelude::ClientCache>()
-        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
-        .add_event::<renet::ServerEvent>()
+        .init_resource::<bevy_replicon::prelude::ConnectedClients>()
+        .add_plugins(VisibilityAttributesPlugin{
+            server_id: Some(ClientId::SERVER),
+            reconnect_policy: ReconnectPolicy::Reset
+        })
+        .add_event::<bevy_replicon::prelude::ServerEvent>()
         //setup app
         .set_runner(make_test_runner(num_prep_ticks + num_game_ticks + 3))
         .add_plugins(AddMockMessageChannelsPlugin)

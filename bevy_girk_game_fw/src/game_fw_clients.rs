@@ -1,8 +1,8 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts

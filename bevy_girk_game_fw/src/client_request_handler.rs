@@ -4,6 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientId;
 use serde::Deserialize;
 
 //standard shortcuts
@@ -12,7 +13,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`ClientPacket`] into a client request.
-pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoEventType>(
+pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
     client_id     : ClientId,
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>

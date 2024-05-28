@@ -22,7 +22,7 @@ pub struct GameMessageType(TypeId);
 
 impl GameMessageType
 {
-    pub fn new<T: Serialize + Debug + IntoEventType + 'static>() -> Self
+    pub fn new<T: Serialize + Debug + IntoChannelKind + 'static>() -> Self
     {
         Self(TypeId::of::<T>())
     }
@@ -62,7 +62,7 @@ impl<'w> GameMessageSender<'w>
     /// Panics when `debug_assertions` are enabled if `T` does not match the type specified in [`GameMessageType`].
     pub fn send<T>(&mut self, attributes: &ClientAttributes, message: T, condition: VisibilityCondition)
     where
-        T: Serialize + for<'de> Deserialize<'de> + Debug + IntoEventType + 'static
+        T: Serialize + for<'de> Deserialize<'de> + Debug + IntoChannelKind + 'static
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.message_id);
         let tick = ***self.tick;

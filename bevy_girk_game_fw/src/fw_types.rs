@@ -55,9 +55,9 @@ impl GameInitProgress
 #[derive(Bundle)]
 pub struct GameInitProgressEntity
 {
-    progress    : GameInitProgress,
-    replication : Replication,
-    visibility  : VisibilityCondition,
+    progress   : GameInitProgress,
+    replicated : Replicated,
+    visibility : VisibilityCondition,
 }
 
 impl Default for GameInitProgressEntity
@@ -65,9 +65,9 @@ impl Default for GameInitProgressEntity
     fn default() -> Self
     {
         Self {
-            progress    : GameInitProgress::default(),
-            replication : Replication,
-            visibility  : vis!(Global),
+            progress   : GameInitProgress::default(),
+            replicated : Replicated,
+            visibility : vis!(Global),
          }
     }
 }

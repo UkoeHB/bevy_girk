@@ -1,5 +1,4 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -55,7 +54,7 @@ pub struct PlayerState
     /// Current player score
     pub score: PlayerScore,
     /// Players are replicated
-    pub replicate: Replication,
+    pub replicate: Replicated,
 }
 
 //-------------------------------------------------------------------------------------------------------------------

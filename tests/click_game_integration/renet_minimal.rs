@@ -5,6 +5,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_renet::{*, transport::*};
+use renet::RenetClient;
 
 //standard shortcuts
 

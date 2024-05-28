@@ -1,11 +1,11 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
-use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
+use bevy_replicon::prelude::ClientId;
 
 //standard shortcuts
 #[cfg(not(target_family = "wasm"))]
@@ -81,13 +81,13 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
 
     for (idx, (env, player_user_id)) in players.iter().enumerate()
     {
-        client_init_data.push(make_player_init_data(*env, *player_user_id, ClientId::from_raw(idx as u64)));
+        client_init_data.push(make_player_init_data(*env, *player_user_id, ClientId::new(idx as u64)));
     }
 
     for (idx, (env, watcher_user_id)) in watchers.iter().enumerate()
     {
         let client_id = idx + num_players;
-        client_init_data.push(make_watcher_init_data(*env, *watcher_user_id, ClientId::from_raw(client_id as u64)));
+        client_init_data.push(make_watcher_init_data(*env, *watcher_user_id, ClientId::new(client_id as u64)));
     }
 
     // click launch pack

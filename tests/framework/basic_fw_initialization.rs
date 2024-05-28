@@ -32,9 +32,9 @@ fn basic_fw_initialization()
 
     // make the client ready
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: SERVER_ID,
+            client_id: ClientId::SERVER,
             event: ClientPacket{
-                    send_policy : EventType::Ordered,
+                    send_policy : ChannelKind::Ordered,
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
@@ -45,7 +45,7 @@ fn basic_fw_initialization()
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(
-            ReplicationPlugins
+            RepliconPlugins
                 .build()
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
@@ -53,7 +53,10 @@ fn basic_fw_initialization()
                     ..Default::default()
                 })
         )
-        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+        .add_plugins(VisibilityAttributesPlugin{
+            server_id: Some(ClientId::SERVER),
+            reconnect_policy: ReconnectPolicy::Reset
+        })
         //setup app
         .set_runner(make_test_runner(2))
         //setup game framework
@@ -61,7 +64,7 @@ fn basic_fw_initialization()
         .insert_resource(prepare_player_client_contexts(num_players))
         .insert_resource(GameMessageType::new::<()>())
         //setup client framework
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::from_raw(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::new(0u64) ))
         .insert_resource(client_fw_comand_reader)
         .insert_resource(ClientRequestType::new::<()>())
         //setup game core

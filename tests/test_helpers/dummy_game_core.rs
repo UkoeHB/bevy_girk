@@ -4,6 +4,7 @@ use bevy_girk_game_fw::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_fn_plugin::*;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 

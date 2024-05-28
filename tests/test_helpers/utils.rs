@@ -25,7 +25,7 @@ pub fn add_game_over_flag(world: &mut World)
 pub fn append_client(clients: &mut GameFwClients)
 {
     let mut hashset = (**clients).clone();
-    hashset.insert(ClientId::from_raw(clients.len() as u64));
+    hashset.insert(ClientId::new(clients.len() as u64));
     *clients = GameFwClients::new(hashset);
 }
 
@@ -37,7 +37,7 @@ pub fn prepare_player_client_contexts(num_players: usize) -> GameFwClients
 
     for client_id in 0..num_players
     {
-        clients.insert(ClientId::from_raw(client_id as u64));
+        clients.insert(ClientId::new(client_id as u64));
     }
 
     GameFwClients::new(clients)
@@ -58,7 +58,7 @@ pub fn AddMockMessageChannelsPlugin(app: &mut App)
     for client_id in 0..10
     {
         app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: renet::ClientId::from_raw(client_id as u64),
+                client_id: ClientId::new(client_id as u64),
                 event: ClientPacket{
                         send_policy : SendOrdered.into(),
                         request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -119,7 +119,7 @@ pub fn forward_client_packets(
 ){
     for packet in packets.drain()
     {
-        from_client.send(FromClient{ client_id: renet::ClientId::from_raw(0), event: packet });
+        from_client.send(FromClient{ client_id: ClientId::new(0), event: packet });
     }
 }
 

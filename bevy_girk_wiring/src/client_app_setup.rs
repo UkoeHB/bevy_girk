@@ -6,11 +6,15 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_renet::{client_disconnected, client_just_connected, client_just_disconnected};
+use bevy_replicon::client::ServerInitTick;
 use bevy_replicon::prelude::{
-    ClientEventAppExt, ClientSet, EventType, ReplicationPlugins, RepliconTick, ServerPlugin, ServerEventAppExt
+    ChannelKind, ClientEventAppExt, ClientSet, RepliconPlugins, ServerEventAppExt, ServerPlugin
 };
+use bevy_replicon_renet::RepliconRenetClientPlugin;
 use bevy_replicon_repair::AppReplicationRepairExt;
 use iyes_progress::*;
+use renet::{transport::NetcodeTransportError, RenetClient};
 
 //standard shortcuts
 use std::time::Duration;
@@ -24,7 +28,7 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn track_connection_state(client: Res<bevy_renet::renet::RenetClient>) -> Progress
+fn track_connection_state(client: Res<RenetClient>) -> Progress
 {
     if client.is_disconnected() { return Progress{ done: 0, total: 2 }; }
     if client.is_connecting()   { return Progress{ done: 1, total: 2 }; }
@@ -53,8 +57,8 @@ fn track_initialization_state(mode: Res<State<ClientFwMode>>) -> Progress
 fn track_replication_initialized(
     In(just_connected) : In<bool>,
     mut initialized    : Local<bool>,
-    client             : Res<bevy_renet::renet::RenetClient>,
-    tick               : Res<RepliconTick>
+    client             : Res<RenetClient>,
+    tick               : Res<ServerInitTick>
 ) -> Progress
 {
     // reset initialized
@@ -126,7 +130,7 @@ fn log_just_disconnected()
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn log_transport_errors(mut errors: EventReader<renet::transport::NetcodeTransportError>)
+fn log_transport_errors(mut errors: EventReader<NetcodeTransportError>)
 {
     for error in errors.read()
     {
@@ -184,31 +188,34 @@ pub fn prepare_client_app_replication(
     // prepare channels
     prepare_network_channels(client_app, resend_time);
 
-    // setup client with bevy_replicon (includes bevy_renet)
+    // setup client with bevy_replicon
     client_app
         //add framework command endpoint for use by connection controls
         .insert_resource(command_sender)
         //add bevy_replicon client
-        .add_plugins(ReplicationPlugins
+        .add_plugins(RepliconPlugins
             .build()
             .disable::<ServerPlugin>())
+        .add_plugins(RepliconRenetClientPlugin)
         //enable replication repair for reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ClientPlugin{ cleanup_prespawns: true })
         //prepare message channels
         //- note: the event types specified here do nothing
-        .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, dummy, receive_server_packets)
-        .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, send_client_packets, dummy)
+        .add_server_event_with::<GamePacket, _, _>(ChannelKind::Unreliable, dummy, receive_server_packets)
+        .add_client_event_with::<ClientPacket, _, _>(ChannelKind::Unreliable, send_client_packets, dummy)
         //register GameInitProgress for replication
         .replicate_repair::<GameInitProgress>()
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: collects network packets
+        //<-- ClientSet::ReceivePackets {replicon}: collects renet packets
         //<-- ClientSet::ResetEvents (if client just connected) {replicon}: ensures client and server messages
         //    don't leak across a reconnect
         //<-- ClientSet::Receive {replicon}: collects replication messages
         //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
         //    disconnect
+        //TODO: ClientSet::SyncHierarchy
         //<-- ClientFwSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
         //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
@@ -219,7 +226,7 @@ pub fn prepare_client_app_replication(
             //   message. So we block the client set in the range [Connecting, Syncing first tick]
             ClientSet::Receive
                 .run_if(not(in_state(ClientFwMode::Connecting)))
-                .run_if(not(bevy_renet::client_just_connected))
+                .run_if(not(client_just_connected))
         )
         .configure_sets(PreUpdate,
             ClientFwSetPrivate::FwStart
@@ -227,28 +234,28 @@ pub fn prepare_client_app_replication(
         )
         .add_systems(PreUpdate,
             (
-                log_just_connected.run_if(bevy_renet::client_just_connected),
-                log_just_disconnected.run_if(bevy_renet::client_just_disconnected),
+                log_just_connected.run_if(client_just_connected),
+                log_just_disconnected.run_if(client_just_disconnected),
                 // reinitialize when disconnected and not at game end
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
                 //   the server sends an End mode message, but this will only be called in a tick where we are disconnected
                 //   and hence won't receive a game End mode message in `ClientFwSetPrivate::FwStart` after this
                 reinitialize_client
-                    .run_if(bevy_renet::client_just_disconnected)
+                    .run_if(client_just_disconnected)
                     .run_if(not(in_state(ClientFwMode::End))),
                 // set syncing when just connected
                 // - note: this will not run in the first tick of `ClientFwMode::Connecting` because we disable
                 //   `setup_renet_client` for that tick (it actually takes at least 3 ticks to connect once disconnected)
                 set_client_syncing
-                    .run_if(bevy_renet::client_just_connected)
+                    .run_if(client_just_connected)
                     .run_if(in_state(ClientFwMode::Connecting)),
                 // set initialized when just synchronized
                 // - note: this will not run in the first tick of `ClientFwMode::Syncing` because we disabled
-                //   `ClientSet::Receive` for that tick, so RepliconTick will not change (unless the user manually changes
+                //   `ClientSet::Receive` for that tick, so ServerInitTick will not change (unless the user manually changes
                 //   it)
                 set_client_init
-                    .run_if(resource_changed::<RepliconTick>)
+                    .run_if(resource_changed::<ServerInitTick>)
                     .run_if(in_state(ClientFwMode::Syncing)),
             )
                 .chain()
@@ -269,7 +276,7 @@ pub fn prepare_client_app_replication(
                 //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
                 //        when a client connects (for reconnects we assume the user did not despawn that entity, or spawned
                 //        some other entity/entities)
-                bevy_renet::client_just_connected
+                client_just_connected
                     .pipe(track_replication_initialized)
                     .track_progress(),
                 //track whether the client is initialized
@@ -286,8 +293,9 @@ pub fn prepare_client_app_replication(
         .configure_sets(Update, ClientFwSet::End.before(iyes_progress::prelude::AssetsTrackProgress))
 
         //# POSTUPDATE #
-        //<-- ClientFwSetPrivate::FwEnd {girk}: disatches messages to replicon, performs final tick cleanup
+        //<-- ClientFwSetPrivate::FwEnd {girk}: dispatches messages to replicon, performs final tick cleanup
         //<-- ClientSet::Send (if connected) {replicon}: dispatches messages to renet (`send_client_packets`)
+        //<-- ClientSet::SendPackets {replicon}: forwards packets to renet
         //<-- RenetSend {renet}: dispatches packets to the server
         .configure_sets(PostUpdate,
             ClientFwSetPrivate::FwEnd
@@ -304,7 +312,7 @@ pub fn prepare_client_app_replication(
 
 /// Sets up a renet client and enables renet reconnects.
 ///
-/// Note that this method simply waits for a new connect pack to appear, then sets up a renet client.
+/// Note that this function simply waits for a new connect pack to appear, then sets up a renet client.
 /// For automatically requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
 {
@@ -316,9 +324,9 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
             // - We don't put this in Last in case the client manually disconnects halfway through Update.
             setup_renet_client.map(Result::unwrap)
                 .after(bevy_renet::RenetReceive)  //detect disconnected
-                .before(ClientSet::Receive)       //add ordering constraint
-                .run_if(not(bevy_renet::client_just_disconnected))  //ignore for first full tick while disconnected
-                .run_if(bevy_renet::client_disconnected)            //poll for connect packs while disconnected
+                .before(ClientSet::ReceivePackets)       //add ordering constraint
+                .run_if(not(client_just_disconnected))  //ignore for first full tick while disconnected
+                .run_if(client_disconnected)            //poll for connect packs while disconnected
                 .run_if(resource_exists::<RenetClientConnectPack>)  //check for connect pack
         );
 }

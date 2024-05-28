@@ -4,14 +4,18 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet::renet::{RenetClient, RenetServer, SendType};
-use bevy_replicon::network_event::EventType;
+use bevy_replicon::client::ServerInitTick;
+use bevy_replicon::core::replicon_channels::RepliconChannel;
+use bevy_replicon::core::replicon_tick::RepliconTick;
+use bevy_replicon::core::ClientId;
+use bevy_replicon::network_event::server_event::ServerEventQueue;
 use bevy_replicon::prelude::{
-    ClientCache, FromClient, NetworkChannels, RepliconTick, SendMode, ServerEventQueue, ToClients
+    ChannelKind, ConnectedClients, FromClient, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
 };
 use bincode::Options;
 use bytes::Bytes;
 
+use std::collections::HashMap;
 //standard shortcuts
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -81,18 +85,26 @@ const MAX_CLIENT_MESSAGES_PER_TICK: u16 = 64;
 
 pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 {
-    app.init_resource::<NetworkChannels>();
+    app.init_resource::<RepliconChannels>();
 
-    let mut channels = app.world.resource_mut::<NetworkChannels>();
+    let mut channels = app.world.resource_mut::<RepliconChannels>();
 
-    let unordered = SendType::ReliableUnordered{ resend_time };
-    let ordered   = SendType::ReliableOrdered{ resend_time };
+    let unordered = RepliconChannel{
+        kind: ChannelKind::Unordered,
+        resend_time,
+        max_bytes: None,
+    };
+    let ordered = RepliconChannel{
+        kind: ChannelKind::Ordered,
+        resend_time,
+        max_bytes: None,
+    };
 
-    let unreliable_game_packet   = channels.create_server_channel(EventType::Unreliable.into());
+    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable.into());
     let unordered_game_packet    = channels.create_server_channel(unordered.clone());
     let ordered_game_packet      = channels.create_server_channel(ordered.clone());
-    let unreliable_client_packet = channels.create_client_channel(EventType::Unreliable.into());
-    let unorderd_client_packet   = channels.create_client_channel(unordered);
+    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable.into());
+    let unordered_client_packet  = channels.create_client_channel(unordered);
     let ordered_client_packet    = channels.create_client_channel(ordered);
 
     app
@@ -100,7 +112,7 @@ pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
         .insert_resource(EventChannel::<(GamePacket, SendUnordered)>::new(unordered_game_packet))
         .insert_resource(EventChannel::<(GamePacket, SendOrdered)>::new(ordered_game_packet))
         .insert_resource(EventChannel::<(ClientPacket, SendUnreliable)>::new(unreliable_client_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unorderd_client_packet))
+        .insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unordered_client_packet))
         .insert_resource(EventChannel::<(ClientPacket, SendOrdered)>::new(ordered_client_packet));
 }
 
@@ -109,8 +121,8 @@ pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 /// Server -> Client
 pub(crate) fn send_server_packets(
     mut game_packets   : ResMut<Events<ToClients<GamePacket>>>,
-    client_cache       : Res<ClientCache>,
-    mut server         : ResMut<RenetServer>,
+    client_cache       : Res<ConnectedClients>,
+    mut server         : ResMut<RepliconServer>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
@@ -146,9 +158,9 @@ pub(crate) fn send_server_packets(
 
         match packet.event.send_policy
         {
-            EventType::Unreliable => server.send_message(client_id, unreliable_channel.id, message.bytes.clone()),
-            EventType::Unordered  => server.send_message(client_id, unordered_channel.id, message.bytes.clone()),
-            EventType::Ordered    => server.send_message(client_id, ordered_channel.id, message.bytes.clone())
+            ChannelKind::Unreliable => server.send(client_id, unreliable_channel.id, message.bytes.clone()),
+            ChannelKind::Unordered  => server.send(client_id, unordered_channel.id, message.bytes.clone()),
+            ChannelKind::Ordered    => server.send(client_id, ordered_channel.id, message.bytes.clone())
         }
 
         // cache this message for possible re-use with the next client
@@ -160,30 +172,30 @@ pub(crate) fn send_server_packets(
 
 /// Client <- Server
 pub(crate) fn receive_server_packets(
-    mut client         : ResMut<RenetClient>,
+    mut client         : ResMut<RepliconClient>,
     mut game_packets   : EventWriter<GamePacket>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
     mut event_queue    : ResMut<ServerEventQueue<GamePacket>>,
-    replicon_tick      : Res<RepliconTick>,
+    replicon_tick      : Res<ServerInitTick>,
 ){
     // receive ordered messages first since they are probably oldest
     for &(channel_id, send_policy) in
         [
-            (Into::<u8>::into(ordered_channel.id), EventType::Ordered),
-            (Into::<u8>::into(unordered_channel.id), EventType::Unordered),
-            (Into::<u8>::into(unreliable_channel.id), EventType::Unreliable),
+            (Into::<u8>::into(ordered_channel.id), ChannelKind::Ordered),
+            (Into::<u8>::into(unordered_channel.id), ChannelKind::Unordered),
+            (Into::<u8>::into(unreliable_channel.id), ChannelKind::Unreliable),
         ].iter()
     {
-        while let Some(mut message) = client.receive_message(channel_id)
+        for mut message in client.receive(channel_id)
         {
             // extract the layered-in replicon change tick
             let Some(change_tick) = deser_bytes_partial::<RepliconTick>(&mut message)
             else { tracing::error!("failed deserializing change tick, ignoring server message"); continue; };
             let packet = GamePacket{ send_policy, message };
 
-            match change_tick <= *replicon_tick
+            match change_tick <= **replicon_tick
             {
                 true  => { game_packets.send(packet); }
                 false => { event_queue.insert(change_tick, packet); }
@@ -197,7 +209,7 @@ pub(crate) fn receive_server_packets(
 /// Client -> Server
 pub(crate) fn send_client_packets(
     mut client_packets : ResMut<Events<ClientPacket>>,
-    mut client         : ResMut<RenetClient>,
+    mut client         : ResMut<RepliconClient>,
     unreliable_channel : Res<EventChannel<(ClientPacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(ClientPacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(ClientPacket, SendOrdered)>>,
@@ -206,9 +218,9 @@ pub(crate) fn send_client_packets(
     {
         match client_packet.send_policy
         {
-            EventType::Unreliable => client.send_message(unreliable_channel.id, client_packet.request),
-            EventType::Unordered  => client.send_message(unordered_channel.id, client_packet.request),
-            EventType::Ordered    => client.send_message(ordered_channel.id, client_packet.request)
+            ChannelKind::Unreliable => client.send(unreliable_channel.id, client_packet.request),
+            ChannelKind::Unordered  => client.send(unordered_channel.id, client_packet.request),
+            ChannelKind::Ordered    => client.send(ordered_channel.id, client_packet.request)
         }
     }
 }
@@ -217,42 +229,41 @@ pub(crate) fn send_client_packets(
 
 /// Server <- Client
 pub(crate) fn receive_client_packets(
-    mut server         : ResMut<RenetServer>,
+    mut messages_count : Local<HashMap<ClientId, u16>>,
+    mut server         : ResMut<RepliconServer>,
     mut client_packets : EventWriter<FromClient<ClientPacket>>,
     unreliable_channel : Res<EventChannel<(ClientPacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(ClientPacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(ClientPacket, SendOrdered)>>,
     clients            : Res<GameFwClients>
 ){
-    for client_id in server.clients_id()
+    messages_count.clear();
+
+    // receive ordered messages first since they are probably oldest
+    for &(channel_id, send_policy) in
+        [
+            (Into::<u8>::into(ordered_channel.id), ChannelKind::Ordered),
+            (Into::<u8>::into(unordered_channel.id), ChannelKind::Unordered),
+            (Into::<u8>::into(unreliable_channel.id), ChannelKind::Unreliable),
+        ].iter()
     {
-        // ignore unregistered client ids
-        // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
-        if !clients.contains(&client_id) { tracing::error!(?client_id, "ignoring client with unknown id"); continue; };
-
-        // receive ordered messages first since they are probably oldest
-        let mut messages_count = 0;
-
-        for &(channel_id, send_policy) in
-            [
-                (Into::<u8>::into(ordered_channel.id), EventType::Ordered),
-                (Into::<u8>::into(unordered_channel.id), EventType::Unordered),
-                (Into::<u8>::into(unreliable_channel.id), EventType::Unreliable),
-            ].iter()
+        for (client_id, request) in server.receive(channel_id)
         {
-            while let Some(request) = server.receive_message(client_id, channel_id)
-            {
-                // if too many messages were received this tick, ignore the remaining messages
-                messages_count += 1;
-                if messages_count > MAX_CLIENT_MESSAGES_PER_TICK
-                {
-                    tracing::trace!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
-                    continue;
-                }
+            // ignore unregistered client ids
+            // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
+            if !clients.contains(&client_id) { tracing::error!(?client_id, "ignoring client with unknown id"); continue; };
 
-                // send packet into server
-                client_packets.send(FromClient{client_id, event: ClientPacket{ send_policy, request } });
+            // if too many messages were received this tick, ignore the remaining messages
+            let messages_count = messages_count.entry(client_id).or_default();
+            *messages_count += 1;
+            if *messages_count > MAX_CLIENT_MESSAGES_PER_TICK
+            {
+                tracing::trace!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
+                continue;
             }
+
+            // send packet into server
+            client_packets.send(FromClient{ client_id, event: ClientPacket{ send_policy, request } });
         }
     }
 }

@@ -52,7 +52,7 @@ fn basic_game_and_client()
 
     // make the client ready
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: renet::ClientId::from_raw(0u64),
+            client_id: ClientId::new(0u64),
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -63,7 +63,7 @@ fn basic_game_and_client()
 
     // send ping request
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: renet::ClientId::from_raw(0u64),
+            client_id: ClientId::new(0u64),
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -83,7 +83,7 @@ fn basic_game_and_client()
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            SERVER_ID,
+            ClientId::SERVER,
             *game_initializer.game_context.duration_config()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -92,7 +92,7 @@ fn basic_game_and_client()
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(
-            ReplicationPlugins
+            RepliconPlugins
                 .build()
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
@@ -100,7 +100,10 @@ fn basic_game_and_client()
                     ..Default::default()
                 })
         )
-        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+        .add_plugins(VisibilityAttributesPlugin{
+            server_id: Some(ClientId::SERVER),
+            reconnect_policy: ReconnectPolicy::Reset
+        })
         //setup game framework
         .insert_resource(GameFwConfig::new(ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
@@ -132,7 +135,7 @@ fn basic_game_and_client()
         //game framework
         //client framework
         .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::from_raw(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::new(0u64) ))
         //game
         .insert_resource(game_initializer)
         //client core

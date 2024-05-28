@@ -113,7 +113,7 @@ Visibility of entities and game messages is controlled by [bevy_replicon_attribu
 
 - Insert a `ClientRequestHandler` resource to the app with your desired request-handling callback.
     - The callback should use `deserialize_client_request()?` to extract requests. This function is exposed in case you want to read `ClientFwRequest`s sent by the client framework.
-- Insert a `GameMessageType` resource to the app with your desired game message type. The message type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
+- Insert a `GameMessageType` resource to the app with your desired game message type. The message type must implement `IntoChannelKind` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
 
@@ -151,7 +151,7 @@ The client app is a GUI where you play a game. Clients communicate with the game
 
 - Insert a `GameMessageHandler` resource to your app with your desired message-handling callback.
     - The callback should use `deserialize_game_message()?` to extract messages. This function is exposed in case you want to read `GameFwMsg`s sent by the game framework.
-- Insert a `ClientRequestType` resource to your app with your desired client request type. The request type must implement `IntoEventType` for determining the message send policy (ordered/unordered/unreliable).
+- Insert a `ClientRequestType` resource to your app with your desired client request type. The request type must implement `IntoChannelKind` for determining the message send policy (ordered/unordered/unreliable).
 
 **API**
 

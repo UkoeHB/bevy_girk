@@ -7,6 +7,7 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
+use bevy_replicon_renet::RepliconRenetServerPlugin;
 use bevy_replicon_repair::AppReplicationRepairExt;
 #[allow(unused_imports)]
 use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
@@ -25,6 +26,7 @@ fn dummy() {}
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+//todo: use bevy_replicon events once they implement Debug
 fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEvent>)
 {
     for event in server_events.read()
@@ -48,12 +50,12 @@ fn log_transport_errors(mut transport_errors: EventReader<renet::transport::Netc
 //-------------------------------------------------------------------------------------------------------------------
 
 fn reset_clients_on_disconnect(
-    mut server_events : EventReader<bevy_renet::renet::ServerEvent>,
+    mut server_events : EventReader<bevy_replicon::prelude::ServerEvent>,
     mut readiness     : ResMut<ClientReadiness>,
 ){
     for event in server_events.read()
     {
-        let bevy_renet::renet::ServerEvent::ClientDisconnected{ client_id, .. } = event else { continue; };
+        let bevy_replicon::prelude::ServerEvent::ClientDisconnected{ client_id, .. } = event else { continue; };
 
         readiness.set(*client_id, Readiness::default());
     }
@@ -123,7 +125,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         // add bevy_replicon server
         .add_plugins(bevy::time::TimePlugin)  //required by bevy_renet
         .add_plugins(
-            ReplicationPlugins
+            RepliconPlugins
                 .build()
                 .disable::<ClientPlugin>()
                 .set(ServerPlugin{
@@ -132,6 +134,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                     update_timeout,
                 })
         )
+        .add_plugins(RepliconRenetServerPlugin)
         //enable visibility attributes
         .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Repair })
         //enable replication repair for client reconnects
@@ -139,19 +142,20 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         .add_plugins(bevy_replicon_repair::ServerPlugin)
         //prepare message channels
         //- note: the event types specified here do nothing
-        .add_server_event_with::<GamePacket, _, _>(EventType::Unreliable, send_server_packets, dummy)
-        .add_client_event_with::<ClientPacket, _, _>(EventType::Unreliable, dummy, receive_client_packets)
+        .add_server_event_with::<GamePacket, _, _>(ChannelKind::Unreliable, send_server_packets, dummy)
+        .add_client_event_with::<ClientPacket, _, _>(ChannelKind::Unreliable, dummy, receive_client_packets)
         //register GameInitProgress for replication
         .replicate_repair::<GameInitProgress>()
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: receive network packets from clients
-        //<-- ServerSet::Receive {replicon}: process client acks and connection events
+        //<-- ServerSet::ReceivePackets {replicon}: collect renet packets
         //<-- ServerRepairSet {replicon repair}: repairs replicon server internal trackers for reconnected clients
+        //<-- ServerSet::Receive {replicon}: process client acks and connection events
         //<-- GameFwSetPrivate::FwStart {girk}: prepares the app for this tick
         .configure_sets(PreUpdate,
             GameFwSetPrivate::FwStart
-                .after(bevy_replicon_repair::ServerRepairSet)
+                .after(bevy_replicon::prelude::ServerSet::Receive)
         )
 
         //# UPDATE #
@@ -191,7 +195,7 @@ pub fn prepare_game_app_network(
     wasm_count         : usize,
 ) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    //todo: wasm single player, we don't need auth key, just use in-memory transport (need server config enum)
+    //todo: single player w/ in-memory transport (need server config enum) (waiting on worldswap integration)
     //todo: set up renet server transports based on client types
 
     let mut native_meta = None;

@@ -10,6 +10,7 @@ use crate::test_helpers::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_renet::renet::RenetClient;
+use bevy_replicon::prelude::*;
 
 //standard shortcuts
 
@@ -79,7 +80,7 @@ fn raw_localhost_network_demo(num_players: usize)
         // set up client framework
         let client_fw_config = ClientFwConfig::new(
                 ticks_per_sec,
-                ClientId::from_raw(client_id as u64),
+                ClientId::new(client_id as u64),
             );
 
         let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_fw_config);
@@ -90,7 +91,7 @@ fn raw_localhost_network_demo(num_players: usize)
 
         // prepare client initializer
         let player_context = ClickPlayerContext::new(
-            ClientId::from_raw(client_id as u64),
+                ClientId::new(client_id as u64),
                 *game_initializer.game_context.duration_config()
             );
         let player_initializer = ClickPlayerInitializer{ player_context };
@@ -104,7 +105,7 @@ fn raw_localhost_network_demo(num_players: usize)
     // make watcher client to demo non-player client with no replication
     let client_fw_config = ClientFwConfig::new(
             ticks_per_sec,
-            ClientId::from_raw(num_players as u64),
+            ClientId::new(num_players as u64),
         );
 
     let mut watcher_client_app = App::new();

@@ -2,7 +2,7 @@
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_replicon::prelude::EventType;
+use bevy_replicon::prelude::ChannelKind;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -18,9 +18,9 @@ pub enum GameRequest
     ClickButton,
 }
 
-impl IntoEventType for GameRequest
+impl IntoChannelKind for GameRequest
 {
-    fn into_event_type(&self) -> EventType
+    fn into_event_type(&self) -> ChannelKind
     {
         match self
         {

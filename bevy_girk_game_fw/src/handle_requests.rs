@@ -4,7 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
-use bevy_replicon::prelude::FromClient;
+use bevy_replicon::prelude::{ClientId, FromClient};
 
 //standard shortcuts
 

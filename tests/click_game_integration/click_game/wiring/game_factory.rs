@@ -8,6 +8,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -187,7 +188,7 @@ fn get_game_start_infos(
                 GameStartInfo{
                     game_id,
                     user_id: *user_id,
-                    client_id: client_id.raw(),
+                    client_id: client_id.get(),
                     serialized_start_data: ser_msg(&client_start_pack),
                 }
             );

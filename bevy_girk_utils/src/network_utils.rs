@@ -1,10 +1,8 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_renet::renet::ClientId;
 use bevy_renet::renet::transport::ConnectToken;
 use bevy_replicon::prelude::*;
-use bevy_replicon::network_event::EventType;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
@@ -24,7 +22,7 @@ pub struct TargetAllExcept(pub u64);
 
 impl From<TargetClient> for SendMode
 {
-    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(ClientId::from_raw(client.0)) }
+    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(ClientId::new(client.0)) }
 }
 impl From<TargetAll> for SendMode
 {
@@ -32,7 +30,7 @@ impl From<TargetAll> for SendMode
 }
 impl From<TargetAllExcept> for SendMode
 {
-    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(ClientId::from_raw(exception.0)) }
+    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(ClientId::new(exception.0)) }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -44,17 +42,17 @@ pub struct SendUnordered;
 #[derive(Debug, Copy, Clone)]
 pub struct SendOrdered;
 
-impl From<SendUnreliable> for EventType
+impl From<SendUnreliable> for ChannelKind
 {
-    fn from(_: SendUnreliable) -> EventType { return EventType::Unreliable }
+    fn from(_: SendUnreliable) -> ChannelKind { return ChannelKind::Unreliable }
 }
-impl From<SendUnordered> for EventType
+impl From<SendUnordered> for ChannelKind
 {
-    fn from(_: SendUnordered) -> EventType { return EventType::Unordered }
+    fn from(_: SendUnordered) -> ChannelKind { return ChannelKind::Unordered }
 }
-impl From<SendOrdered> for EventType
+impl From<SendOrdered> for ChannelKind
 {
-    fn from(_: SendOrdered) -> EventType { return EventType::Ordered }
+    fn from(_: SendOrdered) -> ChannelKind { return ChannelKind::Ordered }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -62,17 +60,17 @@ impl From<SendOrdered> for EventType
 /// Helper trait for converting a message type into its send policy.
 ///
 /// Especially useful for enum-type messages where different variants have different send policies.
-pub trait IntoEventType
+pub trait IntoChannelKind
 {
-    fn into_event_type(&self) -> EventType;
+    fn into_event_type(&self) -> ChannelKind;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Default implementation for tests.
-impl IntoEventType for ()
+impl IntoChannelKind for ()
 {
-    fn into_event_type(&self) -> EventType { EventType::Unreliable }
+    fn into_event_type(&self) -> ChannelKind { ChannelKind::Unreliable }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

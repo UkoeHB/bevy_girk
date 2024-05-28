@@ -9,7 +9,8 @@ use bevy_renet::renet::transport::{
     ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
     ServerConfig,
 };
-use bevy_replicon::prelude::NetworkChannels;
+use bevy_replicon::core::replicon_channels::RepliconChannels;
+use bevy_replicon_renet::RenetChannelsExt;
 
 //standard shortcuts
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
@@ -131,18 +132,18 @@ fn create_localhost_test_client(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up a renet client with default transport using the provided authentication and client address.
-/// - Assumes there is a `bevy_replicon::NetworkChannels` resource already loaded in the app.
+/// - Assumes there is a `bevy_replicon::RepliconChannels` resource already loaded in the app.
 fn setup_native_renet_client(
     In((
         authentication,
         client_address
     ))                      : In<(ClientAuthentication, SocketAddr)>,
     mut client_app_commands : Commands,
-    network_channels        : Res<NetworkChannels>,
+    replicon_channels       : Res<RepliconChannels>,
 ){
     // get server/client channels
-    let server_channels  = network_channels.get_server_configs();
-    let client_channels  = network_channels.get_client_configs();
+    let server_channels = replicon_channels.get_server_configs();
+    let client_channels = replicon_channels.get_client_configs();
 
     // make server
     let (client, client_transport) = create_client(
@@ -161,15 +162,15 @@ fn setup_native_renet_client(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Set up a renet server with default transport using the provided `ServerConfig`.
-/// - Assumes there is a bevy_replicon::NetworkChannels resource already loaded in the app.
+/// - Assumes there is a bevy_replicon::RepliconChannels resource already loaded in the app.
 pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerConfig) -> SocketAddr
 {
     tracing::info!("setting up renet server");
 
     // get server/client channels
-    let network_channels = server_app.world.resource::<NetworkChannels>();
-    let server_channels  = network_channels.get_server_configs();
-    let client_channels  = network_channels.get_client_configs();
+    let replicon_channels = server_app.world.resource::<RepliconChannels>();
+    let server_channels   = replicon_channels.get_server_configs();
+    let client_channels   = replicon_channels.get_client_configs();
 
     // make server
     let (server, server_transport) = create_server(
@@ -264,9 +265,9 @@ pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
 pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Vec<App>)
 {
     // get server/client channels
-    let network_channels = server_app.world.resource::<NetworkChannels>();
-    let server_channels  = network_channels.get_server_configs();
-    let client_channels  = network_channels.get_client_configs();
+    let replicon_channels = server_app.world.resource::<RepliconChannels>();
+    let server_channels   = replicon_channels.get_server_configs();
+    let client_channels   = replicon_channels.get_client_configs();
 
     // make server
     let (server, server_transport) = create_localhost_test_server(

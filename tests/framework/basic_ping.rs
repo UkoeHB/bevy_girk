@@ -37,7 +37,7 @@ fn basic_ping()
 
     // make the client ready
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: SERVER_ID,
+            client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -48,7 +48,7 @@ fn basic_ping()
 
     // send ping request
     app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: SERVER_ID,
+            client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -64,7 +64,7 @@ fn basic_ping()
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(
-            ReplicationPlugins
+            RepliconPlugins
                 .build()
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
@@ -72,7 +72,10 @@ fn basic_ping()
                     ..Default::default()
                 })
         )
-        .add_plugins(VisibilityAttributesPlugin{ server_id: Some(SERVER_ID), reconnect_policy: ReconnectPolicy::Reset })
+        .add_plugins(VisibilityAttributesPlugin{
+            server_id: Some(ClientId::SERVER),
+            reconnect_policy: ReconnectPolicy::Reset
+        })
         //setup game framework
         .insert_resource(GameFwConfig::new( 1, 1, 0 ))
         .insert_resource(GameMessageType::new::<()>())

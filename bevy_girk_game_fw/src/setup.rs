@@ -21,7 +21,7 @@ pub(crate) fn setup_game_fw_state(clients: Res<GameFwClients>, mut commands: Com
     // Spawn empty replicated entity to ensure replication initializes in the first world tick.
     // - This way clients can reliably check for the first replication message as part of initialization progress
     //   even if the game does not replicate entities at startup.
-    commands.spawn(Replication);
+    commands.spawn(Replicated);
 
     // Initialize readiness for each client.
     let mut readiness = ClientReadiness::new();
