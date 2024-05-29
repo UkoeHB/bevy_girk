@@ -9,7 +9,7 @@ use bevy_renet::renet::transport::{
     ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
     ServerConfig,
 };
-use bevy_replicon::core::replicon_channels::RepliconChannels;
+use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet::RenetChannelsExt;
 
 //standard shortcuts

@@ -4,10 +4,9 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet::client_connected;
 use bevy_replicon::client::{ClientSet, ServerInitTick};
-use bevy_replicon::core::common_conditions::server_running;
-use bevy_replicon::core::replicon_channels::RepliconChannel;
+use bevy_replicon::core::common_conditions::{client_connected, server_running};
+use bevy_replicon::core::channels::RepliconChannel;
 use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::core::ClientId;
 use bevy_replicon::prelude::{
@@ -55,7 +54,7 @@ struct SerializedGamePacket
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Serializes change ticks into a message.
-fn serialize_bytes_with_change_tick(
+fn serialize_bytes_with_init_tick(
     cached      : Option<SerializedGamePacket>,
     change_tick : RepliconTick,
     data        : &[u8],
@@ -206,7 +205,7 @@ fn send_server_packets(
         else { tracing::debug!(?client_id, "ignoring game packet sent to disconnected client"); continue; };
 
         // construct the final message, using the cached bytes if possible
-        let Ok(message) = serialize_bytes_with_change_tick(cached, client.change_tick(), &packet.event.message)
+        let Ok(message) = serialize_bytes_with_init_tick(cached, client.init_tick(), &packet.event.message)
         else { tracing::error!(?client_id, "failed serializing game packet for client"); continue; };
 
         match packet.event.send_policy
@@ -244,15 +243,15 @@ fn receive_server_packets(
     {
         for mut message in client.receive(channel_id)
         {
-            // extract the layered-in replicon change tick
-            let Some(change_tick) = deser_bytes_partial::<RepliconTick>(&mut message)
-            else { tracing::error!("failed deserializing change tick, ignoring server message"); continue; };
+            // extract the layered-in replicon init tick
+            let Some(init_tick) = deser_bytes_partial::<RepliconTick>(&mut message)
+            else { tracing::error!("failed deserializing init tick, ignoring server message"); continue; };
             let packet = GamePacket{ send_policy, message };
 
-            match change_tick <= **replicon_tick
+            match init_tick <= **replicon_tick
             {
                 true  => { game_packets.send(packet); }
-                false => { packet_queue.insert(change_tick, packet); }
+                false => { packet_queue.insert(init_tick, packet); }
             }
         }
     }
@@ -361,6 +360,12 @@ pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// System set that runs in [`PostUpdate`] between [`ServerSet::Send`] and [`ServerSet::SendPackets`].
+///
+/// [`GamePackets`](GamePacket) are sent here.
+#[derive(SystemSet, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub struct SendServerEventsSet;
+
 /// Plugin for server.
 pub(crate) struct ServerEventHandlingPlugin;
 
@@ -370,6 +375,12 @@ impl Plugin for ServerEventHandlingPlugin
     {
         app.init_resource::<Events<FromClient<ClientPacket>>>()
             .init_resource::<Events<ToClients<GamePacket>>>()
+            .configure_sets(PostUpdate,
+                SendServerEventsSet
+                    .after(ServerSet::Send)
+                    .before(ServerSet::SendPackets)
+                    .run_if(server_running)
+            )
             .add_systems(
                 PreUpdate,
                 receive_client_packets
@@ -379,16 +390,18 @@ impl Plugin for ServerEventHandlingPlugin
             .add_systems(
                 PostUpdate,
                 send_server_packets
-                    //.after(ServerPlugin::send_replication)
-                    //todo: SendServerEventsSet
-                    .after(ServerSet::Send)
-                    .before(ServerSet::SendPackets)
-                    .run_if(server_running)
+                    .in_set(SendServerEventsSet)
             );
     }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+
+/// System set that runs in [`PreUpdate`] after [`ClientSet::Receive`].
+///
+/// [`GamePackets`](GamePacket) are collected here.
+#[derive(SystemSet, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub struct ReceiveServerEventsSet;
 
 /// Plugin for client.
 pub(crate) struct ClientEventHandlingPlugin;
@@ -400,6 +413,11 @@ impl Plugin for ClientEventHandlingPlugin
         app.add_event::<GamePacket>()  //from game
             .add_event::<ClientPacket>()  //to game
             .init_resource::<GamePacketQueue>()
+            .configure_sets(PreUpdate,
+                ReceiveServerEventsSet
+                    .after(ClientSet::Receive)
+                    .run_if(client_connected)
+            )
             .add_systems(
                 PreUpdate,
                 (
@@ -415,10 +433,7 @@ impl Plugin for ClientEventHandlingPlugin
                     receive_server_packets
                 )
                     .chain()
-                    //todo: ReceiveServerEventsSet
-                    .after(ClientSet::ReceivePackets)
-                    .before(ClientSet::Receive)
-                    .run_if(client_connected)
+                    .in_set(ReceiveServerEventsSet)
             )
             .add_systems(
                 PostUpdate,

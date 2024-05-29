@@ -205,6 +205,7 @@ pub fn prepare_client_app_replication(
         //<-- ClientSet::ResetEvents (if client just connected) {replicon}: ensures client and server messages
         //    don't leak across a reconnect
         //<-- ClientSet::Receive {replicon}: collects replication messages
+        //<-- ReceiveServerEventsSet {girk}: collects GamePacket messages
         //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
         //    disconnect
         //TODO: ClientSet::SyncHierarchy
@@ -219,6 +220,10 @@ pub fn prepare_client_app_replication(
             ClientSet::Receive
                 .run_if(not(in_state(ClientFwMode::Connecting)))
                 .run_if(not(client_just_connected))
+        )
+        .configure_sets(PreUpdate,
+            ReceiveServerEventsSet
+                .before(bevy_replicon_repair::ClientRepairSet)
         )
         .configure_sets(PreUpdate,
             ClientFwSetPrivate::FwStart
@@ -304,7 +309,7 @@ pub fn prepare_client_app_replication(
 
 /// Sets up a renet client and enables renet reconnects.
 ///
-/// Note that this function simply waits for a new connect pack to appear, then sets up a renet client.
+/// Note that here we just wait for a new connect pack to appear, then set up a renet client.
 /// For automatically requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClientConnectPack)
 {
@@ -316,7 +321,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
             // - We don't put this in Last in case the client manually disconnects halfway through Update.
             setup_renet_client.map(Result::unwrap)
                 .after(bevy_renet::RenetReceive)  //detect disconnected
-                .before(ClientSet::ReceivePackets)       //add ordering constraint
+                .before(ClientSet::ReceivePackets)      //add ordering constraint
                 .run_if(not(client_just_disconnected))  //ignore for first full tick while disconnected
                 .run_if(client_disconnected)            //poll for connect packs while disconnected
                 .run_if(resource_exists::<RenetClientConnectPack>)  //check for connect pack
