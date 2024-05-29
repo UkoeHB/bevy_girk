@@ -20,6 +20,7 @@ iyes_progress            = { workspace = true }
 serde                    = { workspace = true }
 renet                    = { workspace = true, features = ["transport"] }  #todo: want this feature on wasm?
 tracing                  = { workspace = true }
+ordered-multimap         = { version = "0.7" }
 wasm-timer               = { version = "0.2" }
 
 bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }

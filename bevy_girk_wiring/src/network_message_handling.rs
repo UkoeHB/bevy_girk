@@ -4,19 +4,22 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::client::ServerInitTick;
+use bevy_renet::client_connected;
+use bevy_replicon::client::{ClientSet, ServerInitTick};
+use bevy_replicon::core::common_conditions::server_running;
 use bevy_replicon::core::replicon_channels::RepliconChannel;
 use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::core::ClientId;
-use bevy_replicon::network_event::server_event::ServerEventQueue;
 use bevy_replicon::prelude::{
     ChannelKind, ConnectedClients, FromClient, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
 };
+use bevy_replicon::server::ServerSet;
 use bincode::Options;
 use bytes::Bytes;
+use ordered_multimap::ListOrderedMultimap;
 
-use std::collections::HashMap;
 //standard shortcuts
+use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -25,7 +28,8 @@ use std::time::Duration;
 
 /// Holds a server's channel ID for `T`.
 #[derive(Resource)]
-pub struct EventChannel<T> {
+struct EventChannel<T>
+{
     id: u8,
     marker: PhantomData<T>,
 }
@@ -82,44 +86,93 @@ fn serialize_bytes_with_change_tick(
 const MAX_CLIENT_MESSAGES_PER_TICK: u16 = 64;
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
-{
-    app.init_resource::<RepliconChannels>();
-
-    let mut channels = app.world.resource_mut::<RepliconChannels>();
-
-    let unordered = RepliconChannel{
-        kind: ChannelKind::Unordered,
-        resend_time,
-        max_bytes: None,
-    };
-    let ordered = RepliconChannel{
-        kind: ChannelKind::Ordered,
-        resend_time,
-        max_bytes: None,
-    };
-
-    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable.into());
-    let unordered_game_packet    = channels.create_server_channel(unordered.clone());
-    let ordered_game_packet      = channels.create_server_channel(ordered.clone());
-    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable.into());
-    let unordered_client_packet  = channels.create_client_channel(unordered);
-    let ordered_client_packet    = channels.create_client_channel(ordered);
-
-    app
-        .insert_resource(EventChannel::<(GamePacket, SendUnreliable)>::new(unreliable_game_packet))
-        .insert_resource(EventChannel::<(GamePacket, SendUnordered)>::new(unordered_game_packet))
-        .insert_resource(EventChannel::<(GamePacket, SendOrdered)>::new(ordered_game_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendUnreliable)>::new(unreliable_client_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unordered_client_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendOrdered)>::new(ordered_client_packet));
+/// Applies all queued events if their tick is less or equal to `ServerInitTick`.
+fn pop_game_packet_queue(
+    init_tick: Res<ServerInitTick>,
+    mut server_events: EventWriter<GamePacket>,
+    mut event_queue: ResMut<GamePacketQueue>,
+){
+    while let Some((_, event)) = event_queue.pop_if_le(**init_tick)
+    {
+        server_events.send(event);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Clears queued events.
+///
+/// We clear events while waiting for a connection to ensure clean reconnects.
+fn reset_game_packet_queue(mut event_queue: ResMut<GamePacketQueue>)
+{
+    if !event_queue.0.is_empty()
+    {
+        warn!(
+            "discarding {} queued server events due to a disconnect",
+            event_queue.0.values_len()
+        );
+    }
+    event_queue.0.clear();
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Discards all pending events.
+///
+/// We discard events while waiting to connect to ensure clean reconnects.
+fn reset_client_packet_events(mut events: ResMut<Events<ClientPacket>>)
+{
+    let drained_count = events.drain().count();
+    if drained_count > 0 { warn!("discarded {drained_count} client events due to a disconnect"); }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Stores all received events from server that arrived earlier then replication message with their tick.
+///
+/// Stores data sorted by ticks and maintains order of arrival.
+/// Needed to ensure that when an event is triggered, all the data that it affects or references already exists.
+#[derive(Resource)]
+struct GamePacketQueue(ListOrderedMultimap<RepliconTick, GamePacket>);
+
+impl GamePacketQueue {
+    /// Inserts a new event.
+    ///
+    /// The event will be queued until [`RepliconTick`] is bigger or equal to the tick specified here.
+    fn insert(&mut self, tick: RepliconTick, event: GamePacket)
+    {
+        self.0.insert(tick, event);
+    }
+
+    /// Pops the next event that is at least as old as the specified replicon tick.
+    fn pop_if_le(&mut self, init_tick: RepliconTick) -> Option<(RepliconTick, GamePacket)>
+    {
+        let (tick, _) = self.0.front()?;
+        if *tick > init_tick { return None; }
+        self.0
+            .pop_front()
+            .map(|(tick, event)| (tick.into_owned(), event))
+    }
+}
+
+impl Default for GamePacketQueue
+{
+    fn default() -> Self
+    {
+        Self(Default::default())
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
 /// Server -> Client
-pub(crate) fn send_server_packets(
+fn send_server_packets(
     mut game_packets   : ResMut<Events<ToClients<GamePacket>>>,
     client_cache       : Res<ConnectedClients>,
     mut server         : ResMut<RepliconServer>,
@@ -169,15 +222,16 @@ pub(crate) fn send_server_packets(
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
 /// Client <- Server
-pub(crate) fn receive_server_packets(
+fn receive_server_packets(
     mut client         : ResMut<RepliconClient>,
     mut game_packets   : EventWriter<GamePacket>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
-    mut event_queue    : ResMut<ServerEventQueue<GamePacket>>,
+    mut packet_queue   : ResMut<GamePacketQueue>,
     replicon_tick      : Res<ServerInitTick>,
 ){
     // receive ordered messages first since they are probably oldest
@@ -198,16 +252,17 @@ pub(crate) fn receive_server_packets(
             match change_tick <= **replicon_tick
             {
                 true  => { game_packets.send(packet); }
-                false => { event_queue.insert(change_tick, packet); }
+                false => { packet_queue.insert(change_tick, packet); }
             }
         }
     }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
 /// Client -> Server
-pub(crate) fn send_client_packets(
+fn send_client_packets(
     mut client_packets : ResMut<Events<ClientPacket>>,
     mut client         : ResMut<RepliconClient>,
     unreliable_channel : Res<EventChannel<(ClientPacket, SendUnreliable)>>,
@@ -226,9 +281,10 @@ pub(crate) fn send_client_packets(
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
 
 /// Server <- Client
-pub(crate) fn receive_client_packets(
+fn receive_client_packets(
     mut messages_count : Local<HashMap<ClientId, u16>>,
     mut server         : ResMut<RepliconServer>,
     mut client_packets : EventWriter<FromClient<ClientPacket>>,
@@ -265,6 +321,113 @@ pub(crate) fn receive_client_packets(
             // send packet into server
             client_packets.send(FromClient{ client_id, event: ClientPacket{ send_policy, request } });
         }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
+{
+    app.init_resource::<RepliconChannels>();
+    let mut channels = app.world.resource_mut::<RepliconChannels>();
+
+    let unordered = RepliconChannel{
+        kind: ChannelKind::Unordered,
+        resend_time,
+        max_bytes: None,
+    };
+    let ordered = RepliconChannel{
+        kind: ChannelKind::Ordered,
+        resend_time,
+        max_bytes: None,
+    };
+
+    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable.into());
+    let unordered_game_packet    = channels.create_server_channel(unordered.clone());
+    let ordered_game_packet      = channels.create_server_channel(ordered.clone());
+    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable.into());
+    let unordered_client_packet  = channels.create_client_channel(unordered);
+    let ordered_client_packet    = channels.create_client_channel(ordered);
+
+    app
+        .insert_resource(EventChannel::<(GamePacket, SendUnreliable)>::new(unreliable_game_packet))
+        .insert_resource(EventChannel::<(GamePacket, SendUnordered)>::new(unordered_game_packet))
+        .insert_resource(EventChannel::<(GamePacket, SendOrdered)>::new(ordered_game_packet))
+        .insert_resource(EventChannel::<(ClientPacket, SendUnreliable)>::new(unreliable_client_packet))
+        .insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unordered_client_packet))
+        .insert_resource(EventChannel::<(ClientPacket, SendOrdered)>::new(ordered_client_packet));
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Plugin for server.
+pub(crate) struct ServerEventHandlingPlugin;
+
+impl Plugin for ServerEventHandlingPlugin
+{
+    fn build(&self, app: &mut App)
+    {
+        app.init_resource::<Events<FromClient<ClientPacket>>>()
+            .init_resource::<Events<ToClients<GamePacket>>>()
+            .add_systems(
+                PreUpdate,
+                receive_client_packets
+                    .in_set(ServerSet::Receive)
+                    .run_if(server_running)
+            )
+            .add_systems(
+                PostUpdate,
+                send_server_packets
+                    //.after(ServerPlugin::send_replication)
+                    //todo: SendServerEventsSet
+                    .after(ServerSet::Send)
+                    .before(ServerSet::SendPackets)
+                    .run_if(server_running)
+            );
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Plugin for client.
+pub(crate) struct ClientEventHandlingPlugin;
+
+impl Plugin for ClientEventHandlingPlugin
+{
+    fn build(&self, app: &mut App)
+    {
+        app.add_event::<GamePacket>()  //from game
+            .add_event::<ClientPacket>()  //to game
+            .init_resource::<GamePacketQueue>()
+            .add_systems(
+                PreUpdate,
+                (
+                    reset_client_packet_events,
+                    reset_game_packet_queue
+                )
+                    .in_set(ClientSet::ResetEvents)
+            )
+            .add_systems(
+                PreUpdate,
+                (
+                    pop_game_packet_queue,
+                    receive_server_packets
+                )
+                    .chain()
+                    //todo: ReceiveServerEventsSet
+                    .after(ClientSet::ReceivePackets)
+                    .before(ClientSet::Receive)
+                    .run_if(client_connected)
+            )
+            .add_systems(
+                PostUpdate,
+                (
+                    send_client_packets.run_if(client_connected)
+                )
+                    .chain()
+                    .in_set(ClientSet::Send)
+            );
     }
 }
 

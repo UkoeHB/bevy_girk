@@ -20,12 +20,6 @@ use wasm_timer::{SystemTime, UNIX_EPOCH};
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Dummy system, does nothing.
-fn dummy() {}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 //todo: use bevy_replicon events once they implement Debug
 fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEvent>)
 {
@@ -122,8 +116,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
 
     // setup server with bevy_replicon (includes bevy_renet)
     game_app
-        // add bevy_replicon server
-        .add_plugins(bevy::time::TimePlugin)  //required by bevy_renet
+        //add bevy_replicon server
         .add_plugins(
             RepliconPlugins
                 .build()
@@ -134,16 +127,16 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                     update_timeout,
                 })
         )
+        // add renet backend
+        .add_plugins(bevy::time::TimePlugin)  //required by bevy_renet
         .add_plugins(RepliconRenetServerPlugin)
         //enable visibility attributes
         .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Repair })
         //enable replication repair for client reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ServerPlugin)
-        //prepare message channels
-        //- note: the event types specified here do nothing
-        .add_server_event_with::<GamePacket, _, _>(ChannelKind::Unreliable, send_server_packets, dummy)
-        .add_client_event_with::<ClientPacket, _, _>(ChannelKind::Unreliable, dummy, receive_client_packets)
+        //prepare event handling
+        .add_plugins(ServerEventHandlingPlugin)
         //register GameInitProgress for replication
         .replicate_repair::<GameInitProgress>()
 

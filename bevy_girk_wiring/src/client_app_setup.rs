@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use bevy_renet::{client_disconnected, client_just_connected, client_just_disconnected};
 use bevy_replicon::client::ServerInitTick;
 use bevy_replicon::prelude::{
-    ChannelKind, ClientEventAppExt, ClientSet, RepliconPlugins, ServerEventAppExt, ServerPlugin
+    ClientSet, RepliconPlugins, ServerPlugin
 };
 use bevy_replicon_renet::RepliconRenetClientPlugin;
 use bevy_replicon_repair::AppReplicationRepairExt;
@@ -18,12 +18,6 @@ use renet::{transport::NetcodeTransportError, RenetClient};
 
 //standard shortcuts
 use std::time::Duration;
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Dummy system, does nothing.
-fn dummy() {}
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -200,10 +194,8 @@ pub fn prepare_client_app_replication(
         //enable replication repair for reconnects
         //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
         .add_plugins(bevy_replicon_repair::ClientPlugin{ cleanup_prespawns: true })
-        //prepare message channels
-        //- note: the event types specified here do nothing
-        .add_server_event_with::<GamePacket, _, _>(ChannelKind::Unreliable, dummy, receive_server_packets)
-        .add_client_event_with::<ClientPacket, _, _>(ChannelKind::Unreliable, send_client_packets, dummy)
+        //prepare event handling
+        .add_plugins(ClientEventHandlingPlugin)
         //register GameInitProgress for replication
         .replicate_repair::<GameInitProgress>()
 
