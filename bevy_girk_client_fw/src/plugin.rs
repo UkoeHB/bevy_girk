@@ -3,7 +3,6 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::*;
 use bevy_girk_utils::*;
 use iyes_progress::prelude::*;
 
@@ -56,26 +55,30 @@ pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwMode>>) -> bool 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client startup plugin.
-#[bevy_plugin]
-pub fn ClientFwStartupPlugin(app: &mut App)
+pub struct ClientFwStartupPlugin;
+
+impl Plugin for ClientFwStartupPlugin
 {
-    app.init_state::<ClientInitializationState>()
-        .init_state::<ClientFwMode>()
-        .add_systems(PreStartup,
-            (
-                prestartup_check,
-            ).chain()
-        )
-        .add_systems(Startup,
-            (
-                setup_client_fw_state,
-            ).chain()
-        )
-        .add_systems(PostStartup,
-            (
-                poststartup_check,
-            ).chain()
-        );
+    fn build(&self, app: &mut App)
+    {
+        app.init_state::<ClientInitializationState>()
+            .init_state::<ClientFwMode>()
+            .add_systems(PreStartup,
+                (
+                    prestartup_check,
+                ).chain()
+            )
+            .add_systems(Startup,
+                (
+                    setup_client_fw_state,
+                ).chain()
+            )
+            .add_systems(PostStartup,
+                (
+                    poststartup_check,
+                ).chain()
+            );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -119,86 +122,94 @@ pub struct ClientFwLoadingSet;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client tick plugin.
-#[bevy_plugin]
-pub fn ClientFwTickPlugin(app: &mut App)
+pub struct ClientFwTickPlugin;
+
+impl Plugin for ClientFwTickPlugin
 {
-    app.add_plugins(
-            ProgressPlugin::new(ClientInitializationState::InProgress)
-                .continue_to(ClientInitializationState::Done)
-                // we check progress in PostUpdate so initialization progress can be collected and networked immediately
-                .check_progress_in(PostUpdate)
-        );
+    fn build(&self, app: &mut App)
+    {
+        app.add_plugins(
+                ProgressPlugin::new(ClientInitializationState::InProgress)
+                    .continue_to(ClientInitializationState::Done)
+                    // we check progress in PostUpdate so initialization progress can be collected and networked immediately
+                    .check_progress_in(PostUpdate)
+            );
 
-    app.configure_sets(Update,
-            (
-                ClientFwSet::Admin,
-                ClientFwSet::Start,
-                ClientFwSet::PreLogic,
-                ClientFwSet::Logic,
-                ClientFwSet::PostLogic,
-                ClientFwSet::End,
-            ).chain()
-        );
-    app.configure_sets(Update,
-            ClientFwLoadingSet
-                .run_if(in_state(ClientInitializationState::InProgress))
-        );
+        app.configure_sets(Update,
+                (
+                    ClientFwSet::Admin,
+                    ClientFwSet::Start,
+                    ClientFwSet::PreLogic,
+                    ClientFwSet::Logic,
+                    ClientFwSet::PostLogic,
+                    ClientFwSet::End,
+                ).chain()
+            );
+        app.configure_sets(Update,
+                ClientFwLoadingSet
+                    .run_if(in_state(ClientInitializationState::InProgress))
+            );
 
-    // FWSTART
-    app.add_systems(PreUpdate,
-            (
-                handle_commands,
-                // The client may have been commanded to reinitialize.
-                apply_state_transition::<ClientInitializationState>,
-                // We want connection-related mode changes to be applied here since game mode changes will be ignored if
-                // initializing.
-                apply_state_transition::<ClientFwMode>,
-                handle_game_incoming,
-                // The game may have caused a mode change (will be ignored if in the middle of initializing).
-                apply_state_transition::<ClientFwMode>,
-            ).chain().in_set(ClientFwSetPrivate::FwStart)
-        );
+        // FWSTART
+        app.add_systems(PreUpdate,
+                (
+                    handle_commands,
+                    // The client may have been commanded to reinitialize.
+                    apply_state_transition::<ClientInitializationState>,
+                    // We want connection-related mode changes to be applied here since game mode changes will be ignored if
+                    // initializing.
+                    apply_state_transition::<ClientFwMode>,
+                    handle_game_incoming,
+                    // The game may have caused a mode change (will be ignored if in the middle of initializing).
+                    apply_state_transition::<ClientFwMode>,
+                ).chain().in_set(ClientFwSetPrivate::FwStart)
+            );
 
-    // ADMIN
+        // ADMIN
 
-    // START
+        // START
 
-    // PRELOGIC
+        // PRELOGIC
 
-    // LOGIC
+        // LOGIC
 
-    // POSTLOGIC
+        // POSTLOGIC
 
-    // END
+        // END
 
-    // FWEND
-    app.add_systems(PostUpdate,
-            (
-                apply_state_transition::<ClientInitializationState>,
-                update_initialization_cache.run_if(client_is_initializing()),
-                send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
-            ).chain()
-                .in_set(ClientFwSetPrivate::FwEnd)
-                .after(iyes_progress::CheckProgressSet)
-        );
+        // FWEND
+        app.add_systems(PostUpdate,
+                (
+                    apply_state_transition::<ClientInitializationState>,
+                    update_initialization_cache.run_if(client_is_initializing()),
+                    send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
+                ).chain()
+                    .in_set(ClientFwSetPrivate::FwEnd)
+                    .after(iyes_progress::CheckProgressSet)
+            );
 
 
-    // MISC
+        // MISC
 
-    // Handle just disconnected.
-    app.add_systems(OnEnter(ClientFwMode::Connecting), reset_init_progress);
+        // Handle just disconnected.
+        app.add_systems(OnEnter(ClientFwMode::Connecting), reset_init_progress);
 
-    // Systems that should run when the client is fully initialized.
-    app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_mode);
+        // Systems that should run when the client is fully initialized.
+        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_mode);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[bevy_plugin]
-pub fn ClientFwPlugin(app: &mut App)
+pub struct ClientFwPlugin;
+
+impl Plugin for ClientFwPlugin
 {
-    app.add_plugins(ClientFwStartupPlugin)
-        .add_plugins(ClientFwTickPlugin);
+    fn build(&self, app: &mut App)
+    {
+        app.add_plugins(ClientFwStartupPlugin)
+            .add_plugins(ClientFwTickPlugin);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

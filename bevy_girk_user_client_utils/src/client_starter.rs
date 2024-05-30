@@ -2,7 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
-use bevy_fn_plugin::bevy_plugin;
+use bevy::prelude::*;
 use bevy_girk_utils::*;
 use bevy_cobweb::prelude::*;
 
@@ -95,10 +95,14 @@ impl Default for ClientStarter
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Add a [`ClientStarter`] to your app.
-#[bevy_plugin]
-pub fn ClientStarterPlugin(app: &mut App)
+pub struct ClientStarterPlugin;
+
+impl Plugin for ClientStarterPlugin
 {
-    app.insert_react_resource(ClientStarter::default());
+    fn build(&self, app: &mut App)
+    {
+        app.insert_react_resource(ClientStarter::default());
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

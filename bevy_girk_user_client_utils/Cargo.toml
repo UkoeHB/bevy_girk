@@ -8,11 +8,10 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy            = { version = "0.13", default-features = false }
-bevy_fn_plugin  = { workspace = true }
-bevy_cobweb     = { workspace = true }
-enfync          = { workspace = true }
-tracing         = { workspace = true }
+bevy        = { version = "0.13", default-features = false }
+bevy_cobweb = { workspace = true }
+enfync      = { workspace = true }
+tracing     = { workspace = true }
 
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }

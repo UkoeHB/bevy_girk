@@ -16,7 +16,6 @@ use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::{prelude::*, app::PluginGroupBuilder};
-use bevy_fn_plugin::*;
 
 //standard shortcuts
 
@@ -35,22 +34,26 @@ fn prestartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Game startup plugin.
-#[bevy_plugin]
-pub fn GameStartupPlugin(app: &mut App)
+pub struct GameStartupPlugin;
+
+impl Plugin for GameStartupPlugin
 {
-    app.init_state::<GameMode>()
-        .add_systems(PreStartup,
-            (
-                prestartup_check,
-            ).chain()
-        )
-        .add_systems(Startup,
-            (
-                setup_game_state,
-                setup_game_input_handler,
-                setup_game_message_buffer,
-            ).chain()
-        );
+    fn build(&self, app: &mut App)
+    {
+        app.init_state::<GameMode>()
+            .add_systems(PreStartup,
+                (
+                    prestartup_check,
+                ).chain()
+            )
+            .add_systems(Startup,
+                (
+                    setup_game_state,
+                    setup_game_input_handler,
+                    setup_game_message_buffer,
+                ).chain()
+            );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -71,66 +74,70 @@ pub enum GameSet
 
 /// Game tick plugin. Depends on [GameFwPlugin] and [GameStartupPlugin].
 /// Configures system sets and adds basic administrative systems.
-#[bevy_plugin]
-pub fn GameTickPlugin(app: &mut App)
+pub struct GameTickPlugin;
+
+impl Plugin for GameTickPlugin
 {
-    // GAME Tick systems (after initialization).
-    app.configure_sets(Update,
-            GameSet::PostInit
-                .run_if(not(in_state(GameFwMode::Init)))
-        );
-
-    // GAME Prep systems.
-    app.configure_sets(Update,
-                GameSet::Prep
-                    .run_if(in_state(GameFwMode::Game))
-                    .run_if(in_state(GameMode::Prep))
+    fn build(&self, app: &mut App)
+    {
+        // GAME Tick systems (after initialization).
+        app.configure_sets(Update,
+                GameSet::PostInit
+                    .run_if(not(in_state(GameFwMode::Init)))
             );
 
-    // GAME Play systems.
-    app.configure_sets(Update,
-                GameSet::Play
-                    .run_if(in_state(GameFwMode::Game))
-                    .run_if(in_state(GameMode::Play))
+        // GAME Prep systems.
+        app.configure_sets(Update,
+                    GameSet::Prep
+                        .run_if(in_state(GameFwMode::Game))
+                        .run_if(in_state(GameMode::Prep))
+                );
+
+        // GAME Play systems.
+        app.configure_sets(Update,
+                    GameSet::Play
+                        .run_if(in_state(GameFwMode::Game))
+                        .run_if(in_state(GameMode::Play))
+                );
+
+        // GAME GameOver systems.
+        //todo: this will only run in the short delay between entering 'game over' and the GameFwMode moving to 'End'
+        app.configure_sets(Update,
+                    GameSet::GameOver
+                        .run_if(in_state(GameFwMode::Game))
+                        .run_if(in_state(GameMode::GameOver))
+                );
+
+
+        // ADMIN
+        app.add_systems(Update,
+                (
+                    // determine which game mode the previous tick was in and set it
+                    update_game_mode.in_set(GameSet::PostInit),
+                    apply_state_transition::<GameMode>.in_set(GameSet::PostInit),
+                    // elapse the previous tick
+                    advance_game_tick.in_set(GameSet::PostInit),
+                    advance_prep_tick.in_set(GameSet::Prep),
+                    advance_play_tick.in_set(GameSet::Play),
+                    advance_game_over_tick.in_set(GameSet::GameOver),
+                ).chain().in_set(GameFwSet::Admin)
             );
 
-    // GAME GameOver systems.
-    //todo: this will only run in the short delay between entering 'game over' and the GameFwMode moving to 'End'
-    app.configure_sets(Update,
-                GameSet::GameOver
-                    .run_if(in_state(GameFwMode::Game))
-                    .run_if(in_state(GameMode::GameOver))
+
+        // MISC
+
+        // Respond to state transitions
+        app.add_systems(OnEnter(GameMode::Init), notify_game_mode_all);
+        app.add_systems(OnEnter(GameMode::Prep), notify_game_mode_all);
+        app.add_systems(OnEnter(GameMode::Play), notify_game_mode_all);
+        app.add_systems(OnEnter(GameMode::GameOver),
+                (
+                    notify_game_mode_all,
+                    set_game_end_flag,
+                )
+                    .chain()
             );
-
-
-    // ADMIN
-    app.add_systems(Update,
-            (
-                // determine which game mode the previous tick was in and set it
-                update_game_mode.in_set(GameSet::PostInit),
-                apply_state_transition::<GameMode>.in_set(GameSet::PostInit),
-                // elapse the previous tick
-                advance_game_tick.in_set(GameSet::PostInit),
-                advance_prep_tick.in_set(GameSet::Prep),
-                advance_play_tick.in_set(GameSet::Play),
-                advance_game_over_tick.in_set(GameSet::GameOver),
-            ).chain().in_set(GameFwSet::Admin)
-        );
-
-
-    // MISC
-
-    // Respond to state transitions
-    app.add_systems(OnEnter(GameMode::Init), notify_game_mode_all);
-    app.add_systems(OnEnter(GameMode::Prep), notify_game_mode_all);
-    app.add_systems(OnEnter(GameMode::Play), notify_game_mode_all);
-    app.add_systems(OnEnter(GameMode::GameOver),
-            (
-                notify_game_mode_all,
-                set_game_end_flag,
-            )
-                .chain()
-        );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

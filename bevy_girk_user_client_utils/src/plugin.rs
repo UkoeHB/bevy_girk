@@ -2,18 +2,22 @@
 use crate::*;
 
 //third-party shortcuts
-use bevy_fn_plugin::bevy_plugin;
+use bevy::prelude::*;
 
 //standard shortcuts
 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[bevy_plugin]
-pub fn UserClientUtilsPlugin(app: &mut App)
+pub struct UserClientUtilsPlugin;
+
+impl Plugin for UserClientUtilsPlugin
 {
-    app.add_plugins(ClientMonitorPlugin)
-        .add_plugins(ClientStarterPlugin);
+    fn build(&self, app: &mut App)
+    {
+        app.add_plugins(ClientMonitorPlugin)
+            .add_plugins(ClientStarterPlugin);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

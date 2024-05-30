@@ -5,7 +5,6 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::bevy_plugin;
 use bevy_cobweb::prelude::*;
 
 //standard shortcuts
@@ -178,11 +177,15 @@ impl Default for ClientMonitor
 /// `bevy_kot::prelude::ReactEvents<GameOverReport>` event reader.
 ///
 /// Depends on `bevy_kot::prelude::ReactPlugin`.
-#[bevy_plugin]
-pub fn ClientMonitorPlugin(app: &mut App)
+pub struct ClientMonitorPlugin;
+
+impl Plugin for ClientMonitorPlugin
 {
-    app.insert_react_resource(ClientMonitor::default())
-        .add_systems(First, cleanup_game_monitor);
+    fn build(&self, app: &mut App)
+    {
+        app.insert_react_resource(ClientMonitor::default())
+            .add_systems(First, cleanup_game_monitor);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

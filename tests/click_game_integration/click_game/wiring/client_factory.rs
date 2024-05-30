@@ -9,7 +9,6 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::*;
 use bevy_replicon::prelude::ClientId;
 
 //standard shortcuts
@@ -18,16 +17,20 @@ use bevy_replicon::prelude::ClientId;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-#[bevy_plugin]
-fn DummyClientCorePlugin(app: &mut App)
+struct DummyClientCorePlugin;
+
+impl Plugin for DummyClientCorePlugin
 {
-    app.insert_resource(GameMessageHandler::new(
-            | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
-            {
-                deserialize_game_message::<()>(packet)?;
-                Ok(())
-            }
-        ));
+    fn build(&self, app: &mut App)
+    {
+        app.insert_resource(GameMessageHandler::new(
+                | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
+                {
+                    deserialize_game_message::<()>(packet)?;
+                    Ok(())
+                }
+            ));
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

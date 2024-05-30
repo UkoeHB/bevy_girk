@@ -3,7 +3,6 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::*;
 
 //standard shortcuts
 
@@ -32,25 +31,29 @@ fn poststartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Game framework startup plugin.
-#[bevy_plugin]
-pub fn GameFwStartupPlugin(app: &mut App)
+pub struct GameFwStartupPlugin;
+
+impl Plugin for GameFwStartupPlugin
 {
-    app.init_state::<GameFwMode>()
-        .add_systems(PreStartup,
-            (
-                prestartup_check,
-            ).chain()
-        )
-        .add_systems(Startup,
-            (
-                setup_game_fw_state,
-            ).chain()
-        )
-        .add_systems(PostStartup,
-            (
-                poststartup_check,
-            ).chain()
-        );
+    fn build(&self, app: &mut App)
+    {
+        app.init_state::<GameFwMode>()
+            .add_systems(PreStartup,
+                (
+                    prestartup_check,
+                ).chain()
+            )
+            .add_systems(Startup,
+                (
+                    setup_game_fw_state,
+                ).chain()
+            )
+            .add_systems(PostStartup,
+                (
+                    poststartup_check,
+                ).chain()
+            );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -107,67 +110,71 @@ pub enum GameFwSet
 /// 4) Execute logic for the current tick.
 ///
 /// Tick 1's game mode is always [`GameFwMode::Init`].
-#[bevy_plugin]
-pub fn GameFwTickPlugin(app: &mut App)
+pub struct GameFwTickPlugin;
+
+impl Plugin for GameFwTickPlugin
 {
-    app.configure_sets(Update,
-            (
-                GameFwSet::Admin,
-                GameFwSet::Start,
-                GameFwSetPrivate::FwHandleRequests,
-                GameFwSet::PreLogic,
-                GameFwSet::Logic,
-                GameFwSet::PostLogic,
-                GameFwSet::End,
-            ).chain()
-        );
+    fn build(&self, app: &mut App)
+    {
+        app.configure_sets(Update,
+                (
+                    GameFwSet::Admin,
+                    GameFwSet::Start,
+                    GameFwSetPrivate::FwHandleRequests,
+                    GameFwSet::PreLogic,
+                    GameFwSet::Logic,
+                    GameFwSet::PostLogic,
+                    GameFwSet::End,
+                ).chain()
+            );
 
-    // FWSTART
-    app.add_systems(PreUpdate,
-            (
-                // begin the current tick
-                advance_game_fw_tick,
-                update_game_fw_mode,
-                apply_state_transition::<GameFwMode>,
-            ).chain().in_set(GameFwSetPrivate::FwStart)
-        );
+        // FWSTART
+        app.add_systems(PreUpdate,
+                (
+                    // begin the current tick
+                    advance_game_fw_tick,
+                    update_game_fw_mode,
+                    apply_state_transition::<GameFwMode>,
+                ).chain().in_set(GameFwSetPrivate::FwStart)
+            );
 
-    // ADMIN
+        // ADMIN
 
-    // START
+        // START
 
-    // FWHANDLEREQUESTS
-    // note: we handle inputs after the game fw and game core have updated their ticks and modes (in their start sets)
-    app.add_systems(Update,
-            (
-                handle_requests,
-                refresh_game_init_progress,
-            ).chain().in_set(GameFwSetPrivate::FwHandleRequests)
-        );
+        // FWHANDLEREQUESTS
+        // note: we handle inputs after the game fw and game core have updated their ticks and modes (in their start sets)
+        app.add_systems(Update,
+                (
+                    handle_requests,
+                    refresh_game_init_progress,
+                ).chain().in_set(GameFwSetPrivate::FwHandleRequests)
+            );
 
-    // PRELOGIC
+        // PRELOGIC
 
-    // LOGIC
+        // LOGIC
 
-    // POSTLOGIC
+        // POSTLOGIC
 
-    // END
+        // END
 
-    // FWEND
+        // FWEND
 
 
-    // MISC
+        // MISC
 
-    // Respond to state transitions
-    app.add_systems(OnEnter(GameFwMode::Init), notify_game_fw_mode_all)
-        .add_systems(OnEnter(GameFwMode::Game), notify_game_fw_mode_all)
-        .add_systems(OnEnter(GameFwMode::End),
-            (
-                notify_game_fw_mode_all,
-                start_end_countdown,
+        // Respond to state transitions
+        app.add_systems(OnEnter(GameFwMode::Init), notify_game_fw_mode_all)
+            .add_systems(OnEnter(GameFwMode::Game), notify_game_fw_mode_all)
+            .add_systems(OnEnter(GameFwMode::End),
+                (
+                    notify_game_fw_mode_all,
+                    start_end_countdown,
+                )
             )
-        )
-        .add_systems(Last, try_exit_app.run_if(in_state(GameFwMode::End)));
+            .add_systems(Last, try_exit_app.run_if(in_state(GameFwMode::End)));
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -176,11 +183,15 @@ pub fn GameFwTickPlugin(app: &mut App)
 ///
 /// Requires `TimePlugin` (`bevy`), `ClientCache` (`bevy_replicon`), and `VisibilityAttributesPlugin`
 /// (`bevy_replicon_attributes`).
-#[bevy_plugin]
-pub fn GameFwPlugin(app: &mut App)
+pub struct GameFwPlugin;
+
+impl Plugin for GameFwPlugin
 {
-    app.add_plugins(GameFwStartupPlugin)
-        .add_plugins(GameFwTickPlugin);
+    fn build(&self, app: &mut App)
+    {
+        app.add_plugins(GameFwStartupPlugin)
+            .add_plugins(GameFwTickPlugin);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

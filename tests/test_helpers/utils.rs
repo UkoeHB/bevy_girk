@@ -4,7 +4,6 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::*;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts
@@ -45,27 +44,31 @@ pub fn prepare_player_client_contexts(num_players: usize) -> GameFwClients
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[bevy_plugin]
-pub fn AddMockMessageChannelsPlugin(app: &mut App)
-{
-    // prepare message channels
-    app.add_event::<ClientPacket>();
-    app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
-    app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
-    app.add_event::<GamePacket>();
+pub struct AddMockMessageChannelsPlugin;
 
-    // kludge: enable first 10 clients
-    for client_id in 0..10
+impl Plugin for AddMockMessageChannelsPlugin
+{
+    fn build(&self, app: &mut App)
     {
-        app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: ClientId::new(client_id as u64),
-                event: ClientPacket{
-                        send_policy : SendOrdered.into(),
-                        request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                            }))
-                    }
-            });
+        // prepare message channels
+        app.add_event::<ClientPacket>();
+        app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
+        app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
+        app.add_event::<GamePacket>();
+
+        // kludge: enable first 10 clients
+        for client_id in 0..10
+        {
+            app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+                    client_id: ClientId::new(client_id as u64),
+                    event: ClientPacket{
+                            send_policy : SendOrdered.into(),
+                            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
+                                    req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                                }))
+                        }
+                });
+        }
     }
 }
 

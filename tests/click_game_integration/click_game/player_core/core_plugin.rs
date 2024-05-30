@@ -14,7 +14,6 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::{prelude::*, app::PluginGroupBuilder};
-use bevy_fn_plugin::*;
 use bevy_girk_utils::*;
 
 //standard shortcuts
@@ -74,92 +73,100 @@ pub enum ClientSet
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client startup plugin.
-#[bevy_plugin]
-pub fn ClientCoreStartupPlugin(app: &mut App)
+pub struct ClientCoreStartupPlugin;
+
+impl Plugin for ClientCoreStartupPlugin
 {
-    app.init_state::<ClientCoreMode>()
-        .add_systems(PreStartup,
-            (
-                prestartup_check,
+    fn build(&self, app: &mut App)
+    {
+        app.init_state::<ClientCoreMode>()
+            .add_systems(PreStartup,
+                (
+                    prestartup_check,
+                )
             )
-        )
-        .add_systems(Startup,
-            (
-                setup_player_state,
-                setup_game_output_handler,
-                setup_client_request_buffer,
-            )
-        );
+            .add_systems(Startup,
+                (
+                    setup_player_state,
+                    setup_game_output_handler,
+                    setup_client_request_buffer,
+                )
+            );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Client tick plugin.
 /// Configures system sets and adds basic administrative systems.
-#[bevy_plugin]
-pub fn ClientCoreTickPlugin(app: &mut App)
+pub struct ClientCoreTickPlugin;
+
+impl Plugin for ClientCoreTickPlugin
 {
-    // Init startup. (runs on startup)
-    // - load assets
-    app.configure_sets(Update,
-                ClientSet::InitStartup
-                    .run_if(in_state(ClientFwMode::Init))
-                    .run_if(in_state(ClientCoreMode::Init))
-            );
+    fn build(&self, app: &mut App)
+    {
+        // Init startup. (runs on startup)
+        // - load assets
+        app.configure_sets(Update,
+                    ClientSet::InitStartup
+                        .run_if(in_state(ClientFwMode::Init))
+                        .run_if(in_state(ClientCoreMode::Init))
+                );
 
-    // Init reinitialize. (runs if client needs to be reinitialized during a game)
-    // - lock display and show reinitialization progress
-    app.configure_sets(Update,
-                ClientSet::InitReinit
-                    .run_if(in_state(ClientFwMode::Init))  //framework is reinitializing
-                    .run_if(not(in_state(ClientCoreMode::Init)))  //client core is not in init
-            );
+        // Init reinitialize. (runs if client needs to be reinitialized during a game)
+        // - lock display and show reinitialization progress
+        app.configure_sets(Update,
+                    ClientSet::InitReinit
+                        .run_if(in_state(ClientFwMode::Init))  //framework is reinitializing
+                        .run_if(not(in_state(ClientCoreMode::Init)))  //client core is not in init
+                );
 
-    // Init core. (always runs when framework is being initialized, regardless of client mode)
-    // - connect to game and synchronize times
-    app.configure_sets(Update,
-                ClientSet::InitCore
-                    .run_if(in_state(ClientFwMode::Init))
-            );
+        // Init core. (always runs when framework is being initialized, regardless of client mode)
+        // - connect to game and synchronize times
+        app.configure_sets(Update,
+                    ClientSet::InitCore
+                        .run_if(in_state(ClientFwMode::Init))
+                );
 
-    // Prep systems.
-    app.configure_sets(Update,
-                ClientSet::Prep
-                    .run_if(in_state(ClientFwMode::Game))
-                    .run_if(in_state(ClientCoreMode::Prep))
-            );
+        // Prep systems.
+        app.configure_sets(Update,
+                    ClientSet::Prep
+                        .run_if(in_state(ClientFwMode::Game))
+                        .run_if(in_state(ClientCoreMode::Prep))
+                );
 
-    // Play systems.
-    app.configure_sets(Update,
-                ClientSet::Play
-                    .run_if(in_state(ClientFwMode::Game))
-                    .run_if(in_state(ClientCoreMode::Play))
-            );
+        // Play systems.
+        app.configure_sets(Update,
+                    ClientSet::Play
+                        .run_if(in_state(ClientFwMode::Game))
+                        .run_if(in_state(ClientCoreMode::Play))
+                );
 
-    // GameOver systems.
-    app.configure_sets(Update,
-                ClientSet::GameOver
-                    .run_if(in_state(ClientFwMode::End))
-                    .run_if(in_state(ClientCoreMode::GameOver))
-            );
+        // GameOver systems.
+        app.configure_sets(Update,
+                    ClientSet::GameOver
+                        .run_if(in_state(ClientFwMode::End))
+                        .run_if(in_state(ClientCoreMode::GameOver))
+                );
 
-    // Admin
-    app.add_systems(Update,
+        // Admin
+        app.add_systems(Update,
+                    (
+                        handle_player_inputs_init.in_set(ClientSet::InitStartup),
+                        handle_player_inputs_prep.in_set(ClientSet::Prep),
+                        handle_player_inputs_play.in_set(ClientSet::Play),
+                        handle_player_inputs_gameover.in_set(ClientSet::GameOver),
+                    ).chain().in_set(ClientFwSet::Admin)
+                );
+
+        // Misc
+        // Systems that should run when the client is fully initialized.
+        app.add_systems(OnEnter(ClientInitializationState::Done),
                 (
-                    handle_player_inputs_init.in_set(ClientSet::InitStartup),
-                    handle_player_inputs_prep.in_set(ClientSet::Prep),
-                    handle_player_inputs_play.in_set(ClientSet::Play),
-                    handle_player_inputs_gameover.in_set(ClientSet::GameOver),
-                ).chain().in_set(ClientFwSet::Admin)
+                    request_game_mode,
+                ).chain()
             );
-
-    // Misc
-    // Systems that should run when the client is fully initialized.
-    app.add_systems(OnEnter(ClientInitializationState::Done),
-            (
-                request_game_mode,
-            ).chain()
-        );
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

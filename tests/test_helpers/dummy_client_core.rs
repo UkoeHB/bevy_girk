@@ -4,23 +4,26 @@ use bevy_girk_client_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_fn_plugin::*;
 
 //standard shortcuts
 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[bevy_plugin]
-pub fn DummyClientCorePlugin(app: &mut App)
+pub struct DummyClientCorePlugin;
+
+impl Plugin for DummyClientCorePlugin
 {
-    app.insert_resource(GameMessageHandler::new(
-            | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
-            {
-                deserialize_game_message::<()>(packet)?;
-                Ok(())
-            }
-        ));
+    fn build(&self, app: &mut App)
+    {
+        app.insert_resource(GameMessageHandler::new(
+                | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
+                {
+                    deserialize_game_message::<()>(packet)?;
+                    Ok(())
+                }
+            ));
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
