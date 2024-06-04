@@ -5,7 +5,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet::{renet::RenetClient, RenetReceive};
+use bevy_renet2::{renet2::RenetClient, RenetReceive};
 
 //standard shortcuts
 use std::time::Duration;

@@ -14,7 +14,7 @@ use crate::host_server::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_renet::renet::RenetClient;
+use bevy_renet2::renet2::RenetClient;
 
 //standard shortcuts
 use std::collections::HashMap;

@@ -1,7 +1,7 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_renet::renet::transport::ConnectToken;
+use bevy_renet2::renet2::transport::ConnectToken;
 use bevy_replicon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
@@ -156,6 +156,7 @@ pub fn new_connect_token_native(
         meta.server_config.expire_secs,
         client_id,
         meta.server_config.timeout_secs,
+        0,
         meta.server_addresses.clone(),
         None,
         &meta.auth_key,

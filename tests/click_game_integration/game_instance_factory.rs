@@ -10,7 +10,7 @@ use crate::click_game_integration::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_renet::renet::RenetClient;
+use bevy_renet2::renet2::RenetClient;
 
 //standard shortcuts
 use std::net::Ipv6Addr;

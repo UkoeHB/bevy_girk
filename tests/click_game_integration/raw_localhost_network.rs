@@ -9,7 +9,7 @@ use crate::test_helpers::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
-use bevy_renet::renet::RenetClient;
+use bevy_renet2::renet2::RenetClient;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts

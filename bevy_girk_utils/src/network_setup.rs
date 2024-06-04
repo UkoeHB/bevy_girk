@@ -4,13 +4,13 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::syscall;
-use bevy_renet::renet::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
-use bevy_renet::renet::transport::{
-    ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerConfig,
+use bevy_renet2::renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
+use bevy_renet2::renet2::transport::{
+    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
+    ServerSetupConfig,
 };
 use bevy_replicon::core::channels::RepliconChannels;
-use bevy_replicon_renet::RenetChannelsExt;
+use bevy_replicon_renet2::RenetChannelsExt;
 
 //standard shortcuts
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
@@ -27,7 +27,7 @@ const LOCALHOST_TEST_NETWORK_PROTOCOL_ID: u64 = 0;
 fn create_server(
     server_channels_config : Vec<ChannelConfig>,
     client_channels_config : Vec<ChannelConfig>,
-    mut server_config      : ServerConfig
+    mut server_config      : ServerSetupConfig
 ) -> (RenetServer, NetcodeServerTransport)
 {
     // make server
@@ -41,12 +41,12 @@ fn create_server(
 
     // prepare udp socket
     // - finalizes the public address (wildcards should be resolved)
-    let server_socket = UdpSocket::bind(server_config.public_addresses[0])
+    let server_socket = UdpSocket::bind(server_config.socket_addresses[0][0])
         .expect("renet server address should be bindable");
-    server_config.public_addresses = vec![server_socket.local_addr().unwrap()];
+    server_config.socket_addresses = vec![vec![server_socket.local_addr().unwrap()]];
 
     // make transport
-    let server_transport = NetcodeServerTransport::new(server_config, server_socket).unwrap();
+    let server_transport = NetcodeServerTransport::new(server_config, NativeSocket::new(server_socket).unwrap()).unwrap();
 
     (server, server_transport)
 }
@@ -75,7 +75,10 @@ fn create_client(
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
     let client_socket = UdpSocket::bind(client_addr).expect("renet client address should be bindable");
-    let client_transport = NetcodeClientTransport::new(current_time, authentication, client_socket).unwrap();
+    let client_transport = NetcodeClientTransport::new(
+        current_time,
+        authentication, NativeSocket::new(client_socket).unwrap()
+    ).unwrap();
 
     (client, client_transport)
 }
@@ -91,11 +94,11 @@ fn create_localhost_test_server(
 {
     // server config
     let server_config =
-        ServerConfig{
+        ServerSetupConfig{
                 current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
                 max_clients      : num_clients as usize,
                 protocol_id      : LOCALHOST_TEST_NETWORK_PROTOCOL_ID,
-                public_addresses : vec![SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 0)],
+                socket_addresses : vec![vec![SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 0)]],
                 authentication   : ServerAuthentication::Unsecure,
             };
 
@@ -120,6 +123,7 @@ fn create_localhost_test_client(
         ClientAuthentication::Unsecure{
                 client_id,
                 protocol_id: LOCALHOST_TEST_NETWORK_PROTOCOL_ID,
+                socket_id: 0,
                 server_addr,
                 user_data: None,
             };
@@ -163,7 +167,7 @@ fn setup_native_renet_client(
 
 /// Set up a renet server with default transport using the provided `ServerConfig`.
 /// - Assumes there is a bevy_replicon::RepliconChannels resource already loaded in the app.
-pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerConfig) -> SocketAddr
+pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerSetupConfig) -> SocketAddr
 {
     tracing::info!("setting up renet server");
 

@@ -7,10 +7,10 @@ use bevy_girk_utils::*;
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
-use bevy_replicon_renet::RepliconRenetServerPlugin;
+use bevy_replicon_renet2::RepliconRenetServerPlugin;
 use bevy_replicon_repair::AppReplicationRepairExt;
 #[allow(unused_imports)]
-use bevy_renet::renet::transport::{generate_random_bytes, ServerAuthentication, ServerConfig};
+use bevy_renet2::renet2::transport::{generate_random_bytes, ServerAuthentication, ServerSetupConfig};
 
 //standard shortcuts
 use std::net::SocketAddr;
@@ -21,7 +21,7 @@ use wasm_timer::{SystemTime, UNIX_EPOCH};
 //-------------------------------------------------------------------------------------------------------------------
 
 //todo: use bevy_replicon events once they implement Debug
-fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEvent>)
+fn log_server_events(mut server_events: EventReader<bevy_renet2::renet2::ServerEvent>)
 {
     for event in server_events.read()
     {
@@ -32,7 +32,7 @@ fn log_server_events(mut server_events: EventReader<bevy_renet::renet::ServerEve
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn log_transport_errors(mut transport_errors: EventReader<renet::transport::NetcodeTransportError>)
+fn log_transport_errors(mut transport_errors: EventReader<renet2::transport::NetcodeTransportError>)
 {
     for error in transport_errors.read()
     {
@@ -58,13 +58,13 @@ fn reset_clients_on_disconnect(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupConfig, auth_key: &[u8; 32]) -> ServerConfig
+fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupConfig, auth_key: &[u8; 32]) -> ServerSetupConfig
 {
-    ServerConfig{
+    ServerSetupConfig{
             current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
             max_clients      : num_clients,
             protocol_id      : server_setup_config.protocol_id,
-            public_addresses : vec![SocketAddr::new(server_setup_config.server_ip.into(), 0)],
+            socket_addresses : vec![vec![SocketAddr::new(server_setup_config.server_ip.into(), 0)]],
             authentication   : ServerAuthentication::Secure{ private_key: *auth_key },
         }
 }

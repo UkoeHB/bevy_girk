@@ -136,7 +136,7 @@ The game framework exposes a small API to support your game logic.
 
 **Client Connections**
 
-You can track and respond to client connection events with `EventReader<bevy_renet::renet::ServerEvent>`. It is recommended to handle these events promptly every tick if your client-specific state needs to synchronize with connection events.
+You can track and respond to client connection events with `EventReader<bevy_renet2::renet2::ServerEvent>`. It is recommended to handle these events promptly every tick if your client-specific state needs to synchronize with connection events.
 
 
 ### Client App

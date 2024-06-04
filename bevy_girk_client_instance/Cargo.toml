@@ -10,7 +10,7 @@ doctest = false
 [dependencies]
 bevy           = { version = "0.13", default-features = false }
 bevy_cobweb    = { workspace = true }
-bevy_renet     = { workspace = true }
+bevy_renet2    = { workspace = true, features = ["native_transport"] }
 bevy_simplenet = { workspace = true }
 enfync         = { workspace = true }
 serde          = { workspace = true }

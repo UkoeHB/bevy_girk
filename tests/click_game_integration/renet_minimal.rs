@@ -4,8 +4,8 @@ use bevy_girk_utils::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_renet::{*, transport::*};
-use renet::RenetClient;
+use bevy_renet2::{*, transport::*};
+use renet2::RenetClient;
 
 //standard shortcuts
 

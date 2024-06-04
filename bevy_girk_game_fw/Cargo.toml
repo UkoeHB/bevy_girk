@@ -14,7 +14,6 @@ bincode                  = { workspace = true }
 bytes                    = { workspace = true }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
-renet                    = { workspace = true }
 serde                    = { workspace = true }
 serde_with               = { workspace = true }
 tracing                  = { workspace = true }

@@ -6,15 +6,15 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet::{client_disconnected, client_just_connected, client_just_disconnected};
+use bevy_renet2::{client_disconnected, client_just_connected, client_just_disconnected};
 use bevy_replicon::client::ServerInitTick;
 use bevy_replicon::prelude::{
     ClientSet, RepliconPlugins, ServerPlugin
 };
-use bevy_replicon_renet::RepliconRenetClientPlugin;
+use bevy_replicon_renet2::RepliconRenetClientPlugin;
 use bevy_replicon_repair::AppReplicationRepairExt;
 use iyes_progress::*;
-use renet::{transport::NetcodeTransportError, RenetClient};
+use renet2::{transport::NetcodeTransportError, RenetClient};
 
 //standard shortcuts
 use std::time::Duration;
@@ -320,7 +320,7 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
             // - We want `client_just_disconnected` to return true for the first tick of `ClientFwMode::Connecting`.
             // - We don't put this in Last in case the client manually disconnects halfway through Update.
             setup_renet_client.map(Result::unwrap)
-                .after(bevy_renet::RenetReceive)  //detect disconnected
+                .after(bevy_renet2::RenetReceive)  //detect disconnected
                 .before(ClientSet::ReceivePackets)      //add ordering constraint
                 .run_if(not(client_just_disconnected))  //ignore for first full tick while disconnected
                 .run_if(client_disconnected)            //poll for connect packs while disconnected

@@ -9,16 +9,16 @@ doctest = false
 
 [dependencies]
 bevy                     = { version = "0.13", default-features = false }
-bevy_renet               = { workspace = true }
+bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
 bevy_replicon_repair     = { workspace = true }
-bevy_replicon_renet      = { workspace = true }
+bevy_replicon_renet2     = { workspace = true, features = [ "native_transport" ] }
 bincode                  = { workspace = true }
 bytes                    = { workspace = true }
 iyes_progress            = { workspace = true }
 serde                    = { workspace = true }
-renet                    = { workspace = true, features = ["transport"] }  #todo: want this feature on wasm?
+renet2                   = { workspace = true, features = ["native_transport"] }  #todo: want this feature on wasm?
 tracing                  = { workspace = true }
 ordered-multimap         = { version = "0.7" }
 wasm-timer               = { version = "0.2" }
