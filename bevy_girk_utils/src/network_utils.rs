@@ -1,7 +1,7 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_renet2::renet2::transport::ConnectToken;
+use bevy_renet2::renet2::transport::{ConnectToken, ServerCertHash};
 use bevy_replicon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
@@ -139,7 +139,13 @@ impl ConnectMetaNative
 
 /// Metadata required to generate connect tokens for wasm-target clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectMetaWasm;
+pub struct ConnectMetaWasm
+{
+    pub server_config    : GameServerSetupConfig,
+    pub server_addresses : Vec<SocketAddr>,
+    pub auth_key         : [u8; 32],
+    pub cert_hashes      : Vec<ServerCertHash>,
+}
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -162,7 +168,31 @@ pub fn new_connect_token_native(
         &meta.auth_key,
     ).map_err(|_|())?;
 
-    Ok(ServerConnectToken::Native{ bytes: connect_token_to_bytes(&token)? })
+    Ok(ServerConnectToken::Native{ token: connect_token_to_bytes(&token)? })
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Generate a new connect token for a wasm client.
+pub fn new_connect_token_wasm(
+    meta         : &ConnectMetaWasm,
+    current_time : Duration,
+    client_id    : u64,
+) -> Result<ServerConnectToken, ()>
+{
+    let token = ConnectToken::generate(
+        current_time,
+        meta.server_config.protocol_id,
+        meta.server_config.expire_secs,
+        client_id,
+        meta.server_config.timeout_secs,
+        0,
+        meta.server_addresses.clone(),
+        None,
+        &meta.auth_key,
+    ).map_err(|_|())?;
+
+    Ok(ServerConnectToken::Wasm{ token: connect_token_to_bytes(&token)?, cert_hashes: meta.cert_hashes.clone() })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -188,13 +218,20 @@ pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Result<Connect
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServerConnectToken
 {
-    /// A renet `ConnectToken` for native transports.
+    ///  for native transports.
     //todo: how to serialize the connect token more directly to reduce allocations?
     Native{
+        /// A renet `ConnectToken`.
         #[serde_as(as = "Bytes")]
-        bytes: Vec<u8>
+        token: Vec<u8>
     },
-    //Wasm(??),
+    Wasm{
+        /// A renet [`ConnectToken`].
+        #[serde_as(as = "Bytes")]
+        token: Vec<u8>,
+        /// Cert hashes for connecting to self-signed servers.
+        cert_hashes: Vec<ServerCertHash>
+    },
     //InMemory,
     //The server app will contain `Res<[client transports]>` which you must extract and insert to your client apps
     //manually.
@@ -202,7 +239,7 @@ pub enum ServerConnectToken
 
 impl Default for ServerConnectToken
 {
-    fn default() -> Self { Self::Native{ bytes: vec![] } }
+    fn default() -> Self { Self::Native{ token: vec![] } }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

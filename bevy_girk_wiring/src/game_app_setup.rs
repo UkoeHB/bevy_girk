@@ -196,7 +196,7 @@ pub fn prepare_game_app_network(
 
     #[cfg(not(target_family = "wasm"))]
     {
-        if native_count > 0
+        if native_count > 0 && wasm_count == 0
         {
             // set up renet server
             // - we use a unique auth key so clients can only interact with the server created here
@@ -214,7 +214,27 @@ pub fn prepare_game_app_network(
         if wasm_count > 0
         {
             tracing::error!("wasm clients not yet supported");
-            //todo: add wasm transport
+            
+            #[cfg(any())]
+            {
+                // set up renet server
+                // - we use a unique auth key so clients can only interact with the server created here
+                let auth_key = generate_random_bytes::<32>();
+                let server_config = new_server_config(native_count, &game_server_config, &auth_key);
+                let (native_addr, wasm_addr, cert_hashes) = setup_native_wasm_renet_server(game_app, server_config);
+
+                native_meta = Some(ConnectMetaNative{
+                    server_config    : game_server_config.clone(),
+                    server_addresses : vec![native_addr],
+                    auth_key         : auth_key.clone(),
+                });
+                wasm_meta = Some(ConnectMetaWasm{
+                    server_config    : game_server_config,
+                    server_addresses : vec![wasm_addr],
+                    auth_key         : auth_key.clone(),
+                    cert_hashes
+                });
+            }
         }
     }
 

@@ -26,6 +26,17 @@ fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn prep_connect_token_wasm(connect_meta: &ConnectMetaWasm, client_id: u64) -> Result<ServerConnectToken, ()>
+{
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap();
+    new_connect_token_wasm(connect_meta, current_time, client_id)
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OngoingGame
 {
@@ -166,16 +177,16 @@ impl OngoingGamesCache
                 let Some(meta) = &ongoing_game.native_meta
                 else { tracing::debug!(user_id, game_id, "no native connect meta for native client"); return None; };
                 let Ok(connect_token) = prep_connect_token_native(meta, start_info.client_id)
-                else { tracing::error!(user_id, game_id, "failed preparing connect token"); return None; };
+                else { tracing::error!(user_id, game_id, "failed preparing native connect token"); return None; };
                 connect_token
             }
             EnvType::Wasm =>
             {
-                let Some(_meta) = &ongoing_game.wasm_meta
+                let Some(meta) = &ongoing_game.wasm_meta
                 else { tracing::debug!(user_id, game_id, "no wasm connect meta for wasm client"); return None; };
-
-                tracing::error!(user_id, game_id, "connect tokens for wasm users not yet implemented");
-                return None;
+                let Ok(connect_token) = prep_connect_token_wasm(meta, start_info.client_id)
+                else { tracing::error!(user_id, game_id, "failed preparing wasm connect token"); return None; };
+                connect_token
             }
         };
 
