@@ -201,33 +201,34 @@ pub fn prepare_client_app_replication(
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: collects network packets
+        //<-- girk renet client setup
         //<-- ClientSet::ReceivePackets {replicon}: collects renet packets
         //<-- ClientSet::ResetEvents (if client just connected) {replicon}: ensures client and server messages
         //    don't leak across a reconnect
-        //<-- ClientSet::Receive {replicon}: collects replication messages
+        //<-- ClientSet::Receive {replicon}: processes replication messages
         //<-- ReceiveServerEventsSet {girk}: collects GamePacket messages
         //<-- ClientRepairSet (after first disconnect) {replicon_repair}: repairs replication state following a
         //    disconnect
-        //TODO: ClientSet::SyncHierarchy
+        //<-- ClientSet::SyncHierarchy {replicon}: synchronizes replicated entity hierarchies
+        //<-- girk connection initialization management
         //<-- ClientFwSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
         //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
         .configure_sets(PreUpdate,
-            // Ordering explanation:
-            // - We want `ClientFwMode::Syncing` to run for at least one tick before handling the first replication
-            //   message. So we block the client set in the range [Connecting, Syncing first tick]
-            ClientSet::Receive
-                .run_if(not(in_state(ClientFwMode::Connecting)))
-                .run_if(not(client_just_connected))
-        )
-        .configure_sets(PreUpdate,
-            ReceiveServerEventsSet
-                .before(bevy_replicon_repair::ClientRepairSet)
-        )
-        .configure_sets(PreUpdate,
-            ClientFwSetPrivate::FwStart
-                .after(bevy_replicon_repair::ClientRepairSet)
+            (
+                // Ordering explanation:
+                // - We want `ClientFwMode::Syncing` to run for at least one tick before handling the first replication
+                //   message. So we block the client set in the range [Connecting, Syncing first tick]
+                ClientSet::Receive
+                    .run_if(not(in_state(ClientFwMode::Connecting)))
+                    .run_if(not(client_just_connected)),
+                ReceiveServerEventsSet,
+                bevy_replicon_repair::ClientRepairSet,
+                ClientSet::SyncHierarchy,
+                ClientFwSetPrivate::FwStart,
+            )
+                .chain()
         )
         .add_systems(PreUpdate,
             (
@@ -256,7 +257,7 @@ pub fn prepare_client_app_replication(
                     .run_if(in_state(ClientFwMode::Syncing)),
             )
                 .chain()
-                .after(bevy_replicon_repair::ClientRepairSet)
+                .after(ClientSet::SyncHierarchy)
                 .before(ClientFwSetPrivate::FwStart),
         )
 
