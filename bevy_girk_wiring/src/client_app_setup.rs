@@ -153,6 +153,7 @@ pub struct GirkClientConfig
 ///
 /// REQUIREMENTS:
 /// - `bevy::time::TimePlugin`.
+/// - `bevy::asset::AssetPlugin`.
 pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFwConfig) -> Sender<ClientFwCommand>
 {
     // prepare message channels
@@ -291,6 +292,7 @@ pub fn prepare_client_app_replication(
         .configure_sets(Update, ClientFwSet::End.before(iyes_progress::prelude::AssetsTrackProgress))
 
         //# POSTUPDATE #
+        //<-- CheckProgressSet {iyes_progress}: checks initialization progress
         //<-- ClientFwSetPrivate::FwEnd {girk}: dispatches messages to replicon, performs final tick cleanup
         //<-- ClientSet::Send (if connected) {replicon}: dispatches messages to renet (`send_client_packets`)
         //<-- ClientSet::SendPackets {replicon}: forwards packets to renet

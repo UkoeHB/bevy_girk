@@ -12,6 +12,20 @@ use iyes_progress::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn add_progress_plugin(app: &mut App)
+{
+    let progress_plugin = ProgressPlugin::new(ClientInitializationState::InProgress)
+        .continue_to(ClientInitializationState::Done)
+        // we check progress in PostUpdate so initialization progress can be collected and networked immediately
+        .check_progress_in(PostUpdate)
+        .track_assets();
+
+    app.add_plugins(progress_plugin);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Validate resources that should exist before client startup.
 fn prestartup_check(world: &World)
 {
@@ -128,12 +142,7 @@ impl Plugin for ClientFwTickPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.add_plugins(
-                ProgressPlugin::new(ClientInitializationState::InProgress)
-                    .continue_to(ClientInitializationState::Done)
-                    // we check progress in PostUpdate so initialization progress can be collected and networked immediately
-                    .check_progress_in(PostUpdate)
-            );
+        add_progress_plugin(app);
 
         app.configure_sets(Update,
                 (
@@ -146,8 +155,15 @@ impl Plugin for ClientFwTickPlugin
                 ).chain()
             );
         app.configure_sets(Update,
-                ClientFwLoadingSet
+                (
+                    iyes_progress::TrackedProgressSet,
+                    ClientFwLoadingSet,
+                )
                     .run_if(in_state(ClientInitializationState::InProgress))
+            );
+        app.configure_sets(PostUpdate,
+                ClientFwSetPrivate::FwEnd
+                    .after(iyes_progress::CheckProgressSet)
             );
 
         // FWSTART
@@ -185,7 +201,6 @@ impl Plugin for ClientFwTickPlugin
                     send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
                 ).chain()
                     .in_set(ClientFwSetPrivate::FwEnd)
-                    .after(iyes_progress::CheckProgressSet)
             );
 
 

@@ -84,7 +84,9 @@ fn raw_localhost_network_demo(num_players: usize)
             );
 
         let client_fw_command_sender = prepare_client_app_framework(&mut client_app, client_fw_config);
-        client_app.add_plugins(bevy::time::TimePlugin);
+        client_app
+            .add_plugins(bevy::time::TimePlugin)
+            .add_plugins(bevy::asset::AssetPlugin::default());
 
         // set up replication
         prepare_client_app_replication(&mut client_app, client_fw_command_sender, std::time::Duration::from_millis(100));
@@ -113,6 +115,7 @@ fn raw_localhost_network_demo(num_players: usize)
     prepare_client_app_replication(&mut watcher_client_app, client_fw_command_sender, std::time::Duration::from_millis(100));
     watcher_client_app
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(DummyClientCorePlugin)
         .insert_resource(ClientRequestType::new::<GameRequest>())
         .add_plugins(GameReplicationPlugin);

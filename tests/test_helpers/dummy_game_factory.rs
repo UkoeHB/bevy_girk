@@ -81,6 +81,7 @@ impl GameFactoryImpl for DummyGameFactory
         app
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
+            .add_plugins(bevy::asset::AssetPlugin::default())
             .add_plugins(
                 RepliconPlugins
                     .build()

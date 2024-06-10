@@ -91,6 +91,7 @@ fn basic_game_and_client()
     app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(
             RepliconPlugins
                 .build()

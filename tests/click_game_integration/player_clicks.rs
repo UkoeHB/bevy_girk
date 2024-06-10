@@ -85,6 +85,7 @@ fn player_clicks()
     app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
         .init_resource::<bevy_replicon::prelude::ConnectedClients>()
         .add_plugins(VisibilityAttributesPlugin{

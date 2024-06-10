@@ -60,6 +60,7 @@ fn test_game_setup(num_players: usize)
     App::new()
         //requirements
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::asset::AssetPlugin::default())
         .init_resource::<bevy_replicon::prelude::ConnectedClients>()
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
