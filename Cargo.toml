@@ -54,8 +54,9 @@ tracing            = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
 url                = { version = "2.4" }
 
-[patch.crates-io]
-bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "6a9df6e" }
+#[patch.crates-io]
+#bevy_replicon  = { git = "https://github.com/projectharmonia/bevy_replicon", rev = "e1fe579" }
+#bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "6a9df6e" }
 
 [profile.test]
 opt-level = 0  #no optimizations for local tests
