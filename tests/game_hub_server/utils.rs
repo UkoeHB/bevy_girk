@@ -30,6 +30,9 @@ fn make_test_host_hub_client_with_id(
             bevy_simplenet::ClientConfig{
                     reconnect_on_disconnect: true,
                     reconnect_on_server_close,
+                    // Use a small interval for testing since we manually close the server and then need it to
+                    // immediately reconnect instead of waiting.
+                    reconnect_interval: std::time::Duration::from_millis(5),
                     ..Default::default()
                 },
             ()

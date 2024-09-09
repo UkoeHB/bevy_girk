@@ -62,6 +62,7 @@ fn test_game_setup(num_players: usize)
         .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
+        .add_event::<bevy_replicon::prelude::StartReplication>()
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset

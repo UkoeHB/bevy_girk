@@ -89,6 +89,7 @@ fn player_clicks()
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
         .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
+        .add_event::<bevy_replicon::prelude::StartReplication>()
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset

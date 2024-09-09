@@ -52,7 +52,7 @@ fn basic_game_and_client()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::new(0u64),
+            client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -63,7 +63,7 @@ fn basic_game_and_client()
 
     // send ping request
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::new(0u64),
+            client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -137,7 +137,7 @@ fn basic_game_and_client()
         //game framework
         //client framework
         .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::new(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::SERVER ))
         //game
         .insert_resource(game_initializer)
         //client core

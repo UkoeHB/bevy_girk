@@ -90,7 +90,7 @@ pub fn make_game_hub_server(
 {
     // make empty app
     tracing::info!("making game hub server");
-    let mut app = App::empty();
+    let mut app = App::new();
 
     // configure bevy scheduling
     app.init_schedule(Main);

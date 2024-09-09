@@ -40,12 +40,12 @@ fn make_configs() -> GameHubServerStartupPack
 fn game_lifecycle()
 {
     // prepare tracing
-    // /*
+    /*
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_max_level(tracing::Level::TRACE)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    // */
+    */
 
     // make a websocket host server
     let mut host_hub_server = make_test_host_hub_server();
@@ -72,8 +72,6 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - receive initial capacity
-    let next = host_hub_server.next();
-    tracing::error!("next: {next:?}");
     let Some((hub_id, HostHubServerEvent::Msg(HubToHostMsg::Capacity(initial_capacity)))) = host_hub_server.next()
     else { panic!("host hub server did not receive game hub server msg"); };
     assert_eq!(hub_id, connected_hub_id);

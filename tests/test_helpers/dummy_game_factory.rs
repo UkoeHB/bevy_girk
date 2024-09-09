@@ -90,6 +90,7 @@ impl GameFactoryImpl for DummyGameFactory
                     .set(ServerPlugin{
                         tick_policy: TickPolicy::EveryFrame,
                         visibility_policy: VisibilityPolicy::Whitelist,
+                        replicate_after_connect: true,
                         ..Default::default()
                     })
             )

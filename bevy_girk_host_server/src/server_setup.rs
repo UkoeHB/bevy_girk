@@ -77,7 +77,7 @@ pub fn make_host_server(
 {
     // make empty app
     tracing::info!("making host server");
-    let mut app = App::empty();
+    let mut app = App::new();
 
     // configure bevy scheduling
     app.init_schedule(Main);

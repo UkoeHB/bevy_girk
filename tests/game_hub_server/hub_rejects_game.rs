@@ -210,7 +210,7 @@ fn reject_no_capacity()
             Some(true)
         );
     hub_server_app.update();
-    std::thread::sleep(Duration::from_millis(15));
+    std::thread::sleep(Duration::from_millis(35));
 
     // - hub connects to server
     let Some((connected_hub_id, HostHubServerEvent::Report(HostHubServerReport::Connected(_, _)))) = host_hub_server.next()

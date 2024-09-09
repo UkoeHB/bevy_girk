@@ -69,7 +69,14 @@ pub fn make_test_host_hub_client_with_id(id: u128, hub_server_url: url::Url) -> 
                 enfync::builtin::Handle::default(),
                 hub_server_url,
                 auth,
-                bevy_simplenet::ClientConfig::default(),
+                bevy_simplenet::ClientConfig{
+                    // Use a small interval for testing since we manually close the server and then need it to
+                    // immediately reconnect instead of waiting.
+                    reconnect_interval: std::time::Duration::from_millis(5),
+                    reconnect_on_disconnect: true,
+                    reconnect_on_server_close: true,
+                    ..Default::default()
+                },
                 ()
             )
     )
