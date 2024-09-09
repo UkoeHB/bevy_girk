@@ -8,8 +8,24 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Client intialization state
+/// Over-arching client states differentiating between the outer client shell and the inner game mode.
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum ClientInstanceMode
+{
+    /// The client is displaying its outer shell, where users can set up and start games.
+    #[default]
+    Client,
+    /// The client is displaying the game client, where users can play the game.
+    Game
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Client intialization state.
+///
+/// These states only run in [`ClientInstanceMode::Game`].
+#[derive(SubStates, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
+#[source(ClientInstanceMode = ClientInstanceMode::Game)]
 pub enum ClientInitializationState
 {
     /// Client fw state when the client fw is initializing or reinitializing.
@@ -23,14 +39,16 @@ pub enum ClientInitializationState
 
 /// Client framework mode.
 ///
+/// These states only run in [`ClientInstanceMode::Game`].
+///
 /// The mode transitions for `Connecting`, `Syncing`, and `Init` are controlled by users of the client framework.
 /// This is handled automatically if you use [`prepare_girk_client_app()`].
 ///
-/// Once you enter `Init`, the client framework will take over for the `Init`/`Game`/`End` transitions until the framework
-/// receives a [`ClientFwCommand::ReInitialize`] which will set it back to `Connecting`.
+/// Once you enter `Init`, the client framework will take over for the `Init`/`Game`/`End` transitions.
 ///
 /// For the sake of clarity, our documentation here reflects the behavior added by [`prepare_girk_client_app()`].
-#[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(SubStates, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
+#[source(ClientInstanceMode = ClientInstanceMode::Game)]
 pub enum ClientFwMode
 {
     /// Runs when the client is connecting to the game.
@@ -71,7 +89,7 @@ pub enum ClientFwMode
     /// - Game messages will be consumed in this tick, including any messages buffered while `Syncing`.
     ///
     /// Initialization ends when in state [`ClientInitializationState::Done`] and the game is no longer in
-    /// [`GameFwState::Game`].
+    /// [`GameFwMode::Init`].
     ///
     /// ### Explanation
     ///
@@ -83,19 +101,17 @@ pub enum ClientFwMode
     /// of the first tick in state [`ClientFwMode::Init`] is the first tick where [`ClientInitializationState::Done`]
     /// may be entered (which means only the next client tick may enter [`ClientFwMode::Game`] or [`ClientFwMode::End`]).
     Init,
-    /// Runs in [`GameFwState::Game`] when the client is not initializing.
+    /// Runs in [`GameFwMode::Game`] when the client is not initializing.
     /// - Client requests sent while in this mode will succeed unless the client disconnects or the game shuts down.
     /// - Game messages will be consumed in this tick.
     ///
-    /// This mode will not run if the client connects to a game in [`GameFwState::End`].
+    /// This mode will not run if the client connects to a game in [`GameFwMode::End`].
     Game,
-    /// Runs in [`GameFwState::End`] when the client is not initializing.
+    /// Runs in [`GameFwMode::End`] when the client is not initializing.
     /// - Client requests sent while in this mode will succeed unless the client disconnects or the game shuts down.
     /// - Game messages will be consumed in this tick. Note that no messages will appear if the game shuts down.
     ///
-    /// Once in this state, the client will never change states.
-    /// This is because eventually the game will shut down but we don't want the client to pointlessly transition
-    /// to a loading screen.
+    /// To fully exit the game, you should set [`ClientInstanceMode::Client`] (e.g. with an "Exit" button).
     End
 }
 
