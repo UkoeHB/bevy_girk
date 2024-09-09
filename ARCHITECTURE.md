@@ -76,7 +76,7 @@ WORK IN PROGRESS
 
         - exposed contents
             - GameFwSet
-            - GameFwMode
+            - GameFwState
             - GameMessageBuffer
 
     - client framework
@@ -87,7 +87,7 @@ WORK IN PROGRESS
         - exposed contents
             - ClientFwSet
             - ClientFwLoadingSet
-            - ClientFwMode
+            - ClientFwState
             - ClientRequestSender
 
 

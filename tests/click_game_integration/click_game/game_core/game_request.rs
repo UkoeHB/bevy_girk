@@ -14,7 +14,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub enum GameRequest
 {
-    GameModeRequest,
+    GameStateRequest,
     ClickButton,
 }
 
@@ -24,7 +24,7 @@ impl IntoChannelKind for GameRequest
     {
         match self
         {
-            Self::GameModeRequest => SendUnordered.into(),
+            Self::GameStateRequest => SendUnordered.into(),
             Self::ClickButton     => SendOrdered.into(),
         }
     }

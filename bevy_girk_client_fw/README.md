@@ -21,7 +21,7 @@ INTERFACE: for users of the framework (framework owners and client dependents)
 - `Res<PingTracker>` provides game-synchronization information
 - `ClientRequestSender` collects requests to be sent to the game
 - `Res<ClientFwConfig>` provides miscellaneous information about the client
-- `State<ClientFwMode>` tracks what mode the client is in
+- `State<ClientFwState>` tracks what state the client is in
 - `Res<InitializationProgressCache>` may be used to track the progress of initialization
 - `iyes_progress`: add `.track_progress().in_set(ClientFwLoadingSet)` to a system to track it during initialization
 

@@ -164,7 +164,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         //# UPDATE #
         //<-- GameFwSet::{Admin, Start} {girk}: ordinal sets for user logic
         //<-- GameFwSetPrivate::FwHandleRequests {girk}: handle client requests; we do this in the middle of
-        //      the ordinal sets so the game tick and game mode updaters (and user-defined tick initialization logic) can
+        //      the ordinal sets so the game tick and game state updaters (and user-defined tick initialization logic) can
         //      run first
         //<-- GameFwSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
         .add_systems(Update, reset_clients_on_disconnect.in_set(GameFwSet::Admin))

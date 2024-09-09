@@ -27,8 +27,8 @@ pub enum ClientFwRequest
     SetInitProgress(f32),
     /// Request a ping response.
     GetPing(PingRequest),
-    /// Request the current game framework mode.
-    GetGameFwMode,
+    /// Request the current game framework state.
+    GetGameFwState,
 }
 
 impl IntoChannelKind for ClientFwRequest
@@ -39,7 +39,7 @@ impl IntoChannelKind for ClientFwRequest
         {
             Self::SetInitProgress(_) => SendOrdered.into(),
             Self::GetPing(_)         => SendUnordered.into(),
-            Self::GetGameFwMode      => SendUnordered.into(),
+            Self::GetGameFwState      => SendUnordered.into(),
         }
     }
 }

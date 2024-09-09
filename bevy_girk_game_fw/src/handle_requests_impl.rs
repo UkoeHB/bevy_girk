@@ -33,10 +33,10 @@ pub(crate) fn handle_ping_request(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Send game fw mode to the client.
-pub(crate) fn handle_game_fw_mode_request(In(client_id): In<ClientId>, world: &mut World)
+/// Send game fw state to the client.
+pub(crate) fn handle_game_fw_state_request(In(client_id): In<ClientId>, world: &mut World)
 {
-    syscall(world, client_id, notify_game_fw_mode_single);
+    syscall(world, client_id, notify_game_fw_state_single);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

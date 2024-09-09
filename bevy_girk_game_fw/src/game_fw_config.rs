@@ -27,11 +27,11 @@ pub struct GameFwConfig
     ///
     /// Must be at least 1.
     ///
-    /// [`GameFwMode::Init`] will always end when these ticks have elapsed even if clients are not ready.
+    /// [`GameFwState::Init`] will always end when these ticks have elapsed even if clients are not ready.
     max_init_ticks: u32,
     /// Maximum number of ticks that may elapse after game over before the app exits.
     ///
-    /// This is included because not exiting immediately allows time to propagate the game end mode change to clients,
+    /// This is included because not exiting immediately allows time to propagate the game end state change to clients,
     /// and to allow custom app termination in game logic (i.e. by setting the max end ticks to infinite).
     max_end_ticks: u32,
 }

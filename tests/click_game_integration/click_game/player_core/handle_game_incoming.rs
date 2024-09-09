@@ -26,7 +26,7 @@ fn handle_game_core_output_init(world: &mut World, message: GameMsg, _tick: Tick
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameMode(mode)            => syscall(world, mode, handle_current_game_mode),
+        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
     }
 }
 
@@ -38,7 +38,7 @@ fn handle_game_core_output_prep(world: &mut World, message: GameMsg, _tick: Tick
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameMode(mode)            => syscall(world, mode, handle_current_game_mode),
+        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
     }
 }
 
@@ -50,7 +50,7 @@ fn handle_game_core_output_play(world: &mut World, message: GameMsg, _tick: Tick
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameMode(mode)            => syscall(world, mode, handle_current_game_mode),
+        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
     }
 }
 
@@ -62,7 +62,7 @@ fn handle_game_core_output_gameover(world: &mut World, message: GameMsg, _tick: 
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameMode(mode)            => syscall(world, mode, handle_current_game_mode),
+        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
     }
 }
 
@@ -79,13 +79,13 @@ pub(crate) fn try_handle_game_core_output(
 {
     let (ticks, message) = deserialize_game_message(game_packet)?;
 
-    // handle based on current client mode
-    match syscall(world, (), get_current_client_core_mode)
+    // handle based on current client state
+    match syscall(world, (), get_current_client_core_state)
     {
-        ClientCoreMode::Init     => handle_game_core_output_init(world, message, ticks),
-        ClientCoreMode::Prep     => handle_game_core_output_prep(world, message, ticks),
-        ClientCoreMode::Play     => handle_game_core_output_play(world, message, ticks),
-        ClientCoreMode::GameOver => handle_game_core_output_gameover(world, message, ticks),
+        ClientCoreState::Init     => handle_game_core_output_init(world, message, ticks),
+        ClientCoreState::Prep     => handle_game_core_output_prep(world, message, ticks),
+        ClientCoreState::Play     => handle_game_core_output_play(world, message, ticks),
+        ClientCoreState::GameOver => handle_game_core_output_gameover(world, message, ticks),
     }
 
     Ok(())

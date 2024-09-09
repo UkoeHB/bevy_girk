@@ -10,30 +10,30 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handles a notification for the current game framework mode.
-pub(crate) fn handle_current_game_fw_mode(
-    In(current_game_fw_mode)    : In<GameFwMode>,
+/// Handles a notification for the current game framework state.
+pub(crate) fn handle_current_game_fw_state(
+    In(current_game_fw_state)    : In<GameFwState>,
     client_initialization_state : Res<State<ClientInitializationState>>,
-    current_client_fw_mode      : Res<State<ClientFwMode>>,
-    mut next_client_fw_mode     : ResMut<NextState<ClientFwMode>>
+    current_client_fw_state      : Res<State<ClientFwState>>,
+    mut next_client_fw_state     : ResMut<NextState<ClientFwState>>
 ){
-    // do not update client framework mode if we are in the process of initializing the client
+    // do not update client framework state if we are in the process of initializing the client
     // - reason: we don't want to leave Init until we are really done initializing
     if *client_initialization_state != ClientInitializationState::Done { return; }
 
-    // update mode
-    let mode =
-        match current_game_fw_mode
+    // update state
+    let state =
+        match current_game_fw_state
         {
-            GameFwMode::Init => ClientFwMode::Init,
-            GameFwMode::Game => ClientFwMode::Game,
-            GameFwMode::End  => ClientFwMode::End,
+            GameFwState::Init => ClientFwState::Init,
+            GameFwState::Game => ClientFwState::Game,
+            GameFwState::End  => ClientFwState::End,
         };
 
-    if mode == **current_client_fw_mode { return; }
-    next_client_fw_mode.set(mode);
-    let old_mode = **current_client_fw_mode;
-    tracing::info!(?old_mode, ?mode, "setting client framework mode");
+    if state == **current_client_fw_state { return; }
+    next_client_fw_state.set(state);
+    let old_state = **current_client_fw_state;
+    tracing::info!(?old_state, ?state, "setting client framework state");
 }
 
 //-------------------------------------------------------------------------------------------------------------------

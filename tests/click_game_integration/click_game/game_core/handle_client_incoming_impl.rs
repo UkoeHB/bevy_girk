@@ -40,9 +40,9 @@ pub(crate) fn handle_player_click_button(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn handle_game_mode_request(In(client_id): In<ClientId>, world: &mut World)
+pub(crate) fn handle_game_state_request(In(client_id): In<ClientId>, world: &mut World)
 {
-    syscall(world, client_id, notify_game_mode_single);
+    syscall(world, client_id, notify_game_state_single);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

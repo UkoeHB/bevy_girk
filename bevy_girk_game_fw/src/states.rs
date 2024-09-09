@@ -9,9 +9,9 @@ use serde::{Serialize, Deserialize};
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// The game framework mode.
+/// The game framework state.
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
-pub enum GameFwMode
+pub enum GameFwState
 {
     /// The game is initializing and at least one client is not ready.
     #[default]

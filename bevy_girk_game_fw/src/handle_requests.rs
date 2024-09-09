@@ -19,7 +19,7 @@ fn handle_client_fw_request(world: &mut World, client_id: ClientId, request: Cli
     {
         ClientFwRequest::SetInitProgress(prog) => syscall(world, (client_id, prog), handle_set_client_init_progress),
         ClientFwRequest::GetPing(req)          => syscall(world, (client_id, req),  handle_ping_request),
-        ClientFwRequest::GetGameFwMode         => syscall(world, client_id,         handle_game_fw_mode_request),
+        ClientFwRequest::GetGameFwState         => syscall(world, client_id,         handle_game_fw_state_request),
     }
 }
 

@@ -131,9 +131,9 @@ fn player_clicks()
         // TEST: player clicks
         .insert_resource(PanicOnDrop::default())
         .insert_resource(player_input_sender)
-        .add_systems(OnEnter(ClientCoreMode::Prep), send_player_click)  //this should fail
-        .add_systems(OnEnter(ClientCoreMode::Play), send_player_click)  //this should succeed
-        .add_systems(OnEnter(ClientCoreMode::GameOver), check_player_score)
+        .add_systems(OnEnter(ClientCoreState::Prep), send_player_click)  //this should fail
+        .add_systems(OnEnter(ClientCoreState::Play), send_player_click)  //this should succeed
+        .add_systems(OnEnter(ClientCoreState::GameOver), check_player_score)
         .run();
 }
 

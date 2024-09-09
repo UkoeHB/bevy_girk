@@ -12,18 +12,18 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Helper function-system for accessing the client core mode.
-pub(crate) fn get_current_client_core_mode(current_client_core_mode: Res<State<ClientCoreMode>>) -> ClientCoreMode
+/// Helper function-system for accessing the client core state.
+pub(crate) fn get_current_client_core_state(current_client_core_state: Res<State<ClientCoreState>>) -> ClientCoreState
 {
-    **current_client_core_mode
+    **current_client_core_state
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Request the current game mode.
-pub(crate) fn request_game_mode(mut sender: ClientRequestSender)
+/// Request the current game state.
+pub(crate) fn request_game_state(mut sender: ClientRequestSender)
 {
-    sender.request(GameRequest::GameModeRequest);
+    sender.request(GameRequest::GameStateRequest);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

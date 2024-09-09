@@ -45,59 +45,59 @@ pub(crate) fn advance_game_over_tick(mut game_over_tick : ResMut<GameOverTick>)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Check the game duration conditions and update the game mode.
-pub(crate) fn update_game_mode(
+/// Check the game duration conditions and update the game state.
+pub(crate) fn update_game_state(
     game_ctx           : Res<ClickGameContext>,
     game_tick          : Res<GameTick>,
-    current_game_mode  : Res<State<GameMode>>,
-    mut next_game_mode : ResMut<NextState<GameMode>>
+    current_game_state  : Res<State<GameState>>,
+    mut next_game_state : ResMut<NextState<GameState>>
 ){
-    // get expected mode based on elapsed ticks
+    // get expected state based on elapsed ticks
     let duration_config    = game_ctx.duration_config();
-    let expected_game_mode = duration_config.expected_mode(**game_tick);
+    let expected_game_state = duration_config.expected_state(**game_tick);
 
-    // update the game mode
-    if expected_game_mode == **current_game_mode
+    // update the game state
+    if expected_game_state == **current_game_state
         { return; }
-    next_game_mode.set(expected_game_mode);
-    tracing::info!(?expected_game_mode, "new game mode");
+    next_game_state.set(expected_game_state);
+    tracing::info!(?expected_game_state, "new game state");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Helper function-system for accessing the game mode.
-pub(crate) fn get_current_game_mode(current_game_mode: Res<State<GameMode>>) -> GameMode
+/// Helper function-system for accessing the game state.
+pub(crate) fn get_current_game_state(current_game_state: Res<State<GameState>>) -> GameState
 {
-    **current_game_mode
+    **current_game_state
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Notify a single client of the current game mode.
-pub(crate) fn notify_game_mode_single(
+/// Notify a single client of the current game state.
+pub(crate) fn notify_game_state_single(
     In(client_id)     : In<ClientId>,
     mut sender        : GameMessageSender,
     attributes        : ClientAttributes,
-    current_game_mode : Res<State<GameMode>>,
+    current_game_state : Res<State<GameState>>,
 ){
     sender.send(
             &attributes,
-            GameMsg::CurrentGameMode(**current_game_mode),
+            GameMsg::CurrentGameState(**current_game_state),
             vis!(Client(client_id))
         );
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Notify all clients of the current game mode.
-pub(crate) fn notify_game_mode_all(
+/// Notify all clients of the current game state.
+pub(crate) fn notify_game_state_all(
     mut sender        : GameMessageSender,
     attributes        : ClientAttributes,
-    current_game_mode : Res<State<GameMode>>,
+    current_game_state : Res<State<GameState>>,
 ){
     sender.send(
             &attributes,
-            GameMsg::CurrentGameMode(**current_game_mode),
+            GameMsg::CurrentGameState(**current_game_state),
             vis!(Global)
         );
 }

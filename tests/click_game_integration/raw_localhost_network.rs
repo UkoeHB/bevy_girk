@@ -141,7 +141,7 @@ fn raw_localhost_network_demo(num_players: usize)
         game_server_app.update();
 
         // expect that we have not left the init phase
-        assert_eq!(*game_server_app.world().resource::<State<GameFwMode>>(), GameFwMode::Init);
+        assert_eq!(*game_server_app.world().resource::<State<GameFwState>>(), GameFwState::Init);
 
         // update clients
         let mut num_inits = 0;
@@ -164,8 +164,8 @@ fn raw_localhost_network_demo(num_players: usize)
     // check that we have left the init phase as expected
     std::thread::sleep(std::time::Duration::from_millis(15));
     game_server_app.update();  //one update to collect client inputs notifying completion
-    game_server_app.update();  //one update to update the mode
-    assert_eq!(*game_server_app.world().resource::<State<GameFwMode>>(), GameFwMode::Game);
+    game_server_app.update();  //one update to update the state
+    assert_eq!(*game_server_app.world().resource::<State<GameFwState>>(), GameFwState::Game);
 
     assert!(game_server_app.world_mut().syscall((), game_is_initialized));
     for client in client_apps.iter_mut()
@@ -181,7 +181,7 @@ fn raw_localhost_network_demo(num_players: usize)
     }
 
     // tick until game over
-    while *game_server_app.world().resource::<State<GameFwMode>>() != GameFwMode::End
+    while *game_server_app.world().resource::<State<GameFwState>>() != GameFwState::End
     {
         game_server_app.update();
 

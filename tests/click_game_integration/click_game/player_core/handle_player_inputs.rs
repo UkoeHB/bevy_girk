@@ -8,6 +8,7 @@ use bevy_girk_utils::*;
 
 //standard shortcuts
 
+
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -81,7 +82,7 @@ fn handle_player_input_gameover(_world: &mut World, player_input: &PlayerInput)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle player inputs for ClientCoreMode::Init.
+/// Handle player inputs for ClientCoreState::Init.
 pub(crate) fn handle_player_inputs_init(world: &mut World)
 {
     process_player_inputs(world, | world, player_input | handle_player_input_init(world, player_input));
@@ -89,7 +90,7 @@ pub(crate) fn handle_player_inputs_init(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle player inputs for ClientCoreMode::Prep.
+/// Handle player inputs for ClientCoreState::Prep.
 pub(crate) fn handle_player_inputs_prep(world: &mut World)
 {
     process_player_inputs(world, | world, player_input | handle_player_input_prep(world, player_input));
@@ -97,7 +98,7 @@ pub(crate) fn handle_player_inputs_prep(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle player inputs for ClientCoreMode::Play.
+/// Handle player inputs for ClientCoreState::Play.
 pub(crate) fn handle_player_inputs_play(world: &mut World)
 {
     process_player_inputs(world, | world, player_input | handle_player_input_play(world, player_input));
@@ -105,7 +106,7 @@ pub(crate) fn handle_player_inputs_play(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle player inputs for ClientCoreMode::GameOver.
+/// Handle player inputs for ClientCoreState::GameOver.
 pub(crate) fn handle_player_inputs_gameover(world: &mut World)
 {
     process_player_inputs(world, | world, player_input | handle_player_input_gameover(world, player_input));

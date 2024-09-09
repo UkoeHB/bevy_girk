@@ -80,7 +80,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         //testing
         .insert_resource(PanicOnDrop::default())
         .insert_resource( TestContext{ num_prep_ticks, num_game_ticks } )
-        .add_systems(OnEnter(GameMode::GameOver), test_game_tick_state)
+        .add_systems(OnEnter(GameState::GameOver), test_game_tick_state)
         .run();
 }
 

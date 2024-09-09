@@ -17,7 +17,7 @@ fn handle_game_fw_message(world: &mut World, tick: Tick, msg: GameFwMsg)
     // Note: We log the framework message in [`deserialize_game_message()`].
     match msg
     {
-        GameFwMsg::CurrentMode(mode)      => syscall(world, mode, handle_current_game_fw_mode),
+        GameFwMsg::CurrentState(state)    => syscall(world, state, handle_current_game_fw_state),
         GameFwMsg::PingResponse(ping_rsp) => syscall(world, (tick, ping_rsp), handle_ping_response),
     }
 }

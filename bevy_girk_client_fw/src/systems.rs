@@ -16,7 +16,7 @@ use iyes_progress::prelude::*;
 /// Runs when the client has just disconnected.
 ///
 // Note: Does not interfere with `bevy_replicon_repair` because:
-// A) This runs in [`ClientFwMode::Connecting`] and repair runs in the first tick of [`ClientFwMode::Init`].
+// A) This runs in [`ClientFwState::Connecting`] and repair runs in the first tick of [`ClientFwState::Init`].
 // B) This component should never be removed by the server, so it should always show up in the replicon sync message
 //    regardless of possible conflict with repair.
 pub(crate) fn reset_init_progress(mut progress: Query<&mut GameInitProgress>)
@@ -58,22 +58,22 @@ pub(crate) fn send_initialization_progress_report(
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Sets [`ClientFwMode::Connecting`] and [`ClientInitializationState::InProgress`].
+/// Sets [`ClientFwState::Connecting`] and [`ClientInitializationState::InProgress`].
 pub(crate) fn reinitialize_client_fw(
     mut client_init_state : ResMut<NextState<ClientInitializationState>>,
-    mut client_fw_mode    : ResMut<NextState<ClientFwMode>>
+    mut client_fw_state    : ResMut<NextState<ClientFwState>>
 ){
     tracing::info!("connecting client");
     client_init_state.set(ClientInitializationState::InProgress);
-    client_fw_mode.set(ClientFwMode::Connecting);
+    client_fw_state.set(ClientFwState::Connecting);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Requests the current game framework mode.
-pub(crate) fn request_game_fw_mode(mut sender: ClientRequestSender)
+/// Requests the current game framework state.
+pub(crate) fn request_game_fw_state(mut sender: ClientRequestSender)
 {
-    sender.fw_request(ClientFwRequest::GetGameFwMode);
+    sender.fw_request(ClientFwRequest::GetGameFwState);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

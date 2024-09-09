@@ -78,7 +78,7 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) -> AppExit + Send + 'sta
 {
     move | mut app: App |
     {
-        app.add_systems(OnEnter(GameFwMode::End), add_game_over_flag);
+        app.add_systems(OnEnter(GameFwState::End), add_game_over_flag);
 
         for _ in 0..num_ticks
         {

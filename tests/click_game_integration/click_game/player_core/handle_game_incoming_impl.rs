@@ -12,40 +12,40 @@ use bevy_cobweb::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Use current game mode to update client mode.
-fn update_client_mode(
-    In(current_game_mode)       : In<GameMode>,
+/// Use current game state to update client state.
+fn update_client_state(
+    In(current_game_state)      : In<GameState>,
     client_initialization_state : Res<State<ClientInitializationState>>,
-    current_client_mode         : Res<State<ClientCoreMode>>,
-    mut next_client_mode        : ResMut<NextState<ClientCoreMode>>
+    current_client_state        : Res<State<ClientCoreState>>,
+    mut next_client_state       : ResMut<NextState<ClientCoreState>>
 ){
-    // do not update game mode if we are in the process of initializing the client
+    // do not update game state if we are in the process of initializing the client
     if *client_initialization_state != ClientInitializationState::Done { return; }
 
-    // update game mode
-    let new_client_mode =
-        match current_game_mode
+    // update game state
+    let new_client_state =
+        match current_game_state
         {
-            GameMode::Init     => ClientCoreMode::Init,
-            GameMode::Prep     => ClientCoreMode::Prep,
-            GameMode::Play     => ClientCoreMode::Play,
-            GameMode::GameOver => ClientCoreMode::GameOver,
+            GameState::Init     => ClientCoreState::Init,
+            GameState::Prep     => ClientCoreState::Prep,
+            GameState::Play     => ClientCoreState::Play,
+            GameState::GameOver => ClientCoreState::GameOver,
         };
 
-    if new_client_mode == **current_client_mode { return; }
-    next_client_mode.set(new_client_mode);
-    tracing::info!(?new_client_mode, "new client mode");
+    if new_client_state == **current_client_state { return; }
+    next_client_state.set(new_client_state);
+    tracing::info!(?new_client_state, "new client state");
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Handle current game mode.
-pub(crate) fn handle_current_game_mode(In(current_game_mode): In<GameMode>, world: &mut World)
+/// Handle current game state.
+pub(crate) fn handle_current_game_state(In(current_game_state): In<GameState>, world: &mut World)
 {
-    syscall(world, current_game_mode, update_client_mode);
+    syscall(world, current_game_state, update_client_state);
     //todo: this is heavy-handed, re-evaluate mode-change handling
-    // - ClientCoreMode
+    // - ClientCoreState
     let _ = world.try_run_schedule(StateTransition);
 }
 

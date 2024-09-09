@@ -40,7 +40,7 @@ impl Plugin for GameStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<GameMode>()
+        app.init_state::<GameState>()
             .add_systems(PreStartup,
                 (
                     build_precheck,
@@ -83,38 +83,38 @@ impl Plugin for GameTickPlugin
         // GAME Tick systems (after initialization).
         app.configure_sets(Update,
                 GameSet::PostInit
-                    .run_if(not(in_state(GameFwMode::Init)))
+                    .run_if(not(in_state(GameFwState::Init)))
             );
 
         // GAME Prep systems.
         app.configure_sets(Update,
                     GameSet::Prep
-                        .run_if(in_state(GameFwMode::Game))
-                        .run_if(in_state(GameMode::Prep))
+                        .run_if(in_state(GameFwState::Game))
+                        .run_if(in_state(GameState::Prep))
                 );
 
         // GAME Play systems.
         app.configure_sets(Update,
                     GameSet::Play
-                        .run_if(in_state(GameFwMode::Game))
-                        .run_if(in_state(GameMode::Play))
+                        .run_if(in_state(GameFwState::Game))
+                        .run_if(in_state(GameState::Play))
                 );
 
         // GAME GameOver systems.
-        //todo: this will only run in the short delay between entering 'game over' and the GameFwMode moving to 'End'
+        //todo: this will only run in the short delay between entering 'game over' and the GameFwState moving to 'End'
         app.configure_sets(Update,
                     GameSet::GameOver
-                        .run_if(in_state(GameFwMode::Game))
-                        .run_if(in_state(GameMode::GameOver))
+                        .run_if(in_state(GameFwState::Game))
+                        .run_if(in_state(GameState::GameOver))
                 );
 
 
         // ADMIN
         app.add_systems(Update,
                 (
-                    // determine which game mode the previous tick was in and set it
-                    update_game_mode.in_set(GameSet::PostInit),
-                    //for GameMode
+                    // determine which game state the previous tick was in and set it
+                    update_game_state.in_set(GameSet::PostInit),
+                    //for GameState
                     {|w: &mut World| { let _ = w.try_run_schedule(StateTransition); }}.in_set(GameSet::PostInit),
                     // elapse the previous tick
                     advance_game_tick.in_set(GameSet::PostInit),
@@ -128,12 +128,12 @@ impl Plugin for GameTickPlugin
         // MISC
 
         // Respond to state transitions
-        app.add_systems(PostStartup, notify_game_mode_all);  // GameMode::Init runs before startup systems
-        app.add_systems(OnEnter(GameMode::Prep), notify_game_mode_all);
-        app.add_systems(OnEnter(GameMode::Play), notify_game_mode_all);
-        app.add_systems(OnEnter(GameMode::GameOver),
+        app.add_systems(PostStartup, notify_game_state_all);  // GameState::Init runs before startup systems
+        app.add_systems(OnEnter(GameState::Prep), notify_game_state_all);
+        app.add_systems(OnEnter(GameState::Play), notify_game_state_all);
+        app.add_systems(OnEnter(GameState::GameOver),
                 (
-                    notify_game_mode_all,
+                    notify_game_state_all,
                     set_game_end_flag,
                 )
                     .chain()

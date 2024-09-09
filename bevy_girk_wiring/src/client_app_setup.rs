@@ -34,14 +34,14 @@ fn track_connection_state(client: Res<RenetClient>) -> Progress
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn track_initialization_state(mode: Res<State<ClientFwMode>>) -> Progress
+fn track_initialization_state(state: Res<State<ClientFwState>>) -> Progress
 {
-    match **mode
+    match **state
     {
-        ClientFwMode::Connecting => Progress{ done: 0, total: 2 },
-        ClientFwMode::Syncing    => Progress{ done: 1, total: 2 },
-        ClientFwMode::Init       => Progress{ done: 2, total: 2 },
-        _                        => Progress{ done: 2, total: 2 },
+        ClientFwState::Connecting => Progress{ done: 0, total: 2 },
+        ClientFwState::Syncing    => Progress{ done: 1, total: 2 },
+        ClientFwState::Init       => Progress{ done: 2, total: 2 },
+        _                         => Progress{ done: 2, total: 2 },
     }
 }
 
@@ -90,19 +90,19 @@ fn reinitialize_client(command_sender: Res<Sender<ClientFwCommand>>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn set_client_syncing(mut client_fw_mode: ResMut<NextState<ClientFwMode>>)
+fn set_client_syncing(mut client_fw_state: ResMut<NextState<ClientFwState>>)
 {
     tracing::info!("synchronizing client");
-    client_fw_mode.set(ClientFwMode::Syncing);
+    client_fw_state.set(ClientFwState::Syncing);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn set_client_init(mut client_fw_mode: ResMut<NextState<ClientFwMode>>)
+fn set_client_init(mut client_fw_state: ResMut<NextState<ClientFwState>>)
 {
     tracing::info!("initializing client");
-    client_fw_mode.set(ClientFwMode::Init);
+    client_fw_state.set(ClientFwState::Init);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -227,15 +227,15 @@ pub fn prepare_client_app_replication(
         //<-- girk connection initialization management
         //<-- ClientFwSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
-        //    game mode (and in general determine the contents of the current tick - e.g. replicated state is applied
+        //    game state (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
         .configure_sets(PreUpdate,
             (
                 // Ordering explanation:
-                // - We want `ClientFwMode::Syncing` to run for at least one tick before handling the first replication
+                // - We want `ClientFwState::Syncing` to run for at least one tick before handling the first replication
                 //   message. So we block the client set in the range [Connecting, Syncing first tick]
                 ClientSet::Receive
-                    .run_if(not(in_state(ClientFwMode::Connecting)))
+                    .run_if(not(in_state(ClientFwState::Connecting)))
                     .run_if(not(client_just_connected)),
                 ReceiveServerEventsSet,
                 bevy_replicon_repair::ClientRepairSet,
@@ -251,24 +251,24 @@ pub fn prepare_client_app_replication(
                 // reinitialize when disconnected and not at game end
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
-                //   the server sends an End mode message, but this will only be called in a tick where we are disconnected
-                //   and hence won't receive a game End mode message in `ClientFwSetPrivate::FwStart` after this
+                //   the server sends an End state message, but this will only be called in a tick where we are disconnected
+                //   and hence won't receive a game End state message in `ClientFwSetPrivate::FwStart` after this
                 reinitialize_client
                     .run_if(client_just_disconnected)
-                    .run_if(not(in_state(ClientFwMode::End))),
+                    .run_if(not(in_state(ClientFwState::End))),
                 // set syncing when just connected
-                // - note: this will not run in the first tick of `ClientFwMode::Connecting` because we disable
+                // - note: this will not run in the first tick of `ClientFwState::Connecting` because we disable
                 //   `setup_renet_client` for that tick (it actually takes at least 3 ticks to connect once disconnected)
                 set_client_syncing
                     .run_if(client_just_connected)
-                    .run_if(in_state(ClientFwMode::Connecting)),
+                    .run_if(in_state(ClientFwState::Connecting)),
                 // set initialized when just synchronized
-                // - note: this will not run in the first tick of `ClientFwMode::Syncing` because we disabled
+                // - note: this will not run in the first tick of `ClientFwState::Syncing` because we disabled
                 //   `ClientSet::Receive` for that tick, so ServerInitTick will not change (unless the user manually changes
                 //   it)
                 set_client_init
                     .run_if(resource_changed::<ServerInitTick>)
-                    .run_if(in_state(ClientFwMode::Syncing)),
+                    .run_if(in_state(ClientFwState::Syncing)),
             )
                 .chain()
                 .after(ClientSet::SyncHierarchy)
@@ -293,8 +293,8 @@ pub fn prepare_client_app_replication(
                     .track_progress(),
                 //track whether the client is initialized
                 //- note: this leverages the fact that `iyes_progress` collects progress in PostUpdate to ensure
-                //        `ClientInitializationState::Done` will not be entered until `ClientFwMode::Init` has run
-                //        for at least one tick (because the client fw will not try to leave `ClientFwMode::Init` until
+                //        `ClientInitializationState::Done` will not be entered until `ClientFwState::Init` has run
+                //        for at least one tick (because the client fw will not try to leave `ClientFwState::Init` until
                 //        `ClientInitializationState::Done` has been entered, which can happen in the second Init tick
                 //        at earliest)
                 track_initialization_state
@@ -332,8 +332,8 @@ pub fn prepare_client_app_network(client_app: &mut App, connect_pack: RenetClien
     client_app.insert_resource(connect_pack)
         .add_systems(PreUpdate,
             // Ordering explanation:
-            // - We want `ClientFwMode::Connecting` to run for at least one tick.
-            // - We want `client_just_disconnected` to return true for the first tick of `ClientFwMode::Connecting`.
+            // - We want `ClientFwState::Connecting` to run for at least one tick.
+            // - We want `client_just_disconnected` to return true for the first tick of `ClientFwState::Connecting`.
             // - We don't put this in Last in case the client manually disconnects halfway through Update.
             setup_renet_client.map(Result::unwrap)
                 .after(bevy_renet2::RenetReceive)  //detect disconnected

@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Inputs that may come from a player during Init mode.
+/// Inputs that may come from a player during Init state.
 #[derive(Debug)]
 pub enum PlayerInputInit
 {
@@ -16,7 +16,7 @@ pub enum PlayerInputInit
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Inputs that may come from a player during Prep mode.
+/// Inputs that may come from a player during Prep state.
 #[derive(Debug)]
 pub enum PlayerInputPrep
 {
@@ -25,7 +25,7 @@ pub enum PlayerInputPrep
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Inputs that may come from a player during Play mode.
+/// Inputs that may come from a player during Play state.
 #[derive(Debug)]
 pub enum PlayerInputPlay
 {
@@ -35,7 +35,7 @@ pub enum PlayerInputPlay
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Inputs that may come from a player during GameOver mode.
+/// Inputs that may come from a player during GameOver state.
 #[derive(Debug)]
 pub enum PlayerInputGameOver
 {

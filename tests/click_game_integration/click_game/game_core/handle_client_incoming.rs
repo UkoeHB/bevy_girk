@@ -36,8 +36,8 @@ fn handle_client_input_init(world: &mut World, req: GameRequest, id: ClientId)
 {
     match req
     {
-        GameRequest::GameModeRequest => syscall(world, id, handle_game_mode_request),
-        GameRequest::ClickButton     => syscall(world, (id, req, RejectionReason::ModeMismatch), notify_request_rejected),
+        GameRequest::GameStateRequest => syscall(world, id, handle_game_state_request),
+        GameRequest::ClickButton      => syscall(world, (id, req, RejectionReason::StateMismatch), notify_request_rejected),
     }
 }
 
@@ -48,8 +48,8 @@ fn handle_client_input_prep(world: &mut World, req: GameRequest, id: ClientId)
 {
     match req
     {
-        GameRequest::GameModeRequest => syscall(world, id, handle_game_mode_request),
-        GameRequest::ClickButton     => syscall(world, (id, req, RejectionReason::ModeMismatch), notify_request_rejected),
+        GameRequest::GameStateRequest => syscall(world, id, handle_game_state_request),
+        GameRequest::ClickButton      => syscall(world, (id, req, RejectionReason::StateMismatch), notify_request_rejected),
     }
 }
 
@@ -60,8 +60,8 @@ fn handle_client_input_play(world: &mut World, req: GameRequest, id: ClientId)
 {
     match req
     {
-        GameRequest::GameModeRequest => syscall(world, id, handle_game_mode_request),
-        GameRequest::ClickButton     => player_syscall(world, req, id, (), handle_player_click_button),
+        GameRequest::GameStateRequest => syscall(world, id, handle_game_state_request),
+        GameRequest::ClickButton      => player_syscall(world, req, id, (), handle_player_click_button),
     }
 }
 
@@ -72,8 +72,8 @@ fn handle_client_input_gameover(world: &mut World, req: GameRequest, id: ClientI
 {
     match req
     {
-        GameRequest::GameModeRequest => syscall(world, id, handle_game_mode_request),
-        GameRequest::ClickButton     => syscall(world, (id, req, RejectionReason::ModeMismatch), notify_request_rejected),
+        GameRequest::GameStateRequest => syscall(world, id, handle_game_state_request),
+        GameRequest::ClickButton      => syscall(world, (id, req, RejectionReason::StateMismatch), notify_request_rejected),
     }
 }
 
@@ -90,12 +90,12 @@ pub(crate) fn try_handle_game_core_input(
 {
     let request = deserialize_client_request(client_id, client_packet)?;
 
-    match syscall(world, (), get_current_game_mode)
+    match syscall(world, (), get_current_game_state)
     {
-        GameMode::Init     => handle_client_input_init(world, request, client_id),
-        GameMode::Prep     => handle_client_input_prep(world, request, client_id),
-        GameMode::Play     => handle_client_input_play(world, request, client_id),
-        GameMode::GameOver => handle_client_input_gameover(world, request, client_id),
+        GameState::Init     => handle_client_input_init(world, request, client_id),
+        GameState::Prep     => handle_client_input_prep(world, request, client_id),
+        GameState::Play     => handle_client_input_play(world, request, client_id),
+        GameState::GameOver => handle_client_input_gameover(world, request, client_id),
     }
 
     Ok(())

@@ -37,7 +37,7 @@ impl Plugin for GameFwStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<GameFwMode>()
+        app.init_state::<GameFwState>()
             .add_systems(PreStartup,
                 (
                     build_precheck,
@@ -95,21 +95,21 @@ pub enum GameFwSet
 /// We treat a tick as a span of time in which events occur: |__stuff_happening__|. Our logic for handling the stuff that
 /// happened in a span runs after all 'real-space' events of that span have occurred.
 ///
-/// Each tick is assigned one game mode, represented by [`GameFwMode`].
-/// We determine the game mode for the next tick at the start of the current tick, using the state of the current tick.
+/// Each tick is assigned one game state, represented by [`GameFwState`].
+/// We determine the game state for the next tick at the start of the current tick, using the state of the current tick.
 ///
-/// Transition logic can use the `OnEnter(GameFwMode::*)` and `OnExit(GameFwMode::*)` schedules.
-/// Keep in mind that [`GameFwTick`] will equal the *current* tick (i.e. the first tick of the on-entered mode ) when
+/// Transition logic can use the `OnEnter(GameFwState::*)` and `OnExit(GameFwState::*)` schedules.
+/// Keep in mind that [`GameFwTick`] will equal the *current* tick (i.e. the first tick of the on-entered state ) when
 /// these schedules run.
 ///
 /// In practice, since all our game logic is located at the end of a tick span in real time, the order of events in a
 /// tick is:
 /// 1) Elapse a time span (tick).
 /// 2) Increment [`GameFwTick`] for the current tick.
-/// 3) Determine mode for the current tick.
+/// 3) Determine state for the current tick.
 /// 4) Execute logic for the current tick.
 ///
-/// Tick 1's game mode is always [`GameFwMode::Init`].
+/// Tick 1's game state is always [`GameFwState::Init`].
 pub struct GameFwTickPlugin;
 
 impl Plugin for GameFwTickPlugin
@@ -133,9 +133,9 @@ impl Plugin for GameFwTickPlugin
                 (
                     // begin the current tick
                     advance_game_fw_tick,
-                    update_game_fw_mode,
+                    update_game_fw_state,
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
-                    // - GameFwMode
+                    // - GameFwState
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                 ).chain().in_set(GameFwSetPrivate::FwStart)
             );
@@ -145,7 +145,7 @@ impl Plugin for GameFwTickPlugin
         // START
 
         // FWHANDLEREQUESTS
-        // note: we handle inputs after the game fw and game core have updated their ticks and modes (in their start sets)
+        // note: we handle inputs after the game fw and game core have updated their ticks and states (in their start sets)
         app.add_systems(Update,
                 (
                     handle_requests,
@@ -167,15 +167,15 @@ impl Plugin for GameFwTickPlugin
         // MISC
 
         // Respond to state transitions
-        app.add_systems(PostStartup, notify_game_fw_mode_all)  // GameFwMode::Init runs before startup systems
-            .add_systems(OnEnter(GameFwMode::Game), notify_game_fw_mode_all)
-            .add_systems(OnEnter(GameFwMode::End),
+        app.add_systems(PostStartup, notify_game_fw_state_all)  // GameFwState::Init runs before startup systems
+            .add_systems(OnEnter(GameFwState::Game), notify_game_fw_state_all)
+            .add_systems(OnEnter(GameFwState::End),
                 (
-                    notify_game_fw_mode_all,
+                    notify_game_fw_state_all,
                     start_end_countdown,
                 )
             )
-            .add_systems(Last, try_exit_app.run_if(in_state(GameFwMode::End)));
+            .add_systems(Last, try_exit_app.run_if(in_state(GameFwState::End)));
     }
 }
 

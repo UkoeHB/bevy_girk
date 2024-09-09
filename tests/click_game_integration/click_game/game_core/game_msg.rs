@@ -15,7 +15,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub enum RejectionReason
 {
-    ModeMismatch,
+    StateMismatch,
     Invalid,
     None
 }
@@ -27,7 +27,7 @@ pub enum RejectionReason
 pub enum GameMsg
 {
     RequestRejected{ reason: RejectionReason, request: GameRequest },
-    CurrentGameMode(GameMode),
+    CurrentGameState(GameState),
 }
 
 impl IntoChannelKind for GameMsg
@@ -37,7 +37,7 @@ impl IntoChannelKind for GameMsg
         match self
         {
             Self::RequestRejected{..} => SendUnordered.into(),
-            Self::CurrentGameMode(_)  => SendOrdered.into(),
+            Self::CurrentGameState(_)  => SendOrdered.into(),
         }
     }
 }

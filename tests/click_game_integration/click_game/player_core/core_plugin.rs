@@ -58,15 +58,15 @@ pub enum ClientSet
 {
     /// runs the first time the client is initialized
     InitStartup,
-    /// runs if the client is reinitialized after exiting 'Init' mode
+    /// runs if the client is reinitialized after exiting 'Init' state
     InitReinit,
     /// runs main initialization logic
     InitCore,
-    /// runs in game mode 'prep' (but not when initializing)
+    /// runs in game state 'prep' (but not when initializing)
     Prep,
-    /// runs in game mode 'play' (but not when initializing)
+    /// runs in game state 'play' (but not when initializing)
     Play,
-    /// runs in game mode 'game over' (but not when initializing)
+    /// runs in game state 'game over' (but not when initializing)
     GameOver
 }
 
@@ -79,7 +79,7 @@ impl Plugin for ClientCoreStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<ClientCoreMode>()
+        app.init_state::<ClientCoreState>()
             .add_systems(PreStartup,
                 (
                     build_precheck,
@@ -109,44 +109,44 @@ impl Plugin for ClientCoreTickPlugin
         // - load assets
         app.configure_sets(Update,
                     ClientSet::InitStartup
-                        .run_if(in_state(ClientFwMode::Init))
-                        .run_if(in_state(ClientCoreMode::Init))
+                        .run_if(in_state(ClientFwState::Init))
+                        .run_if(in_state(ClientCoreState::Init))
                 );
 
         // Init reinitialize. (runs if client needs to be reinitialized during a game)
         // - lock display and show reinitialization progress
         app.configure_sets(Update,
                     ClientSet::InitReinit
-                        .run_if(in_state(ClientFwMode::Init))  //framework is reinitializing
-                        .run_if(not(in_state(ClientCoreMode::Init)))  //client core is not in init
+                        .run_if(in_state(ClientFwState::Init))  //framework is reinitializing
+                        .run_if(not(in_state(ClientCoreState::Init)))  //client core is not in init
                 );
 
-        // Init core. (always runs when framework is being initialized, regardless of client mode)
+        // Init core. (always runs when framework is being initialized, regardless of client state)
         // - connect to game and synchronize times
         app.configure_sets(Update,
                     ClientSet::InitCore
-                        .run_if(in_state(ClientFwMode::Init))
+                        .run_if(in_state(ClientFwState::Init))
                 );
 
         // Prep systems.
         app.configure_sets(Update,
                     ClientSet::Prep
-                        .run_if(in_state(ClientFwMode::Game))
-                        .run_if(in_state(ClientCoreMode::Prep))
+                        .run_if(in_state(ClientFwState::Game))
+                        .run_if(in_state(ClientCoreState::Prep))
                 );
 
         // Play systems.
         app.configure_sets(Update,
                     ClientSet::Play
-                        .run_if(in_state(ClientFwMode::Game))
-                        .run_if(in_state(ClientCoreMode::Play))
+                        .run_if(in_state(ClientFwState::Game))
+                        .run_if(in_state(ClientCoreState::Play))
                 );
 
         // GameOver systems.
         app.configure_sets(Update,
                     ClientSet::GameOver
-                        .run_if(in_state(ClientFwMode::End))
-                        .run_if(in_state(ClientCoreMode::GameOver))
+                        .run_if(in_state(ClientFwState::End))
+                        .run_if(in_state(ClientCoreState::GameOver))
                 );
 
         // Admin
@@ -163,7 +163,7 @@ impl Plugin for ClientCoreTickPlugin
         // Systems that should run when the client is fully initialized.
         app.add_systems(OnEnter(ClientInitializationState::Done),
                 (
-                    request_game_mode,
+                    request_game_state,
                 ).chain()
             );
     }

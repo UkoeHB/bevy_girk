@@ -52,15 +52,15 @@ fn startup_postcheck(world: &World)
 ///
 /// The run condition returns true when in state [`ClientFwMod::Connecting`], [`ClientFwMod::Syncing`],
 /// and [`ClientFwMod::Init`]
-pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwMode>>) -> bool + Clone
+pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwState>>) -> bool + Clone
 {
-    |current_state: Res<State<ClientFwMode>>| -> bool
+    |current_state: Res<State<ClientFwState>>| -> bool
     {
         match **current_state
         {
-            ClientFwMode::Connecting |
-            ClientFwMode::Syncing |
-            ClientFwMode::Init => true,
+            ClientFwState::Connecting |
+            ClientFwState::Syncing |
+            ClientFwState::Init => true,
             _ => false,
         }
     }
@@ -76,8 +76,8 @@ impl Plugin for ClientFwStartupPlugin
     fn build(&self, app: &mut App)
     {
         app.init_state::<ClientInitializationState>()
-            .init_state::<ClientFwMode>()
-            //todo: all of this needs to be moved to OnEnter(ClientInstanceMode::Game)
+            .init_state::<ClientFwState>()
+            //todo: all of this needs to be moved to OnEnter(ClientInstanceState::Game)
             .add_systems(PreStartup,
                 (
                     build_precheck,
@@ -172,15 +172,15 @@ impl Plugin for ClientFwTickPlugin
                 (
                     handle_commands,
                     // - The client may have been commanded to reinitialize.
-                    // - We want connection-related mode changes to be applied here since game mode changes will be ignored if
+                    // - We want connection-related state changes to be applied here since game state changes will be ignored if
                     //   initializing.
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
-                    // - ClientInitializationState, ClientFwMode
+                    // - ClientInitializationState, ClientFwState
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                     handle_game_incoming,
-                    // The game may have caused a mode change (will be ignored if in the middle of initializing).
+                    // The game may have caused a state change (will be ignored if in the middle of initializing).
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
-                    // - ClientFwMode
+                    // - ClientFwState
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                 ).chain().in_set(ClientFwSetPrivate::FwStart)
             );
@@ -203,7 +203,7 @@ impl Plugin for ClientFwTickPlugin
                     // todo: ClientInitializationState dependency needs to be moved to OnEnter/OnExit since this is global
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                     update_initialization_cache.run_if(client_is_initializing()),
-                    send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
+                    send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()
                     .in_set(ClientFwSetPrivate::FwEnd)
             );
@@ -212,10 +212,10 @@ impl Plugin for ClientFwTickPlugin
         // MISC
 
         // Handle just disconnected.
-        app.add_systems(OnEnter(ClientFwMode::Connecting), reset_init_progress);
+        app.add_systems(OnEnter(ClientFwState::Connecting), reset_init_progress);
 
         // Systems that should run when the client is fully initialized.
-        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_mode);
+        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_state);
     }
 }
 

@@ -31,15 +31,15 @@ impl GameRand
 #[derive(Resource, Default, Deref)]
 pub struct GameTick(pub Tick);
 
-/// The current tick within [GameMode::Prep].
+/// The current tick within [GameState::Prep].
 #[derive(Resource, Default, Deref)]
 pub struct PrepTick(pub Tick);
 
-/// The current tick within [GameMode::Play].
+/// The current tick within [GameState::Play].
 #[derive(Resource, Default, Deref)]
 pub struct PlayTick(pub Tick);
 
-/// The current tick within [GameMode::GameOver].
+/// The current tick within [GameState::GameOver].
 #[derive(Resource, Default, Deref)]
 pub struct GameOverTick(pub Tick);
 
@@ -47,7 +47,7 @@ pub struct GameOverTick(pub Tick);
 
 /// Game mode
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
-pub enum GameMode
+pub enum GameState
 {
     #[default]
     Init,
