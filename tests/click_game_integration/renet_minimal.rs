@@ -45,20 +45,20 @@ fn renet_minimal()
 
     setup_local_test_renet_network(&mut server_app, &mut client_app);
 
-    while !client_app[0].world.resource::<RenetClient>().is_connected()
+    while !client_app[0].world().resource::<RenetClient>().is_connected()
     {
         std::thread::sleep(std::time::Duration::from_millis(20));
         server_app.update();
         client_app[0].update();
     }
 
-    assert!(client_app[0].world.resource::<RenetClient>().is_connected());
-    client_app[0].world.resource_mut::<RenetClient>().disconnect();
-    assert!(client_app[0].world.resource::<RenetClient>().is_disconnected());
+    assert!(client_app[0].world().resource::<RenetClient>().is_connected());
+    client_app[0].world_mut().resource_mut::<RenetClient>().disconnect();
+    assert!(client_app[0].world().resource::<RenetClient>().is_disconnected());
     std::thread::sleep(std::time::Duration::from_millis(20));
     server_app.update();
     client_app[0].update();
-    assert!(client_app[0].world.resource::<RenetClient>().is_disconnected());
+    assert!(client_app[0].world().resource::<RenetClient>().is_disconnected());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -46,7 +46,7 @@ fn check_player_scores_system(
 
 fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_clicks: u32)
 {
-    syscall(&mut app.world, (expected_num_players, expected_num_clicks), check_player_scores_system);
+    app.world_mut().syscall( (expected_num_players, expected_num_clicks), check_player_scores_system);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ fn game_instance_factory_demo()
         game_server_app.update();
 
         // expect that we have not left the init phase
-        assert_eq!(*game_server_app.world.resource::<State<GameFwMode>>(), GameFwMode::Init);
+        assert_eq!(*game_server_app.world().resource::<State<GameFwMode>>(), GameFwMode::Init);
 
         // update clients
         let mut num_inits = 0;
@@ -157,10 +157,10 @@ fn game_instance_factory_demo()
         {
             client.update();
 
-            if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<RenetClient>().is_connected());
+            assert!(client.world().resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 
@@ -172,13 +172,13 @@ fn game_instance_factory_demo()
     std::thread::sleep(std::time::Duration::from_millis(15));
     game_server_app.update();  //one update to collect client inputs notifying completion
     game_server_app.update();  //one update to update the mode
-    assert_eq!(*game_server_app.world.resource::<State<GameFwMode>>(), GameFwMode::Game);
+    assert_eq!(*game_server_app.world().resource::<State<GameFwMode>>(), GameFwMode::Game);
 
-    assert!(syscall(&mut game_server_app.world, (), game_is_initialized));
+    assert!(game_server_app.world_mut().syscall((), game_is_initialized));
     for client in client_apps.iter_mut()
     {
         client.update();  //load game initialization progress entity changes
-        assert!(syscall(&mut client.world, (), game_is_initialized));
+        assert!(client.world_mut().syscall((), game_is_initialized));
     }
 
     // send button clicks from each player
@@ -188,7 +188,7 @@ fn game_instance_factory_demo()
     }
 
     // tick until game over
-    while *game_server_app.world.resource::<State<GameFwMode>>() != GameFwMode::End
+    while *game_server_app.world().resource::<State<GameFwMode>>() != GameFwMode::End
     {
         game_server_app.update();
 

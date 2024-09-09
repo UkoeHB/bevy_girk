@@ -173,8 +173,8 @@ fn get_game_start_infos(
 ) -> Result<Vec<GameStartInfo>, ()>
 {
     // extract data
-    let game_initializer = app.world.resource::<ClickGameInitializer>();
-    let ticks_per_sec = app.world.resource::<GameFwConfig>().ticks_per_sec();
+    let game_initializer = app.world().resource::<ClickGameInitializer>();
+    let ticks_per_sec = app.world().resource::<GameFwConfig>().ticks_per_sec();
 
     // make start infos for each client
     let mut start_infos = Vec::<GameStartInfo>::with_capacity(user_clients.len());

@@ -151,11 +151,18 @@ pub struct GirkClientConfig
 
 /// Sets up a client app with the `bevy_girk` client framework.
 ///
-/// REQUIREMENTS:
+/// Adds the following if missing:
 /// - `bevy::time::TimePlugin`.
 /// - `bevy::asset::AssetPlugin`.
 pub fn prepare_client_app_framework(client_app: &mut App, client_fw_config: ClientFwConfig) -> Sender<ClientFwCommand>
 {
+    if !client_app.is_plugin_added::<bevy::time::TimePlugin>() {
+        client_app.add_plugins(bevy::time::TimePlugin);
+    }
+    if !client_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
+        client_app.add_plugins(bevy::state::app::StatesPlugin);
+    }
+
     // prepare message channels
     let (command_sender, command_receiver) = new_channel::<ClientFwCommand>();
 
@@ -179,6 +186,12 @@ pub fn prepare_client_app_replication(
     resend_time    : Duration,
 ){
     // depends on client framework
+    if !client_app.is_plugin_added::<bevy::time::TimePlugin>() {
+        client_app.add_plugins(bevy::time::TimePlugin);
+    }
+    if !client_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
+        client_app.add_plugins(bevy::state::app::StatesPlugin);
+    }
 
     // prepare channels
     prepare_network_channels(client_app, resend_time);

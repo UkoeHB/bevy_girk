@@ -20,17 +20,17 @@ pub(crate) fn setup_player_state(world: &mut World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Initialize the game output handler.
-pub(crate) fn setup_game_output_handler(mut commands: Commands)
+pub(crate) fn setup_game_output_handler(world: &mut World)
 {
-    commands.insert_resource::<GameMessageHandler>(GameMessageHandler::new(try_handle_game_core_output));
+    world.insert_resource::<GameMessageHandler>(GameMessageHandler::new(try_handle_game_core_output));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Initialize the client request handler.
-pub(crate) fn setup_client_request_buffer(mut commands: Commands)
+pub(crate) fn setup_client_request_buffer(world: &mut World)
 {
-    commands.insert_resource(ClientRequestType::new::<GameRequest>());
+    world.insert_resource(ClientRequestType::new::<GameRequest>());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -27,7 +27,7 @@ fn add_progress_plugin(app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist before client startup.
-fn prestartup_check(world: &World)
+fn build_precheck(world: &World)
 {
     if !world.contains_resource::<ClientFwConfig>()            { panic!("ClientFwConfig is missing on startup!"); }
     if !world.contains_resource::<Receiver<ClientFwCommand>>() { panic!("Receiver<ClientFwCommand> is missing on startup!"); }
@@ -39,7 +39,7 @@ fn prestartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist after client startup.
-fn poststartup_check(world: &World)
+fn startup_postcheck(world: &World)
 {
     if !world.contains_resource::<GameMessageHandler>() { panic!("GameMessageHandler is missing post startup!"); }
     if !world.contains_resource::<ClientRequestType>()  { panic!("ClientRequestType is missing post startup!"); }
@@ -77,9 +77,10 @@ impl Plugin for ClientFwStartupPlugin
     {
         app.init_state::<ClientInitializationState>()
             .init_state::<ClientFwMode>()
+            //todo: all of this needs to be moved to OnEnter(ClientInstanceMode::Game)
             .add_systems(PreStartup,
                 (
-                    prestartup_check,
+                    build_precheck,
                 ).chain()
             )
             .add_systems(Startup,
@@ -89,7 +90,7 @@ impl Plugin for ClientFwStartupPlugin
             )
             .add_systems(PostStartup,
                 (
-                    poststartup_check,
+                    startup_postcheck,
                 ).chain()
             );
     }
@@ -170,14 +171,17 @@ impl Plugin for ClientFwTickPlugin
         app.add_systems(PreUpdate,
                 (
                     handle_commands,
-                    // The client may have been commanded to reinitialize.
-                    apply_state_transition::<ClientInitializationState>,
-                    // We want connection-related mode changes to be applied here since game mode changes will be ignored if
-                    // initializing.
-                    apply_state_transition::<ClientFwMode>,
+                    // - The client may have been commanded to reinitialize.
+                    // - We want connection-related mode changes to be applied here since game mode changes will be ignored if
+                    //   initializing.
+                    // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
+                    // - ClientInitializationState, ClientFwMode
+                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                     handle_game_incoming,
                     // The game may have caused a mode change (will be ignored if in the middle of initializing).
-                    apply_state_transition::<ClientFwMode>,
+                    // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
+                    // - ClientFwMode
+                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                 ).chain().in_set(ClientFwSetPrivate::FwStart)
             );
 
@@ -196,7 +200,8 @@ impl Plugin for ClientFwTickPlugin
         // FWEND
         app.add_systems(PostUpdate,
                 (
-                    apply_state_transition::<ClientInitializationState>,
+                    // todo: ClientInitializationState dependency needs to be moved to OnEnter/OnExit since this is global
+                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                     update_initialization_cache.run_if(client_is_initializing()),
                     send_initialization_progress_report.run_if(in_state(ClientFwMode::Init)),
                 ).chain()

@@ -77,6 +77,7 @@ impl ClientFactoryImpl for ClickClientFactory
 
         client_app
             .add_plugins(bevy::time::TimePlugin)
+            .add_plugins(bevy::state::app::StatesPlugin)
             .add_plugins(bevy::asset::AssetPlugin::default());
         prepare_girk_client_app(&mut client_app, config);
 

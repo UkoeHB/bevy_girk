@@ -174,10 +174,10 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
         {
             client.update();
 
-            if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<RenetClient>().is_connected());
+            assert!(client.world().resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 
@@ -192,7 +192,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     for client in game_clients.iter_mut()
     {
         client.update();  //load game initialization progress entity changes
-        assert!(syscall(&mut client.world, (), game_is_initialized));
+        assert!(client.world_mut().syscall((), game_is_initialized));
     }
 }
 
@@ -465,12 +465,12 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // disconnect game client 1 from renet server
-    client_app1.world.resource_mut::<RenetClient>().disconnect();
+    client_app1.world_mut().resource_mut::<RenetClient>().disconnect();
     client_app1.update();
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
     client_app1.update(); std::thread::sleep(Duration::from_millis(45));
-    assert!(client_app1.world.resource::<RenetClient>().is_disconnected());
-    assert_eq!(*client_app1.world.resource::<State<ClientInitializationState>>().get(), ClientInitializationState::InProgress);
+    assert!(client_app1.world().resource::<RenetClient>().is_disconnected());
+    assert_eq!(*client_app1.world().resource::<State<ClientInitializationState>>().get(), ClientInitializationState::InProgress);
 
     // request new connect token for client 1
     user1.request(UserToHostRequest::GetConnectToken{ id: game_id });

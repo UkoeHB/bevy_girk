@@ -27,7 +27,7 @@ fn handle_command_abort(
     // exit the client
     // WARNING: we assume sending AppExit guarantees the app will clean up all its resources and shut down; if that
     //          guarantee does not hold, we should panic instead
-    app_exit.send(AppExit{});
+    app_exit.send(AppExit::Success);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

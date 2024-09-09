@@ -8,7 +8,7 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy                     = { version = "0.13", default-features = false }
+bevy                     = { version = "0.14", default-features = false, features = ["bevy_state"] }
 bevy_cobweb              = { workspace = true }
 bincode                  = { workspace = true }
 bytes                    = { workspace = true }

@@ -59,9 +59,9 @@ fn test_game_setup(num_players: usize)
     // setup game (no client fw or client core)
     App::new()
         //requirements
-        .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
-        .init_resource::<bevy_replicon::prelude::ConnectedClients>()
+        .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset

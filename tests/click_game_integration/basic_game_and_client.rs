@@ -51,7 +51,7 @@ fn basic_game_and_client()
     let (_player_input_sender, player_input_reader)           = new_channel::<PlayerInput>();
 
     // make the client ready
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::new(0u64),
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
@@ -62,7 +62,7 @@ fn basic_game_and_client()
         });
 
     // send ping request
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::new(0u64),
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
@@ -91,6 +91,7 @@ fn basic_game_and_client()
     app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(
             RepliconPlugins

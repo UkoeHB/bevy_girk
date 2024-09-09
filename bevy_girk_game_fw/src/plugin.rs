@@ -11,7 +11,7 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist before game startup.
-fn prestartup_check(world: &World)
+fn build_precheck(world: &World)
 {
     if !world.contains_resource::<GameFwClients>() { panic!("GameFwClients is missing on startup!"); }
     if !world.contains_resource::<GameFwConfig>()  { panic!("GameFwConfig is missing on startup!"); }
@@ -21,7 +21,7 @@ fn prestartup_check(world: &World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist before game begins.
-fn poststartup_check(world: &World)
+fn startup_postcheck(world: &World)
 {
     if !world.contains_resource::<ClientRequestHandler>() { panic!("ClientRequestHandler is missing post startup!"); }
     if !world.contains_resource::<GameMessageType>()      { panic!("GameMessageType is missing post startup!"); }
@@ -40,7 +40,7 @@ impl Plugin for GameFwStartupPlugin
         app.init_state::<GameFwMode>()
             .add_systems(PreStartup,
                 (
-                    prestartup_check,
+                    build_precheck,
                 ).chain()
             )
             .add_systems(Startup,
@@ -50,7 +50,7 @@ impl Plugin for GameFwStartupPlugin
             )
             .add_systems(PostStartup,
                 (
-                    poststartup_check,
+                    startup_postcheck,
                 ).chain()
             );
     }
@@ -134,7 +134,9 @@ impl Plugin for GameFwTickPlugin
                     // begin the current tick
                     advance_game_fw_tick,
                     update_game_fw_mode,
-                    apply_state_transition::<GameFwMode>,
+                    // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
+                    // - GameFwMode
+                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                 ).chain().in_set(GameFwSetPrivate::FwStart)
             );
 
@@ -165,7 +167,7 @@ impl Plugin for GameFwTickPlugin
         // MISC
 
         // Respond to state transitions
-        app.add_systems(OnEnter(GameFwMode::Init), notify_game_fw_mode_all)
+        app.add_systems(PostStartup, notify_game_fw_mode_all)  // GameFwMode::Init runs before startup systems
             .add_systems(OnEnter(GameFwMode::Game), notify_game_fw_mode_all)
             .add_systems(OnEnter(GameFwMode::End),
                 (

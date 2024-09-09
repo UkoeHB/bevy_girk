@@ -33,7 +33,7 @@ fn check_client_framework_consistency(client_fw_config: &ClientFwConfig, player_
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist before client startup.
-fn prestartup_check(world: &World)
+fn build_precheck(world: &World)
 {
     // check for expected resources
     if !world.contains_resource::<ClickPlayerInitializer>()
@@ -82,7 +82,7 @@ impl Plugin for ClientCoreStartupPlugin
         app.init_state::<ClientCoreMode>()
             .add_systems(PreStartup,
                 (
-                    prestartup_check,
+                    build_precheck,
                 )
             )
             .add_systems(Startup,

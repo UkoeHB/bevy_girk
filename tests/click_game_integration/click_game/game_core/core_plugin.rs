@@ -24,7 +24,7 @@ use bevy::{prelude::*, app::PluginGroupBuilder};
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Validate resources that should exist before game startup.
-fn prestartup_check(world: &World)
+fn build_precheck(world: &World)
 {
     if !world.contains_resource::<ClickGameInitializer>()
         { panic!("ClickGameInitializer is missing on startup!"); }
@@ -43,7 +43,7 @@ impl Plugin for GameStartupPlugin
         app.init_state::<GameMode>()
             .add_systems(PreStartup,
                 (
-                    prestartup_check,
+                    build_precheck,
                 ).chain()
             )
             .add_systems(Startup,
@@ -114,7 +114,8 @@ impl Plugin for GameTickPlugin
                 (
                     // determine which game mode the previous tick was in and set it
                     update_game_mode.in_set(GameSet::PostInit),
-                    apply_state_transition::<GameMode>.in_set(GameSet::PostInit),
+                    //for GameMode
+                    {|w: &mut World| { let _ = w.try_run_schedule(StateTransition); }}.in_set(GameSet::PostInit),
                     // elapse the previous tick
                     advance_game_tick.in_set(GameSet::PostInit),
                     advance_prep_tick.in_set(GameSet::Prep),
@@ -127,7 +128,7 @@ impl Plugin for GameTickPlugin
         // MISC
 
         // Respond to state transitions
-        app.add_systems(OnEnter(GameMode::Init), notify_game_mode_all);
+        app.add_systems(PostStartup, notify_game_mode_all);  // GameMode::Init runs before startup systems
         app.add_systems(OnEnter(GameMode::Prep), notify_game_mode_all);
         app.add_systems(OnEnter(GameMode::Play), notify_game_mode_all);
         app.add_systems(OnEnter(GameMode::GameOver),

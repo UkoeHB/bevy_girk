@@ -44,7 +44,9 @@ fn update_client_mode(
 pub(crate) fn handle_current_game_mode(In(current_game_mode): In<GameMode>, world: &mut World)
 {
     syscall(world, current_game_mode, update_client_mode);
-    syscall(world, (), apply_state_transition::<ClientCoreMode>);
+    //todo: this is heavy-handed, re-evaluate mode-change handling
+    // - ClientCoreMode
+    let _ = world.try_run_schedule(StateTransition);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

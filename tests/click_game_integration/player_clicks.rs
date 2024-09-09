@@ -59,7 +59,7 @@ fn player_clicks()
     let (player_input_sender, player_input_reader)            = new_channel::<PlayerInput>();
 
     // make the client ready
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::new(0u64),
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
@@ -85,9 +85,10 @@ fn player_clicks()
     app
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .init_resource::<bevy_replicon::prelude::ConnectedClients>()
+        .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset

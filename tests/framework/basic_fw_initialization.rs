@@ -31,7 +31,7 @@ fn basic_fw_initialization()
     let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFwCommand>();
 
     // make the client ready
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : ChannelKind::Ordered,
@@ -44,6 +44,7 @@ fn basic_fw_initialization()
     app
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(
             RepliconPlugins

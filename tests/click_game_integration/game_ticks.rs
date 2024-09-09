@@ -48,9 +48,10 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
     App::new()
         //third-party plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .init_resource::<bevy_replicon::prelude::ConnectedClients>()
+        .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
         .add_plugins(VisibilityAttributesPlugin{
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset

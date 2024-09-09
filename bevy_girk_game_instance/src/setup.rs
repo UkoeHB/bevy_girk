@@ -16,7 +16,7 @@ use bevy::prelude::*;
 fn set_game_app_runner(app: &mut App)
 {
     // get tick rate
-    let ticks_per_sec = app.world.resource::<GameFwConfig>().ticks_per_sec();
+    let ticks_per_sec = app.world().resource::<GameFwConfig>().ticks_per_sec();
 
     // add runner
     app.add_plugins(bevy::app::ScheduleRunnerPlugin::run_loop(tps_to_duration(ticks_per_sec)));

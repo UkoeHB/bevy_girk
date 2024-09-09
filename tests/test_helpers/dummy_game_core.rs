@@ -20,7 +20,7 @@ pub struct DummyGameDurationConfig
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn prestartup_check(world: &World)
+fn build_precheck(world: &World)
 {
     if !world.contains_resource::<DummyGameDurationConfig>()
         { panic!("DummyGameDurationConfig is missing on startup!"); }
@@ -58,7 +58,7 @@ impl Plugin for DummyGameCorePlugin
             ));
 
         // startup check
-        app.add_systems(PreStartup, prestartup_check);
+        build_precheck(app.world());
 
         // game termination condition
         app.add_systems(PostUpdate, try_end_dummy_game);

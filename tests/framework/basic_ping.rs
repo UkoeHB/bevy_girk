@@ -36,7 +36,7 @@ fn basic_ping()
     app.add_event::<GamePacket>();
 
     // make the client ready
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendOrdered.into(),
@@ -47,7 +47,7 @@ fn basic_ping()
         });
 
     // send ping request
-    app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
             client_id: ClientId::SERVER,
             event: ClientPacket{
                     send_policy : SendUnordered.into(),
@@ -63,6 +63,7 @@ fn basic_ping()
     app
         //bevy plugins
         .add_plugins(bevy::time::TimePlugin)
+        .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
         .add_plugins(
             RepliconPlugins
@@ -95,7 +96,7 @@ fn basic_ping()
     // expect ping response
     let mut found_ping_response: bool = false;
 
-    for game_packet in app.world.resource_mut::<Events<GamePacket>>().drain()
+    for game_packet in app.world_mut().resource_mut::<Events<GamePacket>>().drain()
     {
         // deserialize ping response
         let Some(message) = deser_msg::<GameMessageData::<()>>(&game_packet.message[..])

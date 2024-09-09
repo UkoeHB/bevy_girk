@@ -142,7 +142,7 @@ pub(crate) fn try_exit_app(
 
     // exit the game
     tracing::info!("exiting game app");
-    app_exit.send(AppExit{});
+    app_exit.send(AppExit::Success);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

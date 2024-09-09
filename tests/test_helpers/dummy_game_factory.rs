@@ -67,7 +67,7 @@ impl GameFactoryImpl for DummyGameFactory
         let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFwCommand>();
 
         // make the client ready
-        app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+        app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
                 client_id: ClientId::SERVER,
                 event: ClientPacket{
                         send_policy : SendOrdered.into(),
@@ -81,6 +81,7 @@ impl GameFactoryImpl for DummyGameFactory
         app
             //bevy plugins
             .add_plugins(bevy::time::TimePlugin)
+            .add_plugins(bevy::state::app::StatesPlugin)
             .add_plugins(bevy::asset::AssetPlugin::default())
             .add_plugins(
                 RepliconPlugins

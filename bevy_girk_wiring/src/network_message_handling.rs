@@ -10,7 +10,7 @@ use bevy_replicon::core::channels::RepliconChannel;
 use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::core::ClientId;
 use bevy_replicon::prelude::{
-    ChannelKind, ConnectedClients, FromClient, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
+    ChannelKind, FromClient, ReplicatedClients, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
 };
 use bevy_replicon::server::ServerSet;
 use bincode::Options;
@@ -173,7 +173,7 @@ impl Default for GamePacketQueue
 /// Server -> Client
 fn send_server_packets(
     mut game_packets   : ResMut<Events<ToClients<GamePacket>>>,
-    client_cache       : Res<ConnectedClients>,
+    client_cache       : Res<ReplicatedClients>,
     mut server         : ResMut<RepliconServer>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
@@ -329,7 +329,7 @@ fn receive_client_packets(
 pub(crate) fn prepare_network_channels(app: &mut App, resend_time: Duration)
 {
     app.init_resource::<RepliconChannels>();
-    let mut channels = app.world.resource_mut::<RepliconChannels>();
+    let mut channels = app.world_mut().resource_mut::<RepliconChannels>();
 
     let unordered = RepliconChannel{
         kind: ChannelKind::Unordered,

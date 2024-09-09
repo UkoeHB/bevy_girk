@@ -62,7 +62,7 @@ fn check_player_scores_system(
 
 fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_clicks: u32)
 {
-    syscall(&mut app.world, (expected_num_players, expected_num_clicks), check_player_scores_system);
+    app.world_mut().syscall( (expected_num_players, expected_num_clicks), check_player_scores_system);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -182,10 +182,10 @@ fn game_instance_launcher_demo()
         {
             client.update();
 
-            if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<RenetClient>().is_connected());
+            assert!(client.world().resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 
@@ -200,7 +200,7 @@ fn game_instance_launcher_demo()
     for client in client_apps.iter_mut()
     {
         client.update();  //load game initialization progress entity changes
-        assert!(syscall(&mut client.world, (), game_is_initialized));
+        assert!(client.world_mut().syscall((), game_is_initialized));
     }
 
     // send button clicks from each player

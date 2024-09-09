@@ -62,17 +62,17 @@ pub(crate) fn setup_game_state(world: &mut World)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Initializes the game input handler.
-pub(crate) fn setup_game_input_handler(mut commands: Commands)
+pub(crate) fn setup_game_input_handler(world: &mut World)
 {
-    commands.insert_resource::<ClientRequestHandler>(ClientRequestHandler::new(try_handle_game_core_input));
+    world.insert_resource::<ClientRequestHandler>(ClientRequestHandler::new(try_handle_game_core_input));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Initializes the game message buffer.
-pub(crate) fn setup_game_message_buffer(mut commands: Commands)
+pub(crate) fn setup_game_message_buffer(world: &mut World)
 {
-    commands.insert_resource(GameMessageType::new::<GameMsg>());
+    world.insert_resource(GameMessageType::new::<GameMsg>());
 }
 
 //-------------------------------------------------------------------------------------------------------------------

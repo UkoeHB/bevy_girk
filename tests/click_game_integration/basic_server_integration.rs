@@ -174,10 +174,10 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
         {
             client.update();
 
-            if *client.world.resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
             { continue; }
 
-            assert!(client.world.resource::<RenetClient>().is_connected());
+            assert!(client.world().resource::<RenetClient>().is_connected());
             num_inits += 1;
         }
 
@@ -191,7 +191,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
     for client in game_clients.iter_mut()
     {
         client.update();  //load game initialization progress entity changes
-        assert!(syscall(&mut client.world, (), game_is_initialized));
+        assert!(client.world_mut().syscall((), game_is_initialized));
     }
 }
 

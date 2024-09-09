@@ -10,10 +10,11 @@ use bevy::prelude::*;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Initializes the client framework state.
-pub(crate) fn setup_client_fw_state(mut commands: Commands, client_config: Res<ClientFwConfig>)
+pub(crate) fn setup_client_fw_state(world: &mut World)
 {
-    commands.insert_resource::<InitializationProgressCache>(InitializationProgressCache::default());
-    commands.insert_resource::<PingTracker>(PingTracker::new(client_config.ticks_per_sec()));
+    let ticks_per_sec = world.resource::<ClientFwConfig>().ticks_per_sec();
+    world.insert_resource::<InitializationProgressCache>(InitializationProgressCache::default());
+    world.insert_resource::<PingTracker>(PingTracker::new(ticks_per_sec));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

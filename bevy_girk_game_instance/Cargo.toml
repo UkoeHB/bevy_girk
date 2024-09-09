@@ -8,7 +8,7 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.13", default-features = false }
+bevy           = { version = "0.14", default-features = false }
 bevy_cobweb    = { workspace = true }
 bevy_simplenet = { workspace = true }
 enfync         = { workspace = true }

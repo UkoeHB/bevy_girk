@@ -8,7 +8,7 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.13", default-features = false }
+bevy           = { version = "0.14", default-features = false }
 bevy_simplenet = { workspace = true, features = ["client", "bevy"] }
 serde          = { workspace = true }
 serde_with     = { workspace = true }

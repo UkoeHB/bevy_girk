@@ -59,7 +59,7 @@ impl Plugin for AddMockMessageChannelsPlugin
         // kludge: enable first 10 clients
         for client_id in 0..10
         {
-            app.world.resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
+            app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
                     client_id: ClientId::new(client_id as u64),
                     event: ClientPacket{
                             send_policy : SendOrdered.into(),
@@ -74,7 +74,7 @@ impl Plugin for AddMockMessageChannelsPlugin
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) + Send + 'static
+pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) -> AppExit + Send + 'static
 {
     move | mut app: App |
     {
@@ -82,14 +82,16 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) + Send + 'static
 
         for _ in 0..num_ticks
         {
-            if app.world.contains_resource::<GameOverFlag>()
+            if app.world().contains_resource::<GameOverFlag>()
             { panic!("test runner failed: game over flag found too early (should appear in the last tick)!"); }
 
             app.update();
         }
 
-        if !app.world.contains_resource::<GameOverFlag>()
+        if !app.world().contains_resource::<GameOverFlag>()
         { panic!("test runner failed: game over flag not found!"); }
+
+        AppExit::Success
     }
 }
 

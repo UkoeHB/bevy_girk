@@ -105,7 +105,7 @@ pub(crate) fn handle_host_incoming(world: &mut World)
                 ClientReport::IsDead(_)         =>
                 {
                     tracing::info!("host-hub client is dead, closing game hub app");
-                    world.send_event(bevy::app::AppExit);
+                    world.send_event(bevy::app::AppExit::Success);
                 }
             }
             HostHubClientEvent::Msg(host_message) => match host_message

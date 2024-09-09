@@ -277,7 +277,7 @@ pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerSetu
     tracing::info!("setting up renet server");
 
     // get server/client channels
-    let replicon_channels = server_app.world.resource::<RepliconChannels>();
+    let replicon_channels = server_app.world().resource::<RepliconChannels>();
     let server_channels   = replicon_channels.get_server_configs();
     let client_channels   = replicon_channels.get_client_configs();
 
@@ -312,7 +312,7 @@ pub fn setup_native_wasm_renet_server(
     tracing::info!("setting up cross-platform renet server");
 
     // get server/client channels
-    let replicon_channels = server_app.world.resource::<RepliconChannels>();
+    let replicon_channels = server_app.world().resource::<RepliconChannels>();
     let server_channels   = replicon_channels.get_server_configs();
     let client_channels   = replicon_channels.get_client_configs();
 
@@ -440,7 +440,7 @@ pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
 pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Vec<App>)
 {
     // get server/client channels
-    let replicon_channels = server_app.world.resource::<RepliconChannels>();
+    let replicon_channels = server_app.world().resource::<RepliconChannels>();
     let server_channels   = replicon_channels.get_server_configs();
     let client_channels   = replicon_channels.get_client_configs();
 

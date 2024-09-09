@@ -8,7 +8,7 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy                     = { version = "0.13", default-features = false }
+bevy                     = { version = "0.14", default-features = false }
 bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }

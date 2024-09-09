@@ -95,6 +95,10 @@ pub struct GirkServerConfig
 /// Sets up a game app with the `bevy_girk` game framework.
 pub fn prepare_game_app_framework(game_app: &mut App, clients: GameFwClients, config: GameFwConfig)
 {
+    if !game_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
+        game_app.add_plugins(bevy::state::app::StatesPlugin);
+    }
+
     // prepare server app
     game_app
         //setup components
@@ -110,6 +114,12 @@ pub fn prepare_game_app_framework(game_app: &mut App, clients: GameFwClients, co
 pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, update_timeout: Duration)
 {
     // depends on game framework
+    if !game_app.is_plugin_added::<bevy::time::TimePlugin>() {
+        game_app.add_plugins(bevy::time::TimePlugin);
+    }
+    if !game_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
+        game_app.add_plugins(bevy::state::app::StatesPlugin);
+    }
 
     // prepare channels
     prepare_network_channels(game_app, resend_time);
@@ -125,10 +135,10 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                     tick_policy: TickPolicy::EveryFrame,
                     visibility_policy: VisibilityPolicy::Whitelist,
                     update_timeout,
+                    replicate_after_connect: true,
                 })
         )
         // add renet backend
-        .add_plugins(bevy::time::TimePlugin)  //required by bevy_renet
         .add_plugins(RepliconRenetServerPlugin)
         //enable visibility attributes
         .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Repair })
