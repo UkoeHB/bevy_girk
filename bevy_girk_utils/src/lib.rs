@@ -6,8 +6,9 @@ mod misc_utils;
 mod network_setup;
 mod network_utils;
 mod rand64;
-mod replicate_repair_react_ext;
+mod run_conditions;
 mod serialization;
+mod state_transitions;
 mod tick_counter;
 
 #[cfg(not(target_family = "wasm"))]
@@ -21,8 +22,9 @@ pub use misc_utils::*;
 pub use network_setup::*;
 pub use network_utils::*;
 pub use rand64::*;
-pub use replicate_repair_react_ext::*;
+pub use run_conditions::*;
 pub use serialization::*;
+pub use state_transitions::*;
 pub use tick_counter::*;
 
 #[cfg(not(target_family = "wasm"))]

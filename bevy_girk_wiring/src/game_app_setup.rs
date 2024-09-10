@@ -8,7 +8,6 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
 use bevy_replicon_renet2::RepliconRenetServerPlugin;
-use bevy_replicon_repair::AppReplicationRepairExt;
 #[allow(unused_imports)]
 use bevy_renet2::renet2::transport::{generate_random_bytes, ServerAuthentication, ServerSetupConfig};
 
@@ -141,19 +140,15 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
         // add renet backend
         .add_plugins(RepliconRenetServerPlugin)
         //enable visibility attributes
-        .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Repair })
-        //enable replication repair for client reconnects
-        //todo: add custom input-status tracking mechanism w/ custom prespawn cleanup
-        .add_plugins(bevy_replicon_repair::ServerPlugin)
+        .add_plugins(VisibilityAttributesPlugin{ server_id: None, reconnect_policy: ReconnectPolicy::Reset })
         //prepare event handling
         .add_plugins(ServerEventHandlingPlugin)
         //register GameInitProgress for replication
-        .replicate_repair::<GameInitProgress>()
+        .replicate::<GameInitProgress>()
 
         //# PREUPDATE #
         //<-- RenetReceive {renet}: receive network packets from clients
         //<-- ServerSet::ReceivePackets {replicon}: collect renet packets
-        //<-- ServerRepairSet {replicon repair}: repairs replicon server internal trackers for reconnected clients
         //<-- ServerSet::Receive {replicon}: process client acks and connection events
         //<-- GameFwSetPrivate::FwStart {girk}: prepares the app for this tick
         .configure_sets(PreUpdate,
@@ -171,11 +166,12 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
 
         //# POSTUPDATE
         //<-- GameFwSetPrivate::FwEnd {girk}: dispatch server messages to replicon
+        //<-- ServerSet::StoreHierarchy {replicon}: store hierarchy information that needs to be replicated
         //<-- ServerSet::Send {replicon}: dispatch replication messages and server messages to renet
         //<-- RenetSend {renet}: dispatch network packets to clients
         .configure_sets(PostUpdate,
             GameFwSetPrivate::FwEnd
-                .before(bevy_replicon::prelude::ServerSet::Send)
+                .before(bevy_replicon::prelude::ServerSet::StoreHierarchy)
         )
         //log server events and errors
         //- note that these will be logged out of order, since we need to collect both receive and send events and errors

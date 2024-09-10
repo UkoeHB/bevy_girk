@@ -29,8 +29,7 @@ fn add_progress_plugin(app: &mut App)
 /// Validate resources that should exist before client startup.
 fn build_precheck(world: &World)
 {
-    if !world.contains_resource::<ClientFwConfig>()            { panic!("ClientFwConfig is missing on startup!"); }
-    if !world.contains_resource::<Receiver<ClientFwCommand>>() { panic!("Receiver<ClientFwCommand> is missing on startup!"); }
+    if !world.contains_resource::<ClientFwConfig>() { panic!("ClientFwConfig is missing on startup!"); }
 
     if !world.contains_resource::<Time>() { panic!("bevy::Time is missing on startup!"); }
 }
@@ -51,7 +50,7 @@ fn startup_postcheck(world: &World)
 /// Returns a Bevy run condition indicating if the client is initializing.
 ///
 /// The run condition returns true when in state [`ClientFwMod::Connecting`], [`ClientFwMod::Syncing`],
-/// and [`ClientFwMod::Init`]
+/// or [`ClientFwMod::Init`]
 pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwState>>) -> bool + Clone
 {
     |current_state: Res<State<ClientFwState>>| -> bool
@@ -77,22 +76,10 @@ impl Plugin for ClientFwStartupPlugin
     {
         app.init_state::<ClientInitializationState>()
             .init_state::<ClientFwState>()
-            //todo: all of this needs to be moved to OnEnter(ClientInstanceState::Game)
-            .add_systems(PreStartup,
-                (
-                    build_precheck,
-                ).chain()
-            )
-            .add_systems(Startup,
-                (
-                    setup_client_fw_state,
-                ).chain()
-            )
-            .add_systems(PostStartup,
-                (
-                    startup_postcheck,
-                ).chain()
-            );
+            .add_systems(OnExit(ClientInstanceState::Client), build_precheck)
+            .add_systems(OnEnter(ClientInstanceState::Game), setup_client_fw_state)
+            .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
+            .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_fw_state);
     }
 }
 
@@ -155,13 +142,7 @@ impl Plugin for ClientFwTickPlugin
                     ClientFwSet::End,
                 ).chain()
             );
-        app.configure_sets(Update,
-                (
-                    iyes_progress::TrackedProgressSet,
-                    ClientFwLoadingSet,
-                )
-                    .run_if(in_state(ClientInitializationState::InProgress))
-            );
+        app.configure_sets(Update, ClientFwLoadingSet.run_if(in_state(ClientInitializationState::InProgress)));
         app.configure_sets(PostUpdate,
                 ClientFwSetPrivate::FwEnd
                     .after(iyes_progress::CheckProgressSet)
@@ -170,18 +151,17 @@ impl Plugin for ClientFwTickPlugin
         // FWSTART
         app.add_systems(PreUpdate,
                 (
-                    handle_commands,
-                    // - The client may have been commanded to reinitialize.
+                    prep_replicated_entities,
                     // - We want connection-related state changes to be applied here since game state changes will be ignored if
                     //   initializing.
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
                     // - ClientInitializationState, ClientFwState
-                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
+                    apply_state_transitions,
                     handle_game_incoming,
                     // The game may have caused a state change (will be ignored if in the middle of initializing).
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
                     // - ClientFwState
-                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
+                    apply_state_transitions,
                 ).chain().in_set(ClientFwSetPrivate::FwStart)
             );
 
@@ -200,7 +180,7 @@ impl Plugin for ClientFwTickPlugin
         // FWEND
         app.add_systems(PostUpdate,
                 (
-                    // todo: ClientInitializationState dependency needs to be moved to OnEnter/OnExit since this is global
+                    // capture ClientInitializationState changes
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
                     update_initialization_cache.run_if(client_is_initializing()),
                     send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
@@ -210,9 +190,6 @@ impl Plugin for ClientFwTickPlugin
 
 
         // MISC
-
-        // Handle just disconnected.
-        app.add_systems(OnEnter(ClientFwState::Connecting), reset_init_progress);
 
         // Systems that should run when the client is fully initialized.
         app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_state);

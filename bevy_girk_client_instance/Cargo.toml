@@ -8,24 +8,9 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.14", default-features = false }
-bevy_cobweb    = { workspace = true }
-bevy_renet2    = { workspace = true, features = ["native_transport"] }
-bevy_simplenet = { workspace = true }
-enfync         = { workspace = true }
-serde          = { workspace = true }
-serde_json     = { workspace = true }
-serde_with     = { workspace = true }
-tracing        = { workspace = true }
+bevy = { version = "0.14", default-features = false }
+tracing = { workspace = true }
 
-bevy_girk_game_fw       = { path = "../bevy_girk_game_fw" }
+bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
-bevy_girk_utils         = { path = "../bevy_girk_utils" }
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-clap = { version = "4.4", default-features = false, features = [ "std", "derive" ] }
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies.tokio]
-version = "1.34"
-default-features = false
-features = ["io-util", "process", "macros"]
+bevy_girk_utils = { path = "../bevy_girk_utils" }

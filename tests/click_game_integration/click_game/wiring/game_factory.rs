@@ -149,12 +149,13 @@ fn click_client_initializer(
 
 fn prepare_client_start_pack(
     game_initializer : &ClickGameInitializer,
+    game_id          : u64,
     client_id        : ClientId,
     ticks_per_sec    : u32,
 ) -> Result<ClickClientStartPack, ()>
 {
     // set up client framework
-    let client_fw_config = ClientFwConfig::new(ticks_per_sec, client_id);
+    let client_fw_config = ClientFwConfig::new(ticks_per_sec, game_id, client_id);
 
     // set up client config
     let click_client_initializer = click_client_initializer(game_initializer, client_id)?;
@@ -182,7 +183,7 @@ fn get_game_start_infos(
     for (user_id, client_id) in user_clients.iter()
     {
         // get game start package for client
-        let client_start_pack = prepare_client_start_pack(&*game_initializer, *client_id, ticks_per_sec)?;
+        let client_start_pack = prepare_client_start_pack(&*game_initializer, game_id, *client_id, ticks_per_sec)?;
 
         start_infos.push(
                 GameStartInfo{

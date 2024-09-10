@@ -12,10 +12,10 @@ use bevy::prelude::*;
 
 /// Handles a notification for the current game framework state.
 pub(crate) fn handle_current_game_fw_state(
-    In(current_game_fw_state)    : In<GameFwState>,
+    In(current_game_fw_state)   : In<GameFwState>,
     client_initialization_state : Res<State<ClientInitializationState>>,
-    current_client_fw_state      : Res<State<ClientFwState>>,
-    mut next_client_fw_state     : ResMut<NextState<ClientFwState>>
+    current_client_fw_state     : Res<State<ClientFwState>>,
+    mut next_client_fw_state    : ResMut<NextState<ClientFwState>>
 ){
     // do not update client framework state if we are in the process of initializing the client
     // - reason: we don't want to leave Init until we are really done initializing

@@ -2,6 +2,7 @@ Client framework: `ClientFwPlugin`
 
 PRECONDITION: plugin dependencies
 - `bevy::time::TimePlugin`
+- `bevy::state::app::StatesPlugin`
 
 PRECONDITION: the following must be initialized by the client framework manager
 - `Res<ClientFwConfig>`

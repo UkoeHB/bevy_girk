@@ -17,20 +17,32 @@ use bevy_replicon::prelude::ClientId;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-struct DummyClientCorePlugin;
-
-impl Plugin for DummyClientCorePlugin
+/// Prepare the core of a click game client.
+fn prepare_client_app_core(client_app: &mut App)
 {
-    fn build(&self, app: &mut App)
-    {
-        app.insert_resource(GameMessageHandler::new(
-                | _: &mut World, packet: &GamePacket | -> Result<(), Option<(Tick, GameFwMsg)>>
-                {
-                    deserialize_game_message::<()>(packet)?;
-                    Ok(())
-                }
-            ));
-    }
+    // depends on client framework
+
+    // prep client app
+    client_app.add_plugins(ClientPlugins);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Prepare the core of a click game client.
+fn setup_client_game_core(world: &mut World, player_initializer: ClickPlayerInitializer) -> Sender<PlayerInput>
+{
+    // depends on client framework
+
+    // player input channel
+    let (player_input_sender, player_input_receiver) = new_channel::<PlayerInput>();
+
+    // make client app
+    world
+        .insert_resource(player_initializer)
+        .insert_resource(player_input_receiver);
+
+    player_input_sender
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -57,7 +69,23 @@ impl ClickClientFactory
 
 impl ClientFactoryImpl for ClickClientFactory
 {
-    fn new_client(&mut self, token: ServerConnectToken, start_info: GameStartInfo) -> Result<(App, u64), ()>
+    fn add_plugins(&mut self, client_app: &mut App)
+    {
+        // girk client config
+        let config = GirkClientStartupConfig{
+            resend_time: std::time::Duration::from_millis(100),
+        };
+
+        // set up client app
+        client_app
+            .add_plugins(bevy::time::TimePlugin)
+            .add_plugins(bevy::state::app::StatesPlugin)
+            .add_plugins(bevy::asset::AssetPlugin::default());
+        prepare_girk_client_app(client_app, config);
+        prepare_client_app_core(client_app);
+    }
+
+    fn setup_game(&mut self, world: &mut World, token: ServerConnectToken, start_info: GameStartInfo)
     {
         // extract client startup pack
         let client_start_pack = deser_msg::<ClickClientStartPack>(&start_info.serialized_start_data).unwrap();
@@ -68,18 +96,11 @@ impl ClientFactoryImpl for ClickClientFactory
         // girk client config
         let config = GirkClientConfig{
             client_fw_config: client_start_pack.client_fw_config,
-            resend_time: std::time::Duration::from_millis(100),
             connect_pack,
         };
 
         // set up client app
-        let mut client_app = App::new();
-
-        client_app
-            .add_plugins(bevy::time::TimePlugin)
-            .add_plugins(bevy::state::app::StatesPlugin)
-            .add_plugins(bevy::asset::AssetPlugin::default());
-        prepare_girk_client_app(&mut client_app, config);
+        setup_girk_client_game(world, config);
 
         match client_start_pack.click_client_initializer
         {
@@ -87,19 +108,11 @@ impl ClientFactoryImpl for ClickClientFactory
             ClickClientInitializer::Player(player_initializer) =>
             {
                 self.player_id    = Some(player_initializer.player_context.id());
-                self.player_input = Some(prepare_client_app_core(&mut client_app, player_initializer));
+                self.player_input = Some(setup_client_game_core(world, player_initializer));
             }
             // watcher
-            ClickClientInitializer::Watcher =>
-            {
-                client_app
-                    .add_plugins(DummyClientCorePlugin)
-                    .insert_resource(ClientRequestType::new::<GameRequest>())
-                    .add_plugins(GameReplicationPlugin);
-            }
+            ClickClientInitializer::Watcher => ()
         }
-
-        Ok((client_app, self.expected_protocol_id))
     }
 }
 

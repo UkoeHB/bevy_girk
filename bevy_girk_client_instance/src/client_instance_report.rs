@@ -1,20 +1,24 @@
 //local shortcuts
 
 //third-party shortcuts
-use serde::{Deserialize, Serialize};
+use bevy::prelude::*;
 
 //standard shortcuts
 
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Report emitted by a client instance.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Report emitted by a client instance when leaving [`ClientInstanceState::Game`].
+///
+/// The event can be read in `OnExit(ClientInstanceState::Game)`.
+#[derive(Event, Debug, Copy, Clone)]
 pub enum ClientInstanceReport
 {
-    /// Request a new connect token.
+    /// The client game ended because it needs a new connect token.
     RequestConnectToken,
-    /// The client instance was aborted.
+    /// The client game ended normally.
+    Ended(u64),
+    /// The client game was aborted.
     Aborted(u64),
 }
 

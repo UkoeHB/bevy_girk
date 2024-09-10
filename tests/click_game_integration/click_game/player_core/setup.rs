@@ -34,3 +34,11 @@ pub(crate) fn setup_client_request_buffer(world: &mut World)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+
+/// Clean up when game is done.
+pub(crate) fn cleanup_at_game_end(world: &mut World)
+{
+    world.remove_resource::<ClickPlayerContext>();
+}
+
+//-------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,17 @@
+[package]
+name = "bevy_girk_network_common"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+test    = false
+doctest = false
+
+[dependencies]
+bevy                 = { workspace = true }
+bevy_cobweb          = { workspace = true }
+bevy_renet2          = { workspace = true, features = [ "native_transport", "serde" ] }
+bevy_replicon        = { workspace = true }
+bevy_replicon_renet2 = { workspace = true, features = [ "native_transport", "renet_serde" ] }
+serde                = { workspace = true }
+tracing              = { workspace = true }

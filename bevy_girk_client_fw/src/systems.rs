@@ -4,6 +4,7 @@ use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::core::Replicated;
 use iyes_progress::prelude::*;
 
 //standard shortcuts
@@ -11,19 +12,15 @@ use iyes_progress::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Resets the [`GameInitProgress`] component if it exists.
-/// 
-/// Runs when the client has just disconnected.
-///
-// Note: Does not interfere with `bevy_replicon_repair` because:
-// A) This runs in [`ClientFwState::Connecting`] and repair runs in the first tick of [`ClientFwState::Init`].
-// B) This component should never be removed by the server, so it should always show up in the replicon sync message
-//    regardless of possible conflict with repair.
-pub(crate) fn reset_init_progress(mut progress: Query<&mut GameInitProgress>)
+/// Make sure all replicated entities are scoped properly.
+pub(crate) fn prep_replicated_entities(
+    mut c: Commands,
+    replicated: Query<Entity, (Added<Replicated>, Without<StateScoped<ClientInstanceState>>)>
+)
 {
-    let Ok(mut progress) = progress.get_single_mut() else { return; };
-    tracing::trace!("resetting GameInitProgress");
-    progress.reset();
+    for entity in replicated.iter() {
+        c.entity(entity).insert(StateScoped(ClientInstanceState::Game));
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -54,18 +51,6 @@ pub(crate) fn send_initialization_progress_report(
 
     // sent progress report
     sender.fw_request(ClientFwRequest::SetInitProgress(cache.progress().into()));
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Sets [`ClientFwState::Connecting`] and [`ClientInitializationState::InProgress`].
-pub(crate) fn reinitialize_client_fw(
-    mut client_init_state : ResMut<NextState<ClientInitializationState>>,
-    mut client_fw_state    : ResMut<NextState<ClientFwState>>
-){
-    tracing::info!("connecting client");
-    client_init_state.set(ClientInitializationState::InProgress);
-    client_fw_state.set(ClientFwState::Connecting);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

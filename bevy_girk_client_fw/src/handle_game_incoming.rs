@@ -35,9 +35,9 @@ pub(crate) fn handle_game_incoming(world: &mut World)
     {
         match handler.try_call(world, &packet)
         {
-             Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
-             Err(None)                     => tracing::trace!(?packet, "failed to handle game packet"),
-             Ok(())                        => (),
+            Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
+            Err(None)                     => tracing::trace!(?packet, "failed to handle game packet"),
+            Ok(())                        => (),
         }
     }
 

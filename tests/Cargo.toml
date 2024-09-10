@@ -10,7 +10,6 @@ bevy_cobweb              = { workspace = true }
 bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
-bevy_replicon_repair     = { workspace = true }
 bevy_simplenet           = { workspace = true }
 
 bytes              = { workspace = true }

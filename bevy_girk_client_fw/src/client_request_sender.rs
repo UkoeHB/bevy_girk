@@ -33,8 +33,8 @@ impl ClientRequestType
 /// Sends client requests to the game.
 ///
 /// Requests are sent via `bevy_replicon`, which means the sender will synchronize with client connection events.
-/// Client requests are guaranteed to be dropped between a client disconnect and the client entering
-/// [`ClientFwMode::Syncing`].
+/// Client requests are guaranteed to be dropped between a client disconnect and the client re-entering
+/// [`ClientFwState::Syncing`].
 #[derive(SystemParam)]
 pub struct ClientRequestSender<'w>
 {

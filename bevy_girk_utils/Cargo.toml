@@ -13,7 +13,6 @@ bevy_cobweb          = { workspace = true }
 bevy_renet2          = { workspace = true, features = [ "native_transport", "serde" ] }
 bevy_replicon        = { workspace = true }
 bevy_replicon_renet2 = { workspace = true, features = [ "native_transport", "renet_serde" ] }
-bevy_replicon_repair = { workspace = true }
 bytes                = { workspace = true }
 enfync               = { workspace = true, features = [ "builtin" ] }  #todo: this brings in tokio dependency
 serde                = { workspace = true }

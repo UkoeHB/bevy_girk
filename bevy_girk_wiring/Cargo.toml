@@ -12,7 +12,6 @@ bevy                     = { version = "0.14", default-features = false }
 bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
-bevy_replicon_repair     = { workspace = true }
 bevy_replicon_renet2     = { workspace = true, features = [ "native_transport" ] }
 bincode                  = { workspace = true }
 bytes                    = { workspace = true }
@@ -23,7 +22,8 @@ tracing                  = { workspace = true }
 ordered-multimap         = { version = "0.7" }
 wasm-timer               = { version = "0.2" }
 
-bevy_girk_client_fw     = { path = "../bevy_girk_client_fw" }
+bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
+bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
-bevy_girk_game_fw       = { path = "../bevy_girk_game_fw" }
-bevy_girk_utils         = { path = "../bevy_girk_utils" }
+bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
+bevy_girk_utils = { path = "../bevy_girk_utils" }

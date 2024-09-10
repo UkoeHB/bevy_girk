@@ -18,7 +18,7 @@ pub struct GameFwTick(pub(crate) Tick);
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// The last [`GameFwTick`] before [`GameFwMode::End`].
+/// The last [`GameFwTick`] before [`GameFwState::End`].
 ///
 /// The number of end ticks elapsed equals [`GameFwTick`] - [`GameFwPreEndTick`].
 #[derive(Resource, Default, Deref, Copy, Clone, Debug)]
@@ -38,9 +38,6 @@ impl GameFwPreEndTick
 /// Total initialization progress of the game.
 ///
 /// Can be replicated to clients.
-/// If replicated, then the client framework will automatically reset it when the client has just disconnected.
-/// This makes it easier to use when displaying a loading screen, since otherwise it won't go back to zero until
-/// the client has reconnected.
 #[derive(Component, Debug, Default, PartialEq, Copy, Clone, Serialize, Deserialize, Deref)]
 pub struct GameInitProgress(pub(crate) f32);
 

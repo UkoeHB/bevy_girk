@@ -56,12 +56,8 @@ fn build_precheck(world: &World)
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ClientSet
 {
-    /// runs the first time the client is initialized
-    InitStartup,
-    /// runs if the client is reinitialized after exiting 'Init' state
-    InitReinit,
-    /// runs main initialization logic
-    InitCore,
+    /// runs when the client game is initialized
+    Init,
     /// runs in game state 'prep' (but not when initializing)
     Prep,
     /// runs in game state 'play' (but not when initializing)
@@ -80,18 +76,15 @@ impl Plugin for ClientCoreStartupPlugin
     fn build(&self, app: &mut App)
     {
         app.init_state::<ClientCoreState>()
-            .add_systems(PreStartup,
-                (
-                    build_precheck,
-                )
-            )
-            .add_systems(Startup,
+            .add_systems(OnExit(ClientInstanceState::Client), build_precheck)
+            .add_systems(OnEnter(ClientInstanceState::Game),
                 (
                     setup_player_state,
                     setup_game_output_handler,
                     setup_client_request_buffer,
                 )
-            );
+            )
+            .add_systems(OnExit(ClientInstanceState::Game), cleanup_at_game_end);
     }
 }
 
@@ -107,24 +100,9 @@ impl Plugin for ClientCoreTickPlugin
     {
         // Init startup. (runs on startup)
         // - load assets
-        app.configure_sets(Update,
-                    ClientSet::InitStartup
-                        .run_if(in_state(ClientFwState::Init))
-                        .run_if(in_state(ClientCoreState::Init))
-                );
-
-        // Init reinitialize. (runs if client needs to be reinitialized during a game)
-        // - lock display and show reinitialization progress
-        app.configure_sets(Update,
-                    ClientSet::InitReinit
-                        .run_if(in_state(ClientFwState::Init))  //framework is reinitializing
-                        .run_if(not(in_state(ClientCoreState::Init)))  //client core is not in init
-                );
-
-        // Init core. (always runs when framework is being initialized, regardless of client state)
         // - connect to game and synchronize times
         app.configure_sets(Update,
-                    ClientSet::InitCore
+                    ClientSet::Init
                         .run_if(in_state(ClientFwState::Init))
                 );
 
@@ -152,7 +130,7 @@ impl Plugin for ClientCoreTickPlugin
         // Admin
         app.add_systems(Update,
                     (
-                        handle_player_inputs_init.in_set(ClientSet::InitStartup),
+                        handle_player_inputs_init.in_set(ClientSet::Init),
                         handle_player_inputs_prep.in_set(ClientSet::Prep),
                         handle_player_inputs_play.in_set(ClientSet::Play),
                         handle_player_inputs_gameover.in_set(ClientSet::GameOver),
@@ -161,11 +139,7 @@ impl Plugin for ClientCoreTickPlugin
 
         // Misc
         // Systems that should run when the client is fully initialized.
-        app.add_systems(OnEnter(ClientInitializationState::Done),
-                (
-                    request_game_state,
-                ).chain()
-            );
+        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_state);
     }
 }
 
