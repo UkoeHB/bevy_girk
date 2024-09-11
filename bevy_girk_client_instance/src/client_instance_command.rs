@@ -20,7 +20,14 @@ use bevy::prelude::*;
 pub enum ClientInstanceCommand
 {
     /// Setup game.
+    ///
+    /// The client will move to [`ClientInstanceState::Connecting`] after one tick.
     Start(ServerConnectToken, GameStartInfo),
+    /// Setup local-player game.
+    ///
+    /// Once the game app has emitted a [`GameStartReport`], the client will move to
+    /// [`ClientInstanceState::Connecting`].
+    StartLocal(GameLaunchPack),
     /// Close the client instance in order to get a new connect token.
     RequestConnectToken,
     /// End the client instance.
@@ -39,6 +46,15 @@ impl Command for ClientInstanceCommand
                 w.resource_scope(|w: &mut World, mut factory: Mut<ClientFactory>| {
                     factory.setup_game(w, token, start_info);
                 });
+                set_and_apply_state(w, ClientInstanceState::Game);
+            }
+            Self::StartLocal(launch_pack) => {
+                tracing::debug!("starting local game {}", start_info.game_id);
+
+                // Launch game app.
+                // - The client will be set up automatically once a GameStartReport is detected.
+                w.resource_mut::<LocalGameManager>().launch(launch_pack);
+
                 set_and_apply_state(w, ClientInstanceState::Game);
             }
             Self::RequestConnectToken => {

@@ -101,32 +101,32 @@ pub fn make_game_hub_server(
 
     // initialize server resources
     init_resources(
-            &mut app,
-            startup_pack.pending_games_cache_config,
-            startup_pack.running_games_cache_config,
-            game_launcher,
-            game_hub_server_config.initial_max_capacity,
-        );
+        &mut app,
+        startup_pack.pending_games_cache_config,
+        startup_pack.running_games_cache_config,
+        game_launcher,
+        game_hub_server_config.initial_max_capacity,
+    );
     app.insert_resource(command_receiver);
     app.insert_resource(host_hub_client);
     app.insert_resource(game_launch_pack_source);
 
     // add server systems
     app.add_systems(Main,
-            (
-                increment_tick_counter,
-                handle_commands,
-                handle_host_incoming,
-                handle_launch_pack_reports,
-                handle_instance_reports,  //after 'handle launch pack reports' to maybe catch failed instance launches
-                clean_pending_games,      //no purge period since cache should be relatively small
-                clean_running_games.run_if(
-                        on_tick_counter(game_hub_server_config.running_game_purge_period_ticks)
-                    ),
-                update_capacity,
-                handle_shutdown.run_if(on_event::<AppExit>()),
-            ).chain()
-        );
+        (
+            increment_tick_counter,
+            handle_commands,
+            handle_host_incoming,
+            handle_launch_pack_reports,
+            handle_instance_reports,  //after 'handle launch pack reports' to maybe catch failed instance launches
+            clean_pending_games,      //no purge period since cache should be relatively small
+            clean_running_games.run_if(
+                    on_tick_counter(game_hub_server_config.running_game_purge_period_ticks)
+                ),
+            update_capacity,
+            handle_shutdown.run_if(on_event::<AppExit>()),
+        ).chain()
+    );
 
     app
 }

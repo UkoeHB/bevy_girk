@@ -14,3 +14,5 @@ tracing = { workspace = true }
 bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
+#todo: replace with crates split into client/server setup
+bevy_girk_wiring = { path = "../bevy_girk_wiring", feature = ["memory_transport"] }

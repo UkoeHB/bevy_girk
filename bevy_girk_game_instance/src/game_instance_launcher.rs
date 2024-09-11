@@ -9,12 +9,13 @@ use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub trait GameInstanceLauncherImpl: Debug + Send + Sync
+pub trait GameInstanceLauncherImpl: Debug + Send + Sync + 'static
 {
     fn launch(
         &self,
-        launch_pack   : GameLaunchPack,
-        report_sender : IoSender<GameInstanceReport>,
+        memory_transport: bool,
+        launch_pack: GameLaunchPack,
+        report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance;
 }
 
@@ -28,18 +29,19 @@ pub struct GameInstanceLauncher
 
 impl GameInstanceLauncher
 {
-    pub fn new<L: GameInstanceLauncherImpl + 'static>(launcher: L) -> Self
+    pub fn new<L: GameInstanceLauncherImpl>(launcher: L) -> Self
     {
         Self{ launcher: Box::new(launcher) }
     }
 
     pub fn launch(
         &self,
-        launch_pack   : GameLaunchPack,
-        report_sender : IoSender<GameInstanceReport>,
+        memory_transport: bool,
+        launch_pack: GameLaunchPack,
+        report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
-        self.launcher.launch(launch_pack, report_sender)
+        self.launcher.launch(memory_transport, launch_pack, report_sender)
     }
 }
 

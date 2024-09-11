@@ -29,8 +29,9 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
 {
     fn launch(
         &self,
-        launch_pack   : GameLaunchPack,
-        report_sender : IoSender<GameInstanceReport>,
+        memory_transport: bool,
+        launch_pack: GameLaunchPack,
+        report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
         // prepare command channel
@@ -50,6 +51,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                                 let Ok(mut app) = game_instance_setup(
                                         game_factory,
                                         launch_pack,
+                                        memory_transport,
                                         report_sender_clone,
                                         command_receiver_clone,
                                     ) else { return false; };

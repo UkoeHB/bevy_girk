@@ -111,13 +111,31 @@ impl GameServerSetupConfig
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Metadata required to generate connect tokens for in-memory clients.
+#[cfg(feature = "memory_transport")]
+#[derive(Debug, Clone)]
+pub struct ConnectMetaMemory
+{
+    pub server_config: GameServerSetupConfig,
+    pub clients: Vec<MemorySocketClient>,
+    pub socket_id: u8,
+    pub auth_key: [u8; 32],
+}
+
+#[cfg(not(feature = "memory_transport"))]
+#[derive(Debug, Clone)]
+pub struct ConnectMetaMemory;
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Metadata required to generate connect tokens for native-target clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectMetaNative
 {
-    pub server_config    : GameServerSetupConfig,
-    pub server_addresses : Vec<SocketAddr>,
-    pub auth_key         : [u8; 32],
+    pub server_config: GameServerSetupConfig,
+    pub server_addresses: Vec<SocketAddr>,
+    pub socket_id: u8,
+    pub auth_key: [u8; 32],
 }
 
 impl ConnectMetaNative
@@ -128,8 +146,9 @@ impl ConnectMetaNative
         auth_key[0] = 1;
 
         Self{
-            server_config    : GameServerSetupConfig::dummy(),
-            server_addresses : vec![SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080u16))],
+            server_config: GameServerSetupConfig::dummy(),
+            server_addresses: vec![SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 8080u16))],
+            socket_id: 0,
             auth_key,
         }
     }
@@ -143,18 +162,51 @@ pub struct ConnectMetaWasm
 {
     pub server_config    : GameServerSetupConfig,
     pub server_addresses : Vec<SocketAddr>,
+    pub socket_id        : u8,
     pub auth_key         : [u8; 32],
     pub cert_hashes      : Vec<ServerCertHash>,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Generate a new connect token for a native client.
+/// Generates a new connect token for an in-memory client.
+///
+/// Note that [`ConnectMetaMemory`] can contain sockets for multiple clients. You must specify which client from
+/// that list is needed here with the `client_index` parameter.
+#[cfg(feature = "memory_transport")]
+pub fn new_connect_token_memory(
+    meta         : &ConnectMetaMemory,
+    client_index : usize,
+    current_time : Duration,
+    client_id    : u64,
+) -> Option<ServerConnectToken>
+{
+    let token = ConnectToken::generate(
+        current_time,
+        meta.server_config.protocol_id,
+        meta.server_config.expire_secs,
+        client_id,
+        meta.server_config.timeout_secs,
+        meta.socket_id,
+        vec![in_memory_server_addr()],
+        None,
+        &meta.auth_key,
+    ).ok()?;
+
+    Some(ServerConnectToken::Memory{
+        token: connect_token_to_bytes(&token)?,
+        client: meta.clients.get(client_index)?.clone()
+    })
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Generates a new connect token for a native client.
 pub fn new_connect_token_native(
     meta         : &ConnectMetaNative,
     current_time : Duration,
     client_id    : u64,
-) -> Result<ServerConnectToken, ()>
+) -> Option<ServerConnectToken>
 {
     let token = ConnectToken::generate(
         current_time,
@@ -162,23 +214,23 @@ pub fn new_connect_token_native(
         meta.server_config.expire_secs,
         client_id,
         meta.server_config.timeout_secs,
-        0,
+        meta.socket_id,
         meta.server_addresses.clone(),
         None,
         &meta.auth_key,
-    ).map_err(|_|())?;
+    ).ok()?;
 
-    Ok(ServerConnectToken::Native{ token: connect_token_to_bytes(&token)? })
+    Some(ServerConnectToken::Native{ token: connect_token_to_bytes(&token)? })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Generate a new connect token for a wasm client.
+/// Generates a new connect token for a wasm client.
 pub fn new_connect_token_wasm(
     meta         : &ConnectMetaWasm,
     current_time : Duration,
     client_id    : u64,
-) -> Result<ServerConnectToken, ()>
+) -> Option<ServerConnectToken>
 {
     let token = ConnectToken::generate(
         current_time,
@@ -186,45 +238,45 @@ pub fn new_connect_token_wasm(
         meta.server_config.expire_secs,
         client_id,
         meta.server_config.timeout_secs,
-        0,
+        meta.socket_id,
         meta.server_addresses.clone(),
         None,
         &meta.auth_key,
-    ).map_err(|_|())?;
+    ).ok()?;
 
-    Ok(ServerConnectToken::Wasm{ token: connect_token_to_bytes(&token)?, cert_hashes: meta.cert_hashes.clone() })
+    Some(ServerConnectToken::Wasm{ token: connect_token_to_bytes(&token)?, cert_hashes: meta.cert_hashes.clone() })
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn connect_token_to_bytes(connect_token: &ConnectToken) -> Result<Vec<u8>, ()>
+pub fn connect_token_to_bytes(connect_token: &ConnectToken) -> Option<Vec<u8>>
 {
     let mut bytes = Vec::<u8>::with_capacity(std::mem::size_of::<ConnectToken>());
-    connect_token.write(&mut bytes).map_err(|_| ())?;
-    Ok(bytes)
+    connect_token.write(&mut bytes).ok()?;
+    Some(bytes)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Result<ConnectToken, ()>
+pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Option<ConnectToken>
 {
-    ConnectToken::read(&mut &connect_token_bytes[..]).map_err(|_| ())
+    ConnectToken::read(&mut &connect_token_bytes[..]).ok()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// A token that a client can use to connect to a renet server.
+//todo: how to serialize the connect token more directly to reduce allocations?
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServerConnectToken
 {
-    ///  for native transports.
-    //todo: how to serialize the connect token more directly to reduce allocations?
     Native{
         /// A renet `ConnectToken`.
         #[serde_as(as = "Bytes")]
         token: Vec<u8>
     },
+    //todo: consider making this more flexible in case you don't want the cert hash workflow
     Wasm{
         /// A renet [`ConnectToken`].
         #[serde_as(as = "Bytes")]
@@ -232,9 +284,14 @@ pub enum ServerConnectToken
         /// Cert hashes for connecting to self-signed servers.
         cert_hashes: Vec<ServerCertHash>
     },
-    //InMemory,
-    //The server app will contain `Res<[client transports]>` which you must extract and insert to your client apps
-    //manually.
+    #[cfg(feature = "memory_transport")]
+    #[serde(skip)]
+    Memory{
+        /// A renet [`ConnectToken`].
+        token: Vec<u8>,
+        /// In-memory channel the client will use to talk to the renet server.
+        client: MemorySocketClient,
+    }
 }
 
 impl Default for ServerConnectToken
@@ -246,7 +303,7 @@ impl Default for ServerConnectToken
 
 /// Get an unspecified client address from a server address.
 ///
-/// The type of the client address returned will be tailored to the type of the first server address (Ipv4/Ipv6).
+/// The type of the client address returned will be tailored to the type of the server address (Ipv4/Ipv6).
 pub fn client_address_from_server_address(server_addr: &SocketAddr) -> SocketAddr
 {
     match server_addr

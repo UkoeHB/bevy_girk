@@ -42,8 +42,9 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
 {
     fn launch(
         &self,
-        launch_pack   : GameLaunchPack,
-        report_sender : IoSender<GameInstanceReport>,
+        _memory_transport: bool,
+        launch_pack: GameLaunchPack,
+        report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
         // prepare command channel
@@ -128,6 +129,7 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
     let app = game_instance_setup(
             game_factory,
             args.launch_pack,
+            false,
             report_sender.clone(),
             command_receiver,
         ).expect("failed setting up game instance");

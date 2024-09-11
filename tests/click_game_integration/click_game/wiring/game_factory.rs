@@ -287,7 +287,12 @@ pub struct ClickGameFactory;
 impl GameFactoryImpl for ClickGameFactory
 {
     /// Make a new game.
-    fn new_game(&self, app: &mut App, launch_pack: GameLaunchPack) -> Result<GameStartReport, ()>
+    fn new_game(
+        &self,
+        app: &mut App,
+        memory_transport: bool,
+        launch_pack: GameLaunchPack
+    ) -> Result<GameStartReport, ()>
     {
         // extract game factory config
         let Some(data) = deser_msg::<ClickLaunchPackData>(&launch_pack.game_launch_data)
@@ -299,24 +304,26 @@ impl GameFactoryImpl for ClickGameFactory
         let startup = prepare_game_startup(clients, config.game_duration_config)?;
 
         // girk server config
+        let memory_count = if memory_transport { 1 } else { 0 };
         let server_config = GirkServerConfig{
             clients            : startup.client_set,
             config             : config.game_fw_config,
             game_server_config : config.server_setup_config,
             resend_time        : std::time::Duration::from_millis(100),
+            memory_count,
             native_count       : startup.native_count,
             wasm_count         : startup.wasm_count,
         };
 
         // prepare game app
-        let (native_meta, wasm_meta) = prepare_girk_game_app(app, server_config);
+        let (memory_meta, native_meta, wasm_meta) = prepare_girk_game_app(app, server_config);
         prepare_game_app_core(app, startup.click_init);
 
         // game start info
         // - must call this AFTER prepping the game app and setting up the renet server
         let start_infos = get_game_start_infos(&app, launch_pack.game_id, &startup.clients)?;
 
-        Ok(GameStartReport{ native_meta, wasm_meta, start_infos })
+        Ok(GameStartReport{ memory_meta, native_meta, wasm_meta, start_infos })
     }
 }
 

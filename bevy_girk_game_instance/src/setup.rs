@@ -37,7 +37,7 @@ fn try_collect_game_over_report(
     { tracing::error!(runner_state.game_id, "failed sending game over message"); }
 
     // log
-    tracing::info!("game over report collected from game app");
+    tracing::info!("game over report collected from game app for game {}", runner_state.game_id);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -60,17 +60,18 @@ pub(crate) struct GameRunnerState
 /// - Makes a new game app configured for use in a game instance. Depends on `GameFwConfig`.
 /// - When you run the app, it will continue updating until a game over report appears.
 pub fn game_instance_setup(
-    game_factory     : GameFactory,
-    launch_pack      : GameLaunchPack,
-    report_sender    : IoSender<GameInstanceReport>,
-    command_receiver : IoReceiver<GameInstanceCommand>,
+    game_factory: GameFactory,
+    launch_pack: GameLaunchPack,
+    memory_transport: bool,
+    report_sender: IoSender<GameInstanceReport>,
+    command_receiver: IoReceiver<GameInstanceCommand>,
 ) -> Result<App, ()>
 {
     let game_id = launch_pack.game_id;
 
     // add game to app
     let mut game_app = App::default();
-    let game_start_report = game_factory.new_game(&mut game_app, launch_pack)?;
+    let game_start_report = game_factory.new_game(&mut game_app, memory_transport, launch_pack)?;
 
     // send game start report
     if let Err(_) = report_sender.send(GameInstanceReport::GameStart(game_id, game_start_report))
@@ -80,11 +81,7 @@ pub fn game_instance_setup(
     set_game_app_runner(&mut game_app);
 
     // make runner state
-    let runner_state = GameRunnerState{
-            game_id,
-            report_sender,
-            command_receiver,
-        };
+    let runner_state = GameRunnerState{ game_id, report_sender, command_receiver };
 
     // prepare app
     game_app

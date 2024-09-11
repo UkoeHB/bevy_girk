@@ -9,7 +9,7 @@ use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
 use bevy_replicon_renet2::RepliconRenetServerPlugin;
 #[allow(unused_imports)]
-use bevy_renet2::renet2::transport::{generate_random_bytes, ServerAuthentication, ServerSetupConfig};
+use bevy_renet2::renet2::transport::{ServerAuthentication, ServerSetupConfig};
 
 //standard shortcuts
 use std::net::SocketAddr;
@@ -57,15 +57,19 @@ fn reset_clients_on_disconnect(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn new_server_config(num_clients: usize, server_setup_config: &GameServerSetupConfig, auth_key: &[u8; 32]) -> ServerSetupConfig
+fn new_server_config(
+    num_clients: usize,
+    config: &GameServerSetupConfig,
+    auth_key: &[u8; 32]
+) -> ServerSetupConfig
 {
     ServerSetupConfig{
-            current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
-            max_clients      : num_clients,
-            protocol_id      : server_setup_config.protocol_id,
-            socket_addresses : vec![vec![SocketAddr::new(server_setup_config.server_ip.into(), 0)]],
-            authentication   : ServerAuthentication::Secure{ private_key: *auth_key },
-        }
+        current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default(),
+        max_clients      : num_clients,
+        protocol_id      : config.protocol_id,
+        socket_addresses : vec![vec![SocketAddr::new(config.server_ip.into(), 0)]],
+        authentication   : ServerAuthentication::Secure{ private_key: *auth_key },
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -83,6 +87,8 @@ pub struct GirkServerConfig
     pub resend_time: Duration,
     /// Config for setting up a game server.
     pub game_server_config: GameServerSetupConfig,
+    /// The number of in-memory clients that will connect.
+    pub memory_count: usize,
     /// The number of native clients that will connect.
     pub native_count: usize,
     /// The number of WASM clients that will connect.
@@ -130,6 +136,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
             RepliconPlugins
                 .build()
                 .disable::<ClientPlugin>()
+                .disable::<ClientEventsPlugin>()
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
                     visibility_policy: VisibilityPolicy::Whitelist,
@@ -182,27 +189,49 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
 
 /// Sets up a game app with renet servers.
 ///
-/// If the game app is set up on a WASM target for local single-player
-/// (`native_count` = 0, `wasm_count` = 1, target environment = "wasm"), then in-memory server and
-/// client transports will be added to the app and the user must manually move the client transport into their client app.
-///
-/// Returns metadata for generating connect tokens for clients to connect to the the renet server.
+/// Returns metadata for generating connect tokens for clients to connect to the renet server.
 pub fn prepare_game_app_network(
-    game_app           : &mut App,
-    game_server_config : GameServerSetupConfig,
-    native_count       : usize,
-    wasm_count         : usize,
-) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
+    game_app: &mut App,
+    game_server_config: GameServerSetupConfig,
+    memory_count: usize,
+    native_count: usize,
+    wasm_count: usize,
+) -> (Option<ConnectMetaMemory>, Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    //todo: single player w/ in-memory transport (need server config enum) (waiting on worldswap integration)
-    //todo: set up renet server transports based on client types
+    // set up renet server
+    // - we use a unique auth key so clients can only interact with the server created here
+    let auth_key = {
+        // We assume this is only used for local-player on web.
+        #[cfg(target_family = "wasm")]
+        {
+            if memory_count == 0 || native_count > 0 || wasm_count > 0
+            {
+                panic!("aborting game app networking construction; target family is WASM where only in-memory \
+                    transports are permitted, but found other transport requests (memory: {}, native: {}, wasm: {})",
+                    native_count, wasm_count, memory_count);
+            }
 
-    let mut native_meta = None;
-    let wasm_meta = None;
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos()
+        }
 
+        #[cfg(not(target_family = "wasm"))]
+        bevy_renet2::renet2::transport::generate_random_bytes::<32>()
+    };
+
+    setup_combo_renet_server(
+        game_app,
+        game_server_config,
+        memory_count,
+        native_count,
+        wasm_count,
+        auth_key,
+    )
+
+
+/*
     #[cfg(not(target_family = "wasm"))]
     {
-        if native_count > 0 && wasm_count == 0
+        if native_transport && !wasm_transport
         {
             // set up renet server
             // - we use a unique auth key so clients can only interact with the server created here
@@ -217,7 +246,7 @@ pub fn prepare_game_app_network(
             });
         }
 
-        if wasm_count > 0
+        if wasm_transport
         {
             tracing::error!("wasm clients not yet supported");
             
@@ -232,11 +261,13 @@ pub fn prepare_game_app_network(
                 native_meta = Some(ConnectMetaNative{
                     server_config    : game_server_config.clone(),
                     server_addresses : vec![native_addr],
+                    socket_id        : 0,
                     auth_key         : auth_key.clone(),
                 });
                 wasm_meta = Some(ConnectMetaWasm{
                     server_config    : game_server_config,
                     server_addresses : vec![wasm_addr],
+                    socket_id        : 1,
                     auth_key         : auth_key.clone(),
                     cert_hashes
                 });
@@ -246,14 +277,12 @@ pub fn prepare_game_app_network(
 
     #[cfg(target_family = "wasm")]
     {
-        if native_count > 0 || wasm_count != 1
-        { panic!("wasm game apps are only supported for single-player"); }
+        panic!("wasm game apps not yet supported");
 
         tracing::error!("wasm single-player servers not yet supported");
         //todo: add in-memory server
     }
-
-    (native_meta, wasm_meta)
+*/
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -261,16 +290,13 @@ pub fn prepare_game_app_network(
 /// Sets up a `bevy_girk` game app.
 /// - Sets up the game framework.
 /// - Sets up replication.
-/// - Sets up renet servers based on the number of clients. If the game app is set up on a WASM target for local
-///   single-player (`native_count` = 0, `wasm_count` = 1, target environment = "wasm"), then in-memory server and
-///   client transports will be added to the game app and the user must manually move the client transport into their
-///   client app.
+/// - Sets up renet servers based on the requested transports.
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
 pub fn prepare_girk_game_app(
     game_app : &mut App,
     config   : GirkServerConfig
-) -> (Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
+) -> (Option<ConnectMetaMemory>, Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
     prepare_game_app_framework(game_app, config.clients, config.config);
     prepare_game_app_replication(
@@ -278,14 +304,13 @@ pub fn prepare_girk_game_app(
         config.resend_time,
         Duration::from_secs((config.game_server_config.timeout_secs * 2).min(1i32) as u64),
     );
-    let (native_meta, wasm_meta) = prepare_game_app_network(
+    prepare_game_app_network(
         game_app,
         config.game_server_config,
-        config.native_count,
-        config.wasm_count
-    );
-
-    (native_meta, wasm_meta)
+        config.memory_transport,
+        config.native_transport,
+        config.wasm_transport
+    )
 }
 
 //-------------------------------------------------------------------------------------------------------------------

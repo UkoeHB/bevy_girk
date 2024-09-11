@@ -15,7 +15,7 @@ use std::vec::Vec;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -> Result<ServerConnectToken, ()>
+fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -> Option<ServerConnectToken>
 {
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -26,7 +26,7 @@ fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn prep_connect_token_wasm(connect_meta: &ConnectMetaWasm, client_id: u64) -> Result<ServerConnectToken, ()>
+fn prep_connect_token_wasm(connect_meta: &ConnectMetaWasm, client_id: u64) -> Option<ServerConnectToken>
 {
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -176,7 +176,7 @@ impl OngoingGamesCache
             {
                 let Some(meta) = &ongoing_game.native_meta
                 else { tracing::debug!(user_id, game_id, "no native connect meta for native client"); return None; };
-                let Ok(connect_token) = prep_connect_token_native(meta, start_info.client_id)
+                let Some(connect_token) = prep_connect_token_native(meta, start_info.client_id)
                 else { tracing::error!(user_id, game_id, "failed preparing native connect token"); return None; };
                 connect_token
             }
@@ -184,7 +184,7 @@ impl OngoingGamesCache
             {
                 let Some(meta) = &ongoing_game.wasm_meta
                 else { tracing::debug!(user_id, game_id, "no wasm connect meta for wasm client"); return None; };
-                let Ok(connect_token) = prep_connect_token_wasm(meta, start_info.client_id)
+                let Some(connect_token) = prep_connect_token_wasm(meta, start_info.client_id)
                 else { tracing::error!(user_id, game_id, "failed preparing wasm connect token"); return None; };
                 connect_token
             }

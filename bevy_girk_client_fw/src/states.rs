@@ -51,9 +51,13 @@ pub enum ClientInitializationState
 #[source(ClientInstanceState = ClientInstanceState::Game)]
 pub enum ClientFwState
 {
-    /// Runs when the client is connecting to the game.
+    /// Runs when [`ClientInstanceState::Game`] has just been entered and before the client is fully set up to
+    /// run a game. This state is especially useful for setting up local-player games where you need to wait for
+    /// the game app to emit setup information (which may occur after a small delay if running the game in a child
+    /// process).
+    /// - The [`ClientFwConfig`] and other setup details might *not* be added to the app yet.
     /// - Always runs at least one full tick.
-    /// - The first tick this runs, the `renet` method `client_just_disconnected()` will return true.
+    /// - While this runs, the `renet` method `client_disconnected()` will return true.
     /// - Client requests sent while in this state will always be dropped.
     /// - Game messages will never be received in this tick.
     ///
@@ -62,6 +66,12 @@ pub enum ClientFwState
     /// This runs at least one full tick while disconnected because we do not initialize the `renet` client in the
     /// first tick while disconnected.
     #[default]
+    Setup,
+    /// Runs when the client is connecting to the game.
+    /// - Always runs at least one full tick.
+    /// - While this runs, the `renet` method `client_connecting()` will return true.
+    /// - Client requests sent while in this state will always be dropped.
+    /// - Game messages will never be received in this tick.
     Connecting,
     /// Runs when the client is connected and is waiting to synchronize with the game.
     /// - Always runs at least one full tick.

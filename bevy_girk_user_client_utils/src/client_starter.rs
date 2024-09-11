@@ -13,7 +13,7 @@ use bevy_cobweb::prelude::*;
 
 /// Facilitates starting and restarting a game client.
 ///
-/// This is a `bevy_kot` reactive resource for ease of use in a GUI app.
+/// This is a reactive resource for ease of use in a GUI app.
 #[derive(ReactResource)]
 pub struct ClientStarter
 {

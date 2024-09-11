@@ -49,6 +49,9 @@ impl GameStartInfo
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameStartReport
 {
+    /// Metadata for generating in-memory connect tokens for the game.
+    #[serde(skip)]
+    pub memory_meta: Option<ConnectMetaMemory>,
     /// Metadata for generating native-target connect tokens for the game.
     pub native_meta: Option<ConnectMetaNative>,
     /// Metadata for generating wasm-target connect tokens for the game.

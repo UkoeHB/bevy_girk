@@ -126,7 +126,7 @@ fn create_native_client(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-//todo: this depends on renet2/wt_client_transport feature
+// Note: this depends on renet2/wt_client_transport feature.
 #[cfg(target_family = "wasm")]
 fn create_wasm_client(
     server_channels_config : Vec<ChannelConfig>,
@@ -153,6 +153,33 @@ fn create_wasm_client(
         authentication,
         WebTransportClient::new(config)
     ).unwrap();
+
+    (client, client_transport)
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+#[cfg(feature = "memory_transport")]
+fn create_memory_client(
+    server_channels_config: Vec<ChannelConfig>,
+    client_channels_config: Vec<ChannelConfig>,
+    authentication: ClientAuthentication,
+    client_socket: MemorySocketClient,
+) -> (RenetClient, NetcodeClientTransport)
+{
+    // make client
+    let client = RenetClient::new(
+        ConnectionConfig{
+            server_channels_config,
+            client_channels_config,
+            ..default()
+        }
+    );
+
+    // make transport
+    let current_time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+    let client_transport = NetcodeClientTransport::new(current_time, authentication, client_socket).unwrap();
 
     (client, client_transport)
 }
@@ -256,11 +283,42 @@ fn setup_wasm_renet_client(
 
     // make server
     let (client, client_transport) = create_wasm_client(
-            server_channels.clone(),
-            client_channels.clone(),
-            authentication,
-            config,
-        );
+        server_channels.clone(),
+        client_channels.clone(),
+        authentication,
+        config,
+    );
+
+    // add client and transport
+    client_app_commands.insert_resource(client);
+    client_app_commands.insert_resource(client_transport);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Sets up a renet client with in-memory transport using the provided authentication and client socket.
+/// - Assumes there is a `bevy_replicon::RepliconChannels` resource already loaded in the app.
+#[cfg(feature = "memory_transport")]
+fn setup_memory_renet_client(
+    In((
+        authentication,
+        client
+    ))                      : In<(ClientAuthentication, MemorySocketClient)>,
+    mut client_app_commands : Commands,
+    replicon_channels       : Res<RepliconChannels>,
+){
+    // get server/client channels
+    let server_channels = replicon_channels.get_server_configs();
+    let client_channels = replicon_channels.get_client_configs();
+
+    // make server
+    let (client, client_transport) = create_memory_client(
+        server_channels.clone(),
+        client_channels.clone(),
+        authentication,
+        client,
+    );
 
     // add client and transport
     client_app_commands.insert_resource(client);
@@ -272,6 +330,7 @@ fn setup_wasm_renet_client(
 
 /// Set up a renet server with default transport using the provided `ServerConfig`.
 /// - Assumes there is a bevy_replicon::RepliconChannels resource already loaded in the app.
+#[cfg(feature = "native_transport")]
 pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerSetupConfig) -> SocketAddr
 {
     tracing::info!("setting up renet server");
@@ -299,38 +358,143 @@ pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerSetu
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Set up a renet server with native/wasm transports using the provided `ServerConfig`.
+/// Set up a renet server with arbitrary combinations of memory/native/wasm transports.
 /// - Assumes there is a bevy_replicon::RepliconChannels resource already loaded in the app.
-///
-/// Returns (native addr, wasm addr, wasm cert hashes)
-#[cfg(target_family = "wasm")]
-pub fn setup_native_wasm_renet_server(
-    server_app    : &mut App,
-    server_config : ServerSetupConfig
-) -> (SocketAddr, SocketAddr, Vec<ServerCertHash>)
+pub fn setup_combo_renet_server(
+    server_app: &mut App,
+    config: GameServerSetupConfig,
+    memory_count: usize,
+    native_count: usize,
+    wasm_count: usize,
+    auth_key: &[u8; 32],
+) -> (Option<ConnectMetaMemory>, Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
 {
-    tracing::info!("setting up cross-platform renet server");
+    tracing::info!("setting up renet server");
 
     // get server/client channels
     let replicon_channels = server_app.world().resource::<RepliconChannels>();
-    let server_channels   = replicon_channels.get_server_configs();
-    let client_channels   = replicon_channels.get_client_configs();
+    let server_channels_config = replicon_channels.get_server_configs();
+    let client_channels_config = replicon_channels.get_client_configs();
 
-    // make server
-    let (server, server_transport, cert_hashes) = create_native_wasm_server(
-            server_channels,
-            client_channels,
-            server_config,
-        );
+    let server = RenetServer::new(
+        ConnectionConfig{
+            server_channels_config,
+            client_channels_config,
+            ..default()
+        }
+    );
+
+    let mut memory_meta = None;
+    let mut native_meta = None;
+    let mut wasm_meta = None;
+    let mut socket_addresses = Vec::default();
+    let mut sockets = Vec::default();
+
+    // prepare memory socket
+    #[cfg(not(feature = "memory_transport"))]
+    {
+        if memory_count > 0
+        {
+            panic!("tried setting up renet server with in-memory clients, but memory_transport feature is not enabled");
+        }
+    }
+    #[cfg(feature = "memory_transport")]
+    {
+        if memory_count > 0
+        {
+            let (server_socket, client_sockets) = new_memory_sockets(memory_count, false);
+            let memory_addrs = vec![in_memory_server_addr()];
+
+            memory_meta = ConnectMetaMemory {
+                server_config: config.clone(),
+                client_sockets,
+                socket_id: sockets.len(),
+                auth_key: auth_key.clone(),
+            };
+
+            socket_addresses.push(memory_addrs);
+            sockets.push(BoxedSocket::new(server_socket));
+        }
+    }
+
+    // prepare native socket
+    #[cfg(not(feature = "native_transport"))]
+    {
+        if native_count > 0
+        {
+            panic!("tried setting up renet server with native clients, but native_transport feature is not enabled");
+        }
+    }
+    #[cfg(feature = "native_transport")]
+    {
+        if native_count > 0
+        {
+            let wildcard_addr = SocketAddr::new(config.server_ip.into(), 0);
+            let server_socket = UdpSocket::bind(wildcard_addr).expect("renet server address should be bindable");
+            let native_socket = NativeSocket::new(server_socket).unwrap();
+            let native_addrs = vec![native_socket.addr().unwrap()];
+
+            native_meta = ConnectMetaNative {
+                server_config: config.clone(),
+                server_addresses: native_addrs.clone(),
+                socket_id: sockets.len(),
+                auth_key: auth_key.clone(),
+            };
+
+            socket_addresses.push(native_addrs);
+            sockets.push(BoxedSocket::new(native_socket));
+        }
+    }
+
+    // prepare wasm socket
+    #[cfg(not(feature = "wasm_transport"))]
+    {
+        if wasm_count > 0
+        {
+            panic!("tried setting up renet server with wasm clients, but wasm_transport feature is not enabled");
+        }
+    }
+    #[cfg(feature = "wasm_transport")]
+    {
+        if wasm_count > 0
+        {
+            let wildcard_addr = SocketAddr::new(config.server_ip.into(), 0);
+            let (config, cert_hash) = WebTransportServerConfig::new_selfsigned(wildcard_addr, wasm_clients);
+            let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
+            let wt_socket = WebTransportServer::new(config, handle.0).unwrap();
+            let wasm_addrs = vec![wt_socket.addr().unwrap()];
+
+            wasm_meta = ConnectMetaWasm {
+                server_config: config.clone(),
+                server_addresses: wasm_addrs.clone(),
+                socket_id: sockets.len(),
+                auth_key: auth_key.clone(),
+                cart_hashes: vec![cert_hash],
+            };
+
+            socket_addresses.push(wasm_addrs);
+            sockets.push(BoxedSocket::new(wt_socket));
+        }
+    }
+
+    // save final addresses
+    let server_config = ServerSetupConfig {
+        current_time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default(),
+        max_clients: memory_count + native_count + wasm_count,
+        protocol_id: config.protocol_id,
+        socket_addresses,
+        authentication: ServerAuthentication::Secure{ private_key: *auth_key },
+    };
+
+    // make transport
+    let server_transport = NetcodeServerTransport::new_with_sockets(server_config, sockets).unwrap();
 
     // add server to app
-    let native_addr = server_transport.get_addresses(0)[0];
-    let wasm_addr = server_transport.get_addresses(1)[0];
     server_app
         .insert_resource(server)
         .insert_resource(server_transport);
 
-    (native_addr, wasm_addr, cert_hashes)
+    (memory_meta, native_meta, wasm_meta)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -351,7 +515,8 @@ pub enum RenetClientConnectPack
     /// Connection information for wasm transports.
     #[cfg(target_family = "wasm")]
     Wasm(ClientAuthentication, WebTransportClientConfig),
-    //Local,
+    #[cfg(feature = "memory_transport")]
+    Memory(ClientAuthentication, MemorySocketClient),
 }
 
 impl RenetClientConnectPack
@@ -365,7 +530,7 @@ impl RenetClientConnectPack
             {
                 // Extract renet ConnectToken.
                 let connect_token = connect_token_from_bytes(&token)
-                    .map_err(|_| String::from("failed deserializing renet connect token"))?;
+                    .ok_or(String::from("failed deserializing renet connect token"))?;
                 if connect_token.protocol_id != expected_protocol_id { return Err(String::from("protocol id mismatch")); }
 
                 // prepare client address based on server address
@@ -381,7 +546,7 @@ impl RenetClientConnectPack
                 {
                     // Extract renet ConnectToken.
                     let connect_token = connect_token_from_bytes(&token)
-                        .map_err(|_| String::from("failed deserializing renet connect token"))?;
+                        .ok_or(String::from("failed deserializing renet connect token"))?;
                     if connect_token.protocol_id != expected_protocol_id { return Err(String::from("protocol id mismatch")); }
 
                     // prepare client config based on server address
@@ -396,6 +561,16 @@ impl RenetClientConnectPack
                     let (_, _) = (token, cert_hashes);
                     panic!("ServerConnectToken::Wasm can only be converted to RenetClientConnectPack in WASM");
                 }
+            }
+            #[cfg(feature = "memory_transport")]
+            ServerConnectToken::Memory{ token, client } => 
+            {
+                // Extract renet ConnectToken.
+                let connect_token = connect_token_from_bytes(&token)
+                    .ok_or(String::from("failed deserializing renet connect token"))?;
+                if connect_token.protocol_id != expected_protocol_id { return Err(String::from("protocol id mismatch")); }
+
+                Ok(Self::Memory(ClientAuthentication::Secure{ connect_token }, client))
             }
         }
     }
@@ -424,6 +599,11 @@ pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
         RenetClientConnectPack::Wasm(authentication, config) =>
         {
             syscall(world, (authentication, config), setup_wasm_renet_client);
+        }
+        #[cfg(feature = "memory_transport")]
+        RenetClientConnectPack::Memory(authentication, client) =>
+        {
+            syscall(world, (authentication, client), setup_memory_renet_client);
         }
     }
 

@@ -7,23 +7,68 @@ edition.workspace = true
 test    = false
 doctest = false
 
+[features]
+memory_transport = [
+    "bevy_renet2/memory_transport",
+    "bevy_replicon_renet2/memory_transport",
+    "renet2/memory_transport"
+]
+native_transport = [
+    "bevy_renet2/native_transport",
+    "bevy_replicon_renet2/native_transport",
+    "renet2/native_transport"
+]
+wasm_transport = [
+    "bevy_renet2/wt_server_transport",
+    "bevy_replicon_renet2/wt_server_transport",
+    "renet2/wt_server_transport",
+    "dep:enfync",
+    "enfync/builtin"
+]
+
 [dependencies]
 bevy                     = { version = "0.14", default-features = false }
-bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
-bevy_replicon_renet2     = { workspace = true, features = [ "native_transport" ] }
 bincode                  = { workspace = true }
 bytes                    = { workspace = true }
 iyes_progress            = { workspace = true }
 serde                    = { workspace = true }
-renet2                   = { workspace = true, features = ["native_transport"] }  #todo: want this feature on wasm?
 tracing                  = { workspace = true }
 ordered-multimap         = { version = "0.7" }
 wasm-timer               = { version = "0.2" }
+
+enfync = { workspace = true, optional = true }  #todo: this brings in tokio dependency
 
 bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
+
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.bevy_renet2]
+workspace = true
+features = ["serde"]
+
+[target.'cfg(target_family = "wasm")'.dependencies.bevy_renet2]
+workspace = true
+features = ["serde", "wt_client_transport"]
+
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.bevy_replicon_renet2]
+workspace = true
+features = ["renet_serde"]
+
+[target.'cfg(target_family = "wasm")'.dependencies.bevy_replicon_renet2]
+workspace = true
+features = ["renet_serde", "wt_client_transport"]
+
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies.renet2]
+workspace = true
+features = ["serde"]
+
+[target.'cfg(target_family = "wasm")'.dependencies.renet2]
+workspace = true
+features = ["serde", "wt_client_transport"]

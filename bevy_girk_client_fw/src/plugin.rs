@@ -76,8 +76,7 @@ impl Plugin for ClientFwStartupPlugin
     {
         app.init_state::<ClientInitializationState>()
             .init_state::<ClientFwState>()
-            .add_systems(OnExit(ClientInstanceState::Client), build_precheck)
-            .add_systems(OnEnter(ClientInstanceState::Game), setup_client_fw_state)
+            .add_systems(OnExit(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
             .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
             .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_fw_state);
     }
@@ -132,6 +131,10 @@ impl Plugin for ClientFwTickPlugin
     {
         add_progress_plugin(app);
 
+        app.configure_sets(PreUpdate,
+                ClientFwSetPrivate::FwStart
+                    .run_if(in_state(ClientInstanceState::Game))
+            );
         app.configure_sets(Update,
                 (
                     ClientFwSet::Admin,
@@ -140,12 +143,15 @@ impl Plugin for ClientFwTickPlugin
                     ClientFwSet::Logic,
                     ClientFwSet::PostLogic,
                     ClientFwSet::End,
-                ).chain()
+                )
+                    .chain()
+                    .run_if(in_state(ClientInstanceState::Game))
             );
         app.configure_sets(Update, ClientFwLoadingSet.run_if(in_state(ClientInitializationState::InProgress)));
         app.configure_sets(PostUpdate,
                 ClientFwSetPrivate::FwEnd
                     .after(iyes_progress::CheckProgressSet)
+                    .run_if(in_state(ClientInstanceState::Game))
             );
 
         // FWSTART
@@ -182,7 +188,7 @@ impl Plugin for ClientFwTickPlugin
                 (
                     // capture ClientInitializationState changes
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
-                    update_initialization_cache.run_if(client_is_initializing()),
+                    update_initialization_cache.run_if(client_is_initializing),
                     send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()
                     .in_set(ClientFwSetPrivate::FwEnd)

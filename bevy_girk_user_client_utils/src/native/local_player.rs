@@ -110,7 +110,7 @@ pub(crate) fn launch_local_player_client_native<S: HandleReqs>(
             let Some(start_info) = report.start_infos.pop()
             else { tracing::error!("missing start info for local player game"); return None; };
 
-            let Ok(token) = new_connect_token_native(meta, get_systime(), start_info.client_id)
+            let Some(token) = new_connect_token_native(meta, get_systime(), start_info.client_id)
             else { tracing::error!("failed producing connect token for local player game"); return None; };
 
             // launch game client
