@@ -20,7 +20,7 @@ fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap();
-    new_connect_token_native(connect_meta, current_time, client_id)
+    connect_meta.new_connect_token(current_time, client_id)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ fn prep_connect_token_wasm(connect_meta: &ConnectMetaWasm, client_id: u64) -> Op
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap();
-    new_connect_token_wasm(connect_meta, current_time, client_id)
+    connect_meta.new_connect_token(current_time, client_id)
 }
 
 //-------------------------------------------------------------------------------------------------------------------

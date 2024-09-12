@@ -22,7 +22,7 @@ tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = [ "env-filter", "std", "tracing-log" ] }
 url                = { workspace = true }
 
-bevy_girk_backend_public  = { path = "../bevy_girk_backend_public" }
+bevy_girk_backend_public  = { path = "../bevy_girk_backend_public", features = ["client"] }
 bevy_girk_client_fw       = { path = "../bevy_girk_client_fw" }
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }

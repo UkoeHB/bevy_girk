@@ -1,5 +1,5 @@
 [package]
-name = "bevy_girk_network_client"
+name = "bevy_girk_wiring_common"
 version.workspace = true
 edition.workspace = true
 
@@ -7,13 +7,15 @@ edition.workspace = true
 test    = false
 doctest = false
 
+[features]
+memory_transport = ["renet2/memory_transport"]
+
 [dependencies]
 bevy                 = { workspace = true }
 bevy_cobweb          = { workspace = true }
-bevy_renet2          = { workspace = true, features = [ "native_transport", "serde" ] }
+bevy_renet2          = { workspace = true, features = ["transport", "serde"] }
 bevy_replicon        = { workspace = true }
-bevy_replicon_renet2 = { workspace = true, features = [ "native_transport", "renet_serde" ] }
+bevy_replicon_renet2 = { workspace = true }
+bevy_simplenet       = { workspace = true }
 serde                = { workspace = true }
 tracing              = { workspace = true }
-
-bevy_girk_network_common = { path = "../bevy_girk_network_common" }

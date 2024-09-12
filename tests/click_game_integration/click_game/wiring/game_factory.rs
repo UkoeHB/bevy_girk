@@ -20,11 +20,12 @@ use std::vec::Vec;
 
 struct GameStartupHelper
 {
-    client_set   : GameFwClients,
-    click_init   : ClickGameInitializer,
-    clients      : Vec<(u128, ClientId)>,
-    native_count : usize,
-    wasm_count   : usize,
+    client_set     : GameFwClients,
+    click_init     : ClickGameInitializer,
+    clients        : Vec<(u128, ClientId)>,
+    memory_clients : Vec<u16>,
+    native_count   : usize,
+    wasm_count     : usize,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -37,12 +38,13 @@ fn prepare_game_startup(
 ) -> Result<GameStartupHelper, ()>
 {
     // prepare each client
-    let mut client_set    = HashSet::<ClientId>::with_capacity(client_init_data.len());
-    let mut players       = HashMap::<ClientId, PlayerState>::with_capacity(client_init_data.len());
-    let mut watchers      = HashSet::<ClientId>::with_capacity(client_init_data.len());
-    let mut clients       = Vec::<(u128, ClientId)>::with_capacity(client_init_data.len());
-    let mut native_count  = 0;
-    let mut wasm_count    = 0;
+    let mut client_set     = HashSet::<ClientId>::with_capacity(client_init_data.len());
+    let mut players        = HashMap::<ClientId, PlayerState>::with_capacity(client_init_data.len());
+    let mut watchers       = HashSet::<ClientId>::with_capacity(client_init_data.len());
+    let mut clients        = Vec::<(u128, ClientId)>::with_capacity(client_init_data.len());
+    let mut memory_clients = Vec::<u16>::with_capacity(client_init_data.len());
+    let mut native_count   = 0;
+    let mut wasm_count     = 0;
 
     for client_init in client_init_data
     {
@@ -71,10 +73,13 @@ fn prepare_game_startup(
         client_set.insert(client_id);
 
         // count client type
-        match client_init.env
+        match client_init.connection
         {
-            bevy_simplenet::EnvType::Native => native_count += 1,
-            bevy_simplenet::EnvType::Wasm => wasm_count += 1,
+            ConnectionType::Memory => memory_clients.push(
+                u16::try_from(client_id).expect("large client ids not supported for in-memory connections")
+            ),
+            ConnectionType::Native => native_count += 1,
+            ConnectionType::Wasm => wasm_count += 1,
         }
 
         // save user_id/client_id mapping
@@ -89,6 +94,7 @@ fn prepare_game_startup(
         client_set : GameFwClients::new(client_set),
         click_init : ClickGameInitializer{ game_context, players, watchers },
         clients,
+        memory_clients,
         native_count,
         wasm_count,
     })
@@ -234,8 +240,8 @@ pub enum ClickClientInit
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ClickClientInitDataForGame
 {
-    /// The client's environment type.
-    pub env: bevy_simplenet::EnvType,
+    /// Indicates the type of connection the client wants to have with the server.
+    pub connection: ConnectionType,
 
     /// The client's server-side user id.
     pub user_id: u128,
@@ -290,7 +296,6 @@ impl GameFactoryImpl for ClickGameFactory
     fn new_game(
         &self,
         app: &mut App,
-        memory_transport: bool,
         launch_pack: GameLaunchPack
     ) -> Result<GameStartReport, ()>
     {
@@ -304,13 +309,12 @@ impl GameFactoryImpl for ClickGameFactory
         let startup = prepare_game_startup(clients, config.game_duration_config)?;
 
         // girk server config
-        let memory_count = if memory_transport { 1 } else { 0 };
         let server_config = GirkServerConfig{
             clients            : startup.client_set,
             config             : config.game_fw_config,
             game_server_config : config.server_setup_config,
             resend_time        : std::time::Duration::from_millis(100),
-            memory_count,
+            memory_clients     : startup.memory_clients,
             native_count       : startup.native_count,
             wasm_count         : startup.wasm_count,
         };

@@ -52,7 +52,7 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
                     setting up renet client");
                 return Some(game_id);
             };
-            let Ok(token) = new_connect_token_memory(meta, 0, get_systime(), start_info.client_id) else {
+            let Ok(token) = meta.new_connect_token(0, get_systime(), start_info.client_id) else {
                 tracing::error!("ignoring game start report for local game {}; failed producing in-memory \
                     connect token", game_id);
                 return Some(game_id);
@@ -68,16 +68,18 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
         GameInstanceReport::GameOver(game_id, end_report) =>
         {
             tracing::info!("local-player game {game_id} ended");
-            w.resource_mut::<LocalGameManager>().set_last_game(
+            w.resource_mut::<LocalGameManager>().try_set_last_game(
+                game_id,
                 LocalGameReport::End{ game_id, report: end_report }
             );
-            w.resource_mut::<LocalGameManager>().discard_current_game();
+            // NOTE: Do not discard the game yet, it may still need to communicate with the client.
             None
         }
         GameInstanceReport::GameAborted(game_id) =>
         {
             tracing::warn!("local-player game server aborted, force-closing game client");
-            w.resource_mut::<LocalGameManager>().set_last_game(
+            w.resource_mut::<LocalGameManager>().try_set_last_game(
+                game_id,
                 LocalGameReport::Aborted{ game_id }
             );
             w.resource_mut::<LocalGameManager>().discard_current_game();
@@ -136,9 +138,13 @@ pub enum LocalGameReport
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Resource that constructs and monitors ongoing local-player games.
+///
+/// Inserted to the app via [`ClientInstancePlugin`].
 #[derive(Resource)]
 pub struct LocalGameManager
 {
+    // TODO: This currently only launches games in a thread on the same app. It may be useful to allow configuring
+    // child process (or webworker) launchers.
     launcher: Option<GameInstanceLauncherLocal>,
 
     current_game: Option<RunningLocalGame>,
@@ -191,18 +197,28 @@ impl LocalGameManager
 
     /// Returns `true` if a local-player game is running.
     ///
-    /// This may be `false` even though you are in [`ClientInstanceState::Game`] if the game has ended.
-    /// In that case, [`Self::get_report`] will return a non-`None` value.
+    /// If the game ended successfully, then [`Self::get_report`] will return a value.
     pub fn is_running(&self) -> bool
     {
         self.current_game.is_some()
     }
 
-    fn set_last_game(&mut self, last: LocalGameReport)
+    fn try_set_last_game(&mut self, game_id: u64, last: LocalGameReport)
     {
         if let Some(prev) = self.last_game
         {
-            tracing::debug!("overwriting LocalGameReport in LocalGameManager; previous value was not extracted");
+            // We add this check in case a game-over report is emitted and then the game has to abort while sending
+            // game-over information to clients.
+            // - Note that if local games are given the same `game_id` every time and LocalGameReports are only
+            //   sometimes taken, then this can cause game over reports to be lost.
+            if prev.game_id == game_id
+            {
+                tracing::warn!("ignoring new LocalGameReport in LocalGameManager for game {}; previous value was \
+                    not extracted", game_id, prev.game_id);
+                return;
+            }
+            tracing::warn!("overwriting LocalGameReport in LocalGameManager for game {}; previous value for game \
+                {} was not extracted", game_id, prev.game_id);
         }
         self.last_game = Some(last);
     }

@@ -24,6 +24,8 @@ pub trait ClientFactoryImpl: Debug + Send + Sync + 'static
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Wraps a client factory implementation.
+///
+/// Inserted to the app via [`ClientInstancePlugin`].
 #[derive(Debug, Resource)]
 pub struct ClientFactory
 {

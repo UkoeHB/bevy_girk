@@ -75,7 +75,7 @@ impl ClickLobbyChecker
 
     pub fn collect_members(
         lobby_data: &LobbyData
-    ) -> Result<(Vec<(bevy_simplenet::EnvType, u128)>, Vec<(bevy_simplenet::EnvType, u128)>), ()>
+    ) -> Result<(Vec<(ConnectionType, u128)>, Vec<(ConnectionType, u128)>), ()>
     {
         let mut players = Vec::default();
         let mut watchers = Vec::default();
@@ -83,8 +83,8 @@ impl ClickLobbyChecker
         {
             match ClickLobbyMemberType::try_from(member_data.color)?
             {
-                ClickLobbyMemberType::Player  => players.push((member_data.env, *user_id)),
-                ClickLobbyMemberType::Watcher => watchers.push((member_data.env, *user_id)),
+                ClickLobbyMemberType::Player  => players.push((member_data.connection, *user_id)),
+                ClickLobbyMemberType::Watcher => watchers.push((member_data.connection, *user_id)),
             }
         }
 
@@ -127,10 +127,6 @@ impl LobbyChecker for ClickLobbyChecker
 
         // check password
         if lobby.get_password() != password { return false; }
-
-        // validate env type
-        //todo: allow WASM env
-        if member_data.env != bevy_simplenet::EnvType::Native { panic!("only native clients currently supported"); }
 
         // get member type
         let Ok(member_type) = ClickLobbyMemberType::try_from(member_data.color) else { return false; };

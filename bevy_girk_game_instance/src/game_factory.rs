@@ -16,7 +16,6 @@ pub trait GameFactoryImpl: Debug
     fn new_game(
         &self,
         app: &mut App,
-        memory_transport: bool,
         launch_pack: GameLaunchPack
     ) -> Result<GameStartReport, ()>;
 }
@@ -44,11 +43,10 @@ impl GameFactory
     pub fn new_game(
         &self,
         app: &mut App,
-        memory_transport: bool,
         launch_pack: GameLaunchPack
     ) -> Result<GameStartReport, ()>
     {
-        self.factory.new_game(app, memory_transport, launch_pack)
+        self.factory.new_game(app, launch_pack)
     }
 }
 

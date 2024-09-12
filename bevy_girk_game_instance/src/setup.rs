@@ -62,7 +62,6 @@ pub(crate) struct GameRunnerState
 pub fn game_instance_setup(
     game_factory: GameFactory,
     launch_pack: GameLaunchPack,
-    memory_transport: bool,
     report_sender: IoSender<GameInstanceReport>,
     command_receiver: IoReceiver<GameInstanceCommand>,
 ) -> Result<App, ()>
@@ -71,7 +70,7 @@ pub fn game_instance_setup(
 
     // add game to app
     let mut game_app = App::default();
-    let game_start_report = game_factory.new_game(&mut game_app, memory_transport, launch_pack)?;
+    let game_start_report = game_factory.new_game(&mut game_app, launch_pack)?;
 
     // send game start report
     if let Err(_) = report_sender.send(GameInstanceReport::GameStart(game_id, game_start_report))

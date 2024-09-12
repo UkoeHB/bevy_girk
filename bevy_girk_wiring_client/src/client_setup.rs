@@ -91,28 +91,28 @@ fn reinitialize_client(mut c: Commands)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn set_client_connecting(mut client_fw_state: ResMut<NextState<ClientFwState>>)
+fn set_client_connecting(w: &mut World)
 {
     tracing::info!("connecting client");
-    client_fw_state.set(ClientFwState::Connecting);
+    set_and_apply_state(w, ClientFwState::Connecting);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn set_client_syncing(mut client_fw_state: ResMut<NextState<ClientFwState>>)
+fn set_client_syncing(w: &mut World)
 {
     tracing::info!("synchronizing client");
-    client_fw_state.set(ClientFwState::Syncing);
+    set_and_apply_state(w, ClientFwState::Syncing);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn set_client_init(mut client_fw_state: ResMut<NextState<ClientFwState>>)
+fn set_client_init(w: &mut World)
 {
     tracing::info!("initializing client");
-    client_fw_state.set(ClientFwState::Init);
+    set_and_apply_state(w, ClientFwState::Init);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ pub struct GirkClientConfig
     /// Config for the client framework.
     pub client_fw_config: ClientFwConfig,
     /// Client pack for the initial `renet` connection attempt.
-    pub connect_pack: RenetClientConnectPack,
+    pub connect_pack: ClientConnectPack,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ pub fn prepare_client_app_replication(
 /// Note that here we just wait for a new connect pack to appear, then set up a renet client.
 /// For automatically requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 ///
-/// Note: The `RenetClientConnectPack` needs to be inserted separately (e.g. by the `ClientFactory`).
+/// Note: The `ClientConnectPack` needs to be inserted separately (e.g. by the `ClientFactory`).
 pub fn prepare_client_app_network(client_app: &mut App)
 {
     client_app.add_systems(PreUpdate,
@@ -374,7 +374,7 @@ pub fn prepare_client_app_network(client_app: &mut App)
                 // poll for connect packs while disconnected
                 .run_if(client_disconnected)
                 // check for connect pack
-                .run_if(resource_exists::<RenetClientConnectPack>)
+                .run_if(resource_exists::<ClientConnectPack>)
         );
 }
 

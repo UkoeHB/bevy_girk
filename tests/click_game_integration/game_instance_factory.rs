@@ -125,7 +125,7 @@ fn game_instance_factory_demo()
     for start_info in game_start_report.start_infos.drain(..)
     {
         // make connect token
-        let connect_token = new_connect_token_native(&token_meta, current_time, start_info.client_id).unwrap();
+        let connect_token = token_meta.new_connect_token(current_time, start_info.client_id).unwrap();
 
         // make client core
         // - we only make the core here, no client skin

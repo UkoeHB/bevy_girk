@@ -8,12 +8,11 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy        = { version = "0.14", default-features = false }
+bevy        = { workspace = true }
 bevy_cobweb = { workspace = true }
 enfync      = { workspace = true }
 tracing     = { workspace = true }
 
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
-bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }
-bevy_girk_game_instance   = { path = "../bevy_girk_game_instance" }
-bevy_girk_utils           = { path = "../bevy_girk_utils" }
+bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
+bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }

@@ -36,9 +36,9 @@ fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Manage a child process.
-/// - Spawns a tokio task for managing the child process. Items received from `stdin_receiver` will be serialized
+/// - Spawns an enfync task for managing the child process. Items received from `stdin_receiver` will be serialized
 ///   to JSON and forwarded to the child's `stdin`.
-/// - Spawns a tokio task for monitoring the child process's `stdout`. Lines received from the child's `stdout`
+/// - Spawns an enfync task for monitoring the child process's `stdout`. Lines received from the child's `stdout`
 ///   will be deserialized from JSON and passed to the `stdout_handler` callback. If that callback returns `Some`
 ///   (e.g. on receipt of a 'process aborted' message), then the contained result will be returned from the task. The
 ///   possible results are true/false to indicate if the task closed 'normally'.
@@ -47,11 +47,12 @@ fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver
 ///
 /// This is designed for compatibility with [`run_app_in_child_process()`].
 pub fn manage_child_process<I, O>(
-    spawner            : &impl enfync::Handle,
-    id                 : u64,
-    mut child_process  : tokio::process::Child,
-    mut stdin_receiver : IoReceiver<I>,
-    mut stdout_handler : impl FnMut(O) -> Option<bool> + Send + Sync + 'static,
+    spawner             : &impl enfync::Handle,
+    id                  : u64,
+    mut child_process   : tokio::process::Child,
+    mut stdin_receiver  : IoReceiver<I>,
+    mut stdout_handler  : impl FnMut(O) -> Option<bool> + Send + Sync + 'static,
+    mut on_stdout_error : impl FnMut() + Send + Sync + 'static,
 ) -> (enfync::PendingResult<bool>, enfync::PendingResult<bool>)
 where
     I: Debug + Serialize + Send + Sync + 'static,
@@ -135,11 +136,22 @@ where
                     Ok(_) =>
                     {
                         let Ok(output) = serde_json::de::from_str::<O>(&buf)
-                        else { tracing::warn!(id, ?buf, "failed deserializing process output"); return false; };
+                        else {
+                            tracing::warn!(id, ?buf, "failed deserializing process output");
+                            (on_stdout_error)();
+                            return false;
+                        };
 
-                        if let Some(result) = (stdout_handler)(output) { return result; }
+                        if let Some(result) = (stdout_handler)(output)
+                        {
+                            return result;
+                        }
                     }
-                    Err(_) => return false,
+                    Err(_) =>
+                    {
+                        (on_stdout_error)();
+                        return false;
+                    }
                 }
             }
         }

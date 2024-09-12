@@ -42,7 +42,6 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
 {
     fn launch(
         &self,
-        _memory_transport: bool,
         launch_pack: GameLaunchPack,
         report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
@@ -72,6 +71,7 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
         };
 
         // manage the process
+        let report_sender_clone = report_sender.clone();
         let (_process_handle, stdout_handle) = manage_child_process(
                 &self.spawner,
                 game_id,
@@ -83,24 +83,29 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
                     {
                         GameInstanceReport::GameStart(_, _) =>
                         {
-                            let _ = report_sender.send(report);
                             tracing::trace!(game_id, "game instance process report: game start");
+                            let _ = report_sender.send(report);
                         }
                         GameInstanceReport::GameOver(_, _) =>
                         {
-                            let _ = report_sender.send(report);
                             tracing::trace!(game_id, "game instance process report: game over");
+                            let _ = report_sender.send(report);
                             return Some(true);
                         }
                         GameInstanceReport::GameAborted(_) =>
                         {
-                            let _ = report_sender.send(report);
                             tracing::trace!(game_id, "game instance process report: game aborted");
+                            let _ = report_sender.send(report);
                             return Some(false);
                         }
                     }
 
                     None
+                },
+                move ||
+                {
+                    tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
+                    let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
                 }
             );
 
@@ -127,12 +132,11 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
     let (command_sender, command_receiver) = new_io_channel::<GameInstanceCommand>();
 
     let app = game_instance_setup(
-            game_factory,
-            args.launch_pack,
-            false,
-            report_sender.clone(),
-            command_receiver,
-        ).expect("failed setting up game instance");
+        game_factory,
+        args.launch_pack,
+        report_sender.clone(),
+        command_receiver,
+    ).expect("failed setting up game instance");
 
     // run the app
     run_app_in_child_process(

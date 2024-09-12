@@ -91,7 +91,7 @@ impl ClientFactoryImpl for ClickClientFactory
         let client_start_pack = deser_msg::<ClickClientStartPack>(&start_info.serialized_start_data).unwrap();
 
         // new connect pack
-        let connect_pack = RenetClientConnectPack::new(self.expected_protocol_id, token).unwrap();
+        let connect_pack = ClientConnectPack::new(self.expected_protocol_id, token).unwrap();
 
         // girk client config
         let config = GirkClientConfig{

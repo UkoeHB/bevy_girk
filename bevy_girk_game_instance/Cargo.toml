@@ -8,10 +8,10 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { version = "0.14", default-features = false }
+bevy           = { workspace = true }
 bevy_cobweb    = { workspace = true }
 bevy_simplenet = { workspace = true }
-enfync         = { workspace = true }
+enfync         = { workspace = true, features = ["builtin"] } #todo: this pulls in tokio even when not needed
 serde          = { workspace = true }
 serde_json     = { workspace = true }
 serde_with     = { workspace = true }

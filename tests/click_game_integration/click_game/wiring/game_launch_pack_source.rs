@@ -32,10 +32,10 @@ fn get_protocol_id() -> u64
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn make_player_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
+fn make_player_init_data(connection: ConnectionType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
-            env,
+            connection,
             user_id,
             init: ClickClientInit::Player{
                 client_id   : client_id,
@@ -47,10 +47,10 @@ fn make_player_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id:
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn make_watcher_init_data(env: bevy_simplenet::EnvType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
+fn make_watcher_init_data(connection: ConnectionType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
-            env,
+            connection,
             user_id,
             init: ClickClientInit::Watcher{ client_id },
         }
@@ -69,7 +69,6 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
     let num_watchers = watchers.len();
 
     // shuffle the game participants
-    //todo: assert there is only one player/watcher on WASM
     #[cfg(not(target_family = "wasm"))]
     {
         players.shuffle(&mut thread_rng());
@@ -79,15 +78,15 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
     // make init data for the clients
     let mut client_init_data = Vec::<ClickClientInitDataForGame>::with_capacity(num_players + num_watchers);
 
-    for (idx, (env, player_user_id)) in players.iter().enumerate()
+    for (idx, (connection, player_user_id)) in players.iter().enumerate()
     {
-        client_init_data.push(make_player_init_data(*env, *player_user_id, ClientId::new(1 + idx as u64)));
+        client_init_data.push(make_player_init_data(*connection, *player_user_id, ClientId::new(1 + idx as u64)));
     }
 
-    for (idx, (env, watcher_user_id)) in watchers.iter().enumerate()
+    for (idx, (connection, watcher_user_id)) in watchers.iter().enumerate()
     {
         let client_id = idx + num_players;
-        client_init_data.push(make_watcher_init_data(*env, *watcher_user_id, ClientId::new(1 + client_id as u64)));
+        client_init_data.push(make_watcher_init_data(*connection, *watcher_user_id, ClientId::new(1 + client_id as u64)));
     }
 
     // click launch pack

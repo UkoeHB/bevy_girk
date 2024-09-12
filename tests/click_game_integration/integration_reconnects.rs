@@ -484,7 +484,7 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // reconnect game client app
-    let connect_pack = RenetClientConnectPack::new(get_test_protocol_id(), connect).unwrap();
+    let connect_pack = ClientConnectPack::new(get_test_protocol_id(), connect).unwrap();
     client_app1.insert_resource(connect_pack);
 
 

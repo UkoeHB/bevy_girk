@@ -7,9 +7,13 @@ edition.workspace = true
 test    = false
 doctest = false
 
+[features]
+# Enables code only needed by user clients.
+client = ["bevy_simplenet/client"]
+
 [dependencies]
-bevy           = { version = "0.14", default-features = false }
-bevy_simplenet = { workspace = true, features = ["client", "bevy"] }
+bevy           = { workspace = true }
+bevy_simplenet = { workspace = true }
 serde          = { workspace = true }
 serde_with     = { workspace = true }
 tracing        = { workspace = true }

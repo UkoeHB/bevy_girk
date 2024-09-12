@@ -1,5 +1,5 @@
 [package]
-name = "bevy_girk_network_common"
+name = "bevy_girk_wiring_client"
 version.workspace = true
 edition.workspace = true
 
@@ -15,3 +15,5 @@ bevy_replicon        = { workspace = true }
 bevy_replicon_renet2 = { workspace = true, features = [ "native_transport", "renet_serde" ] }
 serde                = { workspace = true }
 tracing              = { workspace = true }
+
+bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }

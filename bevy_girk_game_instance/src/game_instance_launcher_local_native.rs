@@ -29,7 +29,6 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
 {
     fn launch(
         &self,
-        memory_transport: bool,
         launch_pack: GameLaunchPack,
         report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
@@ -49,12 +48,14 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                             move ||
                             {
                                 let Ok(mut app) = game_instance_setup(
-                                        game_factory,
-                                        launch_pack,
-                                        memory_transport,
-                                        report_sender_clone,
-                                        command_receiver_clone,
-                                    ) else { return false; };
+                                    game_factory,
+                                    launch_pack,
+                                    report_sender_clone,
+                                    command_receiver_clone,
+                                ) else {
+                                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                                    return false;
+                                };
                                 app.run();
                                 true
                             }

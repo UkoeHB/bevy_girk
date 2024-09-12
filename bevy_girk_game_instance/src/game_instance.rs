@@ -11,7 +11,7 @@ use bevy_girk_utils::*;
 
 /// A game instance is a wrapper around a running game.
 ///
-/// The wrapper monitors the game for completion and sends commands and reports in and out of the game.
+/// The wrapper monitors the game for completion and sends commands into the game.
 #[derive(Debug)]
 pub struct GameInstance
 {

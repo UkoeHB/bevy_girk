@@ -135,7 +135,7 @@ WORK IN PROGRESS
             - behavior
                 - connects reconnect logic of app with the app owner
                     - requests ServerConnectTokens from the instance owner on disconnect via ClientInstanceReport
-                    - receives ServerConnectToken via ClientInstanceCommand, inserts to app as RenetClientConnectPack resource, then the systems from prepare_girk_client_app() will use it to set up a new renet client
+                    - receives ServerConnectToken via ClientInstanceCommand, inserts to app as ClientConnectPack resource, then the systems from prepare_girk_client_app() will use it to set up a new renet client
 
     - user client utils
         - launchers: practical methods for launching clients (automatic native/WASM support {WASM is WIP})

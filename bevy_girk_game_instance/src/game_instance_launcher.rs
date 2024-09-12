@@ -9,11 +9,18 @@ use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Trait for types that launch [`GameInstances`](GameInstance).
+///
+/// Note that all launchers should send a [`GameInstanceReport::Aborted`] on any error that causes `false`
+/// to be returned by the game instance. This reduces the need for users to poll game instances for results.
 pub trait GameInstanceLauncherImpl: Debug + Send + Sync + 'static
 {
+    /// Launches a game and returns a [`GameInstance`] for monitoring it.
+    ///
+    /// The `report_sender` can potentially be tied to a centralized `report_receiver` that collects reports
+    /// from many game instances.
     fn launch(
         &self,
-        memory_transport: bool,
         launch_pack: GameLaunchPack,
         report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance;
@@ -36,12 +43,11 @@ impl GameInstanceLauncher
 
     pub fn launch(
         &self,
-        memory_transport: bool,
         launch_pack: GameLaunchPack,
         report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
-        self.launcher.launch(memory_transport, launch_pack, report_sender)
+        self.launcher.launch(launch_pack, report_sender)
     }
 }
 

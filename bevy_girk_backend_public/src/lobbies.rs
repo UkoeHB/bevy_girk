@@ -54,7 +54,7 @@ pub struct LobbyMemberColor(pub u64);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LobbyMemberData
 {
-    pub env: bevy_simplenet::EnvType,
+    pub connection: ConnectionType,
     pub color: LobbyMemberColor,
 }
 

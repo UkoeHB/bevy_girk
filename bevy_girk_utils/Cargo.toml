@@ -21,9 +21,6 @@ bincode       = { version = "1.3" }
 crossbeam     = { version = "0.8" }
 siphasher     = { version = "1.0" }
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rand = { version = "0.8" }
-
 [target.'cfg(not(target_family = "wasm"))'.dependencies.tokio]
 version = "1.34"
 default-features = false

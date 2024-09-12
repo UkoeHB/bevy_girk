@@ -12,12 +12,6 @@ use serde_with::{Bytes, serde_as};
 
 
 //-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum HostToUserMsg
@@ -107,12 +101,16 @@ impl bevy_simplenet::ChannelPack for HostUserChannel
 //-------------------------------------------------------------------------------------------------------------------
 
 /// CLIENT
-pub type HostUserClient      = bevy_simplenet::Client<HostUserChannel>;
+#[cfg(feature = "client")]
+pub type HostUserClient = bevy_simplenet::Client<HostUserChannel>;
+#[cfg(feature = "client")]
 pub type HostUserClientEvent = bevy_simplenet::ClientEventFrom<HostUserChannel>;
 
 /// client factory
+#[cfg(feature = "client")]
 pub fn host_user_client_factory() -> bevy_simplenet::ClientFactory<HostUserChannel>
 {
+    const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
     bevy_simplenet::ClientFactory::<HostUserChannel>::new(PACKAGE_VERSION)
 }
 

@@ -34,11 +34,12 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
 {
     fn launch(
         &self,
-        memory_transport: bool,
         launch_pack: GameLaunchPack,
         report_sender: IoSender<GameInstanceReport>,
     ) -> GameInstance
     {
+        let report_sender_clone = report_sender.clone();
+
         // prepare command channel
         let (command_sender, command_receiver) = new_io_channel::<GameInstanceCommand>();
         let command_receiver_clone = command_receiver.clone();
@@ -53,21 +54,21 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                     let Ok(mut app) = game_instance_setup(
                         game_factory,
                         launch_pack,
-                        memory_transport,
                         report_sender_clone,
                         command_receiver_clone,
-                    ) else { return false; };
+                    ) else {
+                        let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                        return false;
+                    };
 
                     // Run the loop manually until the app exits.
                     let tick_duration = tps_to_duration(world.resource::<GameFwConfig>().ticks_per_sec());
-                    let instant = Instant::now();
-                    let mut tick_count = 0u64;
 
                     loop
                     {
                         // Tick the app once.
+                        let start = Instant::now();
                         app.update();
-                        tick_count += 1;
 
                         // Check if the app shut down.
                         match app.world().resource::<Events<AppExit>>().get_reader().read().next().copied() {
@@ -75,6 +76,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                             Some(AppExit::Success) => break,
                             Some(AppExit::Error(code)) => {
                                 tracing::warn!("local game instance {game_id} closed with error code {code}");
+                                let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
                                 return false;
                             },
                         }
@@ -82,8 +84,13 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                         // Wait until the next tick is needed.
                         // - We always sleep here even if the duration is zero in order to release the thread so
                         //   a frame can be rendered if necessary.
-                        let elapsed = instant.elapsed();
-                        let duration_to_next_update = (tick_count*tick_duration).saturating_sub(elapsed);
+                        // - Note that this behavior mimics bevy's ScheduleRunnerPlugin loop, which will *not* try
+                        //   to 'catch up' if ticks take longer than the target duration. If fixed-update
+                        //   behavior is desired then the FixedUpdate schedule should be used.
+                        let end = Instant::now();
+                        let duration_to_next_update = tick_duration.saturating_sub(
+                            end.saturating_duration_since(start)
+                        );
                         sleep(duration_to_next_update).await;
                     }
 

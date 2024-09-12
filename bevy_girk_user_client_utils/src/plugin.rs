@@ -15,8 +15,7 @@ impl Plugin for UserClientUtilsPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.add_plugins(ClientMonitorPlugin)
-            .add_plugins(ClientStarterPlugin);
+        app.add_plugins(ClientStarterPlugin);
     }
 }
 

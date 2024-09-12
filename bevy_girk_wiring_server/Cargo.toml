@@ -1,5 +1,5 @@
 [package]
-name = "bevy_girk_wiring"
+name = "bevy_girk_wiring_server"
 version.workspace = true
 edition.workspace = true
 
@@ -8,6 +8,12 @@ test    = false
 doctest = false
 
 [features]
+test = [
+    "memory_transport",
+    "native_transport",
+    "wasm_transport"
+]
+
 memory_transport = [
     "bevy_renet2/memory_transport",
     "bevy_replicon_renet2/memory_transport",
@@ -23,11 +29,11 @@ wasm_transport = [
     "bevy_replicon_renet2/wt_server_transport",
     "renet2/wt_server_transport",
     "dep:enfync",
-    "enfync/builtin"
+    "enfync/builtin"  #todo: this brings in tokio dependency
 ]
 
 [dependencies]
-bevy                     = { version = "0.14", default-features = false }
+bevy                     = { workspace = true }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
 bincode                  = { workspace = true }
@@ -38,37 +44,16 @@ tracing                  = { workspace = true }
 ordered-multimap         = { version = "0.7" }
 wasm-timer               = { version = "0.2" }
 
-enfync = { workspace = true, optional = true }  #todo: this brings in tokio dependency
+enfync = { workspace = true, optional = true }
 
-bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
-bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
+bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 
+bevy_renet2 = { workspace = true, features = ["serde"] }
+bevy_replicon_renet2 = { workspace = true, features = ["renet_serde"] }
+renet2 = { workspace = true, features = ["serde"] }
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies.bevy_renet2]
-workspace = true
-features = ["serde"]
-
-[target.'cfg(target_family = "wasm")'.dependencies.bevy_renet2]
-workspace = true
-features = ["serde", "wt_client_transport"]
-
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies.bevy_replicon_renet2]
-workspace = true
-features = ["renet_serde"]
-
-[target.'cfg(target_family = "wasm")'.dependencies.bevy_replicon_renet2]
-workspace = true
-features = ["renet_serde", "wt_client_transport"]
-
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies.renet2]
-workspace = true
-features = ["serde"]
-
-[target.'cfg(target_family = "wasm")'.dependencies.renet2]
-workspace = true
-features = ["serde", "wt_client_transport"]
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+rand = { version = "0.8" }
