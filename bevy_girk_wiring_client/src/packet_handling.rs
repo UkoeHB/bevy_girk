@@ -1,6 +1,6 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
+use bevy_girk_game_fw::GamePacket;
+use bevy_girk_utils::{deser_bytes_partial, SendUnreliable, SendUnordered, SendOrdered};
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -13,8 +13,6 @@ use bevy_replicon::prelude::{
     ChannelKind, FromClient, ReplicatedClients, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
 };
 use bevy_replicon::server::ServerSet;
-use bincode::Options;
-use bytes::Bytes;
 use ordered_multimap::ListOrderedMultimap;
 
 //standard shortcuts

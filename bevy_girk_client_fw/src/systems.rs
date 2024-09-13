@@ -1,11 +1,11 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_game_fw::*;
+use bevy_girk_game_fw::ClientFwRequest;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::core::Replicated;
-use iyes_progress::prelude::*;
+use iyes_progress::prelude::ProgressCounter;
 
 //standard shortcuts
 

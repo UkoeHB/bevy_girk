@@ -1,4 +1,5 @@
 //local shortcuts
+use crate::ConnectionType;
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};

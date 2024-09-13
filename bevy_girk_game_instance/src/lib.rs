@@ -10,7 +10,7 @@ mod types;
 
 #[cfg(not(target_family = "wasm"))]
 mod game_instance_launcher_local_native;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(feature = "process", not(target_family = "wasm")))]
 mod game_instance_launcher_process;
 
 #[cfg(target_family = "wasm")]
@@ -28,7 +28,7 @@ pub use types::*;
 
 #[cfg(not(target_family = "wasm"))]
 pub use game_instance_launcher_local_native::*;
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(feature = "process", not(target_family = "wasm")))]
 pub use game_instance_launcher_process::*;
 
 #[cfg(target_family = "wasm")]

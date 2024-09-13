@@ -1,24 +1,15 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_client_fw::*;
-use bevy_girk_client_instance::*;
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
+use bevy_girk_wiring_commong::{
+    client_address_from_server_address, connect_token_from_bytes, ServerConnectToken
+};
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet2::{client_disconnected, client_just_connected, client_just_disconnected};
-use bevy_replicon::client::ServerInitTick;
-use bevy_replicon::prelude::{
-    AppRuleExt, ClientSet, RepliconPlugins, ServerPlugin
-};
-use bevy_replicon_renet2::RepliconRenetClientPlugin;
-use iyes_progress::*;
-use renet2::transport::NetcodeClientTransport;
-use renet2::{transport::NetcodeTransportError, RenetClient};
+use renet2::ClientAuthentication;
 
 //standard shortcuts
-use std::time::Duration;
+use std::net::SocketAddr;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -37,9 +28,9 @@ pub enum ClientConnectPack
     Native(ClientAuthentication, SocketAddr),
     /// Connection information for wasm transports.
     #[cfg(target_family = "wasm")]
-    Wasm(ClientAuthentication, WebTransportClientConfig),
+    Wasm(ClientAuthentication, renet2::transport::WebTransportClientConfig),
     #[cfg(feature = "memory_transport")]
-    Memory(ClientAuthentication, MemorySocketClient),
+    Memory(ClientAuthentication, renet2::transport::MemorySocketClient),
 }
 
 impl ClientConnectPack
@@ -75,7 +66,7 @@ impl ClientConnectPack
                     // prepare client config based on server address
                     let Some(server_addr) = connect_token.server_addresses[0]
                     else { return Err(String::from("server address is missing")); };
-                    let config = WebTransportClientConfig::new_with_certs(server_addr, cert_hashes);
+                    let config = renet2::transport::WebTransportClientConfig::new_with_certs(server_addr, cert_hashes);
 
                     Ok(Self::Wasm(ClientAuthentication::Secure{ connect_token }, config))
                 }

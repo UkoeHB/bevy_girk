@@ -1,8 +1,9 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_client_fw::*;
-use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
+use crate::{ClientFactory, ClientFwConfig, ClientInstanceReport, LocalGameManager};
+use bevy_girk_client_fw::ClientInstanceState;
+use bevy_girk_game_instance::{GameLaunchPack, GameStartInfo};
+use bevy_girk_utils::set_and_apply_state;
+use bevy_girk_wiring_common::ServerConnectToken;
 
 //third-party shortcuts
 use bevy::ecs::world::Command;

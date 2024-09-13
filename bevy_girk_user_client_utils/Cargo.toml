@@ -8,10 +8,9 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy        = { workspace = true }
+bevy = { workspace = true }
 bevy_cobweb = { workspace = true }
-enfync      = { workspace = true }
-tracing     = { workspace = true }
+tracing = { workspace = true }
 
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }

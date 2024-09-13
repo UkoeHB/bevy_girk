@@ -1,6 +1,6 @@
 //local shortcuts
 use crate::*;
-use bevy_girk_game_fw::*;
+use bevy_girk_game_fw::{GameFwMsg, GamePacket};
 
 //third-party shortcuts
 use bevy::prelude::*;

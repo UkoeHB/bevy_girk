@@ -1,9 +1,8 @@
 //local shortcuts
-use crate::*;
+use crate::{ClientConnectPack, ClientEventHandlingPlugin};
 use bevy_girk_client_fw::*;
-use bevy_girk_client_instance::*;
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
+use bevy_girk_client_instance::ClientInstanceCommand;
+use bevy_girk_game_fw::GameInitProgress;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -13,7 +12,7 @@ use bevy_replicon::prelude::{
     AppRuleExt, ClientSet, RepliconPlugins, ServerPlugin
 };
 use bevy_replicon_renet2::RepliconRenetClientPlugin;
-use iyes_progress::*;
+use iyes_progress::Progress;
 use renet2::transport::NetcodeClientTransport;
 use renet2::{transport::NetcodeTransportError, RenetClient};
 

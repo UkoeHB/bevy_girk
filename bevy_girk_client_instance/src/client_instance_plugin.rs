@@ -1,7 +1,6 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
+use crate::{ClientFactoryImpl, ClientInstanceReport};
+use bevy_girk_game_instance::GameFactory;
 
 //third-party shortcuts
 use bevy::prelude::*;

@@ -1,15 +1,11 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_renet2::renet2::transport::{ConnectToken, ServerCertHash};
-use bevy_replicon::prelude::*;
+use renet2::transport::{ConnectToken, ServerCertHash};
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
 //standard shortcuts
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4};
-use std::time::Duration;
-use std::vec::Vec;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -54,7 +50,7 @@ pub enum ServerConnectToken
         /// A renet [`ConnectToken`].
         token: Vec<u8>,
         /// In-memory channel the client will use to talk to the renet server.
-        client: MemorySocketClient,
+        client: renet2::transport::MemorySocketClient,
     }
 }
 

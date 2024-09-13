@@ -3,8 +3,8 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_girk_utils::*;
-use iyes_progress::prelude::*;
+use bevy_girk_utils::apply_state_transitions;
+use iyes_progress::prelude::ProgressPlugin;
 
 //standard shortcuts
 
@@ -49,14 +49,15 @@ fn startup_postcheck(world: &World)
 
 /// Returns a Bevy run condition indicating if the client is initializing.
 ///
-/// The run condition returns true when in state [`ClientFwMod::Connecting`], [`ClientFwMod::Syncing`],
-/// or [`ClientFwMod::Init`]
+/// The run condition returns true when in state [`ClientFwState::Setup`], [`ClientFwState::Connecting`],
+/// [`ClientFwState::Syncing`], or [`ClientFwState::Init`].
 pub fn client_is_initializing() -> impl FnMut(Res<State<ClientFwState>>) -> bool + Clone
 {
     |current_state: Res<State<ClientFwState>>| -> bool
     {
         match **current_state
         {
+            ClientFwState::Setup |
             ClientFwState::Connecting |
             ClientFwState::Syncing |
             ClientFwState::Init => true,
@@ -187,7 +188,7 @@ impl Plugin for ClientFwTickPlugin
         app.add_systems(PostUpdate,
                 (
                     // capture ClientInitializationState changes
-                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
+                    apply_state_transitions,
                     update_initialization_cache.run_if(client_is_initializing),
                     send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()

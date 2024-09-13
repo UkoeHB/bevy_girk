@@ -1,26 +1,19 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
+use bevy_girk_game_fw::{ClientPacket, GameFwClients, GamePacket};
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::client::{ClientSet, ServerInitTick};
 use bevy_replicon::core::common_conditions::{client_connected, server_running};
-use bevy_replicon::core::channels::RepliconChannel;
-use bevy_replicon::core::replicon_tick::RepliconTick;
-use bevy_replicon::core::ClientId;
 use bevy_replicon::prelude::{
-    ChannelKind, FromClient, ReplicatedClients, RepliconChannels, RepliconClient, RepliconServer, SendMode, ToClients
+    ClientId, ChannelKind, FromClient, ReplicatedClients, RepliconChannel, RepliconChannels, RepliconClient,
+    RepliconServer, SendMode, ToClients, RepliconTick, ClientSet, ServerInitTick
 };
 use bevy_replicon::server::ServerSet;
 use bincode::Options;
 use bytes::Bytes;
-use ordered_multimap::ListOrderedMultimap;
 
 //standard shortcuts
 use std::collections::HashMap;
-use std::marker::PhantomData;
-use std::time::Duration;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------

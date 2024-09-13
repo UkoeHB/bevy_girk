@@ -1,8 +1,8 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_game_fw::*;
-use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
+use crate::LobbyData;
+use bevy_girk_game_fw::GameOverReport;
+use bevy_girk_game_instance::GameStartInfo;
+use bevy_girk_wiring_common::ServerConnectToken;
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};

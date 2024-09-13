@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::*;
+use crate::LobbyData;
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};

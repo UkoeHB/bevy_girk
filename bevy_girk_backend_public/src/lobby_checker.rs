@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::*;
+use crate::{Lobby, LobbyMemberData};
 
 //third-party shortcuts
 

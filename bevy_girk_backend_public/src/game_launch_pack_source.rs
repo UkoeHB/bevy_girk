@@ -1,13 +1,12 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_game_instance::*;
+use bevy_girk_game_instance::GameLaunchPack;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
-use std::boxed::Box;
+
 
 //-------------------------------------------------------------------------------------------------------------------
 

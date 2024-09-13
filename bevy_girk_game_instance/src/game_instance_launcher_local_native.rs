@@ -1,9 +1,9 @@
 //local shortcuts
-use crate::*;
+use crate::{GameFactory, game_instance_setup, GameInstanceCommand, GameInstanceReport, GameLaunchPack};
 
 //third-party shortcuts
 use enfync::{AdoptOrDefault, Handle};
-use bevy_girk_utils::*;
+use bevy_girk_utils::IoSender;
 
 //standard shortcuts
 
@@ -41,32 +41,32 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
         let game_id = launch_pack.game_id;
         let game_factory = self.game_factory.clone();
         let instance_handle = enfync::builtin::native::CPUHandle::adopt_or_default().spawn(
-                async move
-                {
-                    let report_sender_clone = report_sender.clone();
-                    let Ok(result) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
-                            move ||
-                            {
-                                let Ok(mut app) = game_instance_setup(
-                                    game_factory,
-                                    launch_pack,
-                                    report_sender_clone,
-                                    command_receiver_clone,
-                                ) else {
-                                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                                    return false;
-                                };
-                                app.run();
-                                true
-                            }
-                        ))
-                    else {
-                        let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                        return false;
-                    };
-                    result
-                }
-            );
+            async move
+            {
+                let report_sender_clone = report_sender.clone();
+                let Ok(result) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+                        move ||
+                        {
+                            let Ok(mut app) = game_instance_setup(
+                                game_factory,
+                                launch_pack,
+                                report_sender_clone,
+                                command_receiver_clone,
+                            ) else {
+                                let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                                return false;
+                            };
+                            app.run();
+                            true
+                        }
+                    ))
+                else {
+                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                    return false;
+                };
+                result
+            }
+        );
 
         GameInstance::new(game_id, command_sender, command_receiver, instance_handle)
     }

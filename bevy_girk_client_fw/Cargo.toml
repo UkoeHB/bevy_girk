@@ -8,13 +8,13 @@ test    = false
 doctest = false
 
 [dependencies]
-bevy           = { workspace = true, features = ["bevy_state"] }
-bevy_cobweb    = { workspace = true }
-bevy_replicon  = { workspace = true }
-bytes          = { workspace = true }
+bevy = { workspace = true, features = ["bevy_state"] }
+bevy_cobweb = { workspace = true }
+bevy_replicon = { workspace = true }
+bytes = { workspace = true }
 iyes_progress  = { workspace = true }
-serde          = { workspace = true }
-tracing        = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
 
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
-bevy_girk_utils   = { path = "../bevy_girk_utils" }
+bevy_girk_utils = { path = "../bevy_girk_utils" }

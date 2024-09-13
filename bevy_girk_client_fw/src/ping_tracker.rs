@@ -1,6 +1,4 @@
 //local shortcuts
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;

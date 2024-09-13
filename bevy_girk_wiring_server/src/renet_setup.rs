@@ -1,20 +1,19 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::syscall;
-use bevy_renet2::renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
-use bevy_renet2::renet2::transport::{
-    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerSetupConfig,
-};
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
+use renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
+use renet2::transport::{
+    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
+    ServerSetupConfig, new_memory_sockets, in_memory_server_addr, BoxedSocket
+};
 
 //standard shortcuts
-use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::net::SocketAddr;
+use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -74,7 +73,7 @@ fn add_native_socket(
     #[cfg(feature = "native_transport")]
     {
         let wildcard_addr = SocketAddr::new(config.server_ip.into(), 0);
-        let server_socket = UdpSocket::bind(wildcard_addr).expect("renet server address should be bindable");
+        let server_socket = std::net::UdpSocket::bind(wildcard_addr).expect("renet server address should be bindable");
         let socket = NativeSocket::new(server_socket).unwrap();
         let addrs = vec![socket.addr().unwrap()];
 
@@ -156,7 +155,7 @@ pub(crate) fn create_native_server(
 
     // prepare udp socket
     // - finalizes the public address (wildcards should be resolved)
-    let server_socket = UdpSocket::bind(server_config.socket_addresses[0][0])
+    let server_socket = std::net::UdpSocket::bind(server_config.socket_addresses[0][0])
         .expect("renet server address should be bindable");
     server_config.socket_addresses = vec![vec![server_socket.local_addr().unwrap()]];
 

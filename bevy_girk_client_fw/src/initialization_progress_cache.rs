@@ -2,7 +2,7 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
-use iyes_progress::prelude::*;
+use iyes_progress::prelude::Progress;
 
 //standard shortcuts
 

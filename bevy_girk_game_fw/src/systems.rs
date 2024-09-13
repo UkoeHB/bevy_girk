@@ -128,10 +128,10 @@ pub(crate) fn start_end_countdown(ending_game_fw_tick: Res<GameFwTick>, mut game
 //todo: consider exiting early if all clients have acked the game end state
 pub(crate) fn try_exit_app(
     current_game_state : Res<State<GameFwState>>,
-    game_fw_tick      : Res<GameFwTick>,
-    game_end_tick     : Res<GameFwPreEndTick>,
-    game_fw_config    : Res<GameFwConfig>,
-    mut app_exit      : EventWriter<AppExit>,
+    game_fw_tick       : Res<GameFwTick>,
+    game_end_tick      : Res<GameFwPreEndTick>,
+    game_fw_config     : Res<GameFwConfig>,
+    mut app_exit       : EventWriter<AppExit>,
 ){
     // sanity check
     if *current_game_state != GameFwState::End

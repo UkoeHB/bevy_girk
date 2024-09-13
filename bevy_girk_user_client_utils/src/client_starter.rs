@@ -3,10 +3,10 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_girk_client_instance::*;
-use bevy_girk_game_instance::*;
-use bevy_girk_wiring_common::*;
 use bevy_cobweb::prelude::*;
+use bevy_girk_client_instance::ClientInstanceCommand;
+use bevy_girk_game_instance::GameStartInfo;
+use bevy_girk_wiring_common::ServerConnectToken;
 
 //standard shortcuts
 
@@ -59,7 +59,7 @@ impl ClientStarter
     pub fn start(&self, c: &mut Commands, token: ServerConnectToken) -> Result<(), ()>
     {
         let Some(start_info) = &self.start_info else { return Err(()); };
-        c.add(ClientInstanceCommand::Start{ });
+        c.add(ClientInstanceCommand::Start(token, start_info.clone()));
         Ok(())
     }
 
@@ -90,7 +90,7 @@ impl Plugin for ClientStarterPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.initt_react_resource::<ClientStarter>();
+        app.init_react_resource::<ClientStarter>();
     }
 }
 

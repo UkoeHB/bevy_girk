@@ -1,26 +1,26 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
+use crate::{setup_combo_renet_server, ServerEventHandlingPlugin};
+use bevy_girk_game_fw::{
+    ClientReadiness, GameFwClients, GameFwConfig, GameFwSetPrivate, GameInitProgress, Readiness
+};
+use bevy_girk_wiring_common::{ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm, GameServerSetupConfig};
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::*;
+use bevy_replicon::prelude::{
+    ClientPlugin, ClientEventsPlugin, RepliconPlugins, ServerPlugin, TickPolicy, VisibilityPolicy
+};
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
 use bevy_replicon_renet2::RepliconRenetServerPlugin;
-#[allow(unused_imports)]
-use bevy_renet2::renet2::transport::{ServerAuthentication, ServerSetupConfig};
 
 //standard shortcuts
-use std::net::SocketAddr;
 use std::time::Duration;
-use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
 //todo: use bevy_replicon events once they implement Debug
-fn log_server_events(mut server_events: EventReader<bevy_renet2::renet2::ServerEvent>)
+fn log_server_events(mut server_events: EventReader<renet2::ServerEvent>)
 {
     for event in server_events.read()
     {
@@ -195,11 +195,11 @@ pub fn prepare_game_app_network(
                     native_count, wasm_count, memory_clients);
             }
 
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos()
+            wasm_timer::SystemTime::now().duration_since(wasm_timer::UNIX_EPOCH).unwrap_or_default().as_nanos()
         }
 
         #[cfg(not(target_family = "wasm"))]
-        bevy_renet2::renet2::transport::generate_random_bytes::<32>()
+        renet2::transport::generate_random_bytes::<32>()
     };
 
     setup_combo_renet_server(

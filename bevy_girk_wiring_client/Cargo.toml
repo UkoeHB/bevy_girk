@@ -7,13 +7,34 @@ edition.workspace = true
 test    = false
 doctest = false
 
-[dependencies]
-bevy                 = { workspace = true }
-bevy_cobweb          = { workspace = true }
-bevy_renet2          = { workspace = true, features = [ "native_transport", "serde" ] }
-bevy_replicon        = { workspace = true }
-bevy_replicon_renet2 = { workspace = true, features = [ "native_transport", "renet_serde" ] }
-serde                = { workspace = true }
-tracing              = { workspace = true }
+[features]
+memory_transport = [
+    "bevy_girk_wiring_common/memory_transport",
+    "bevy_renet2/memory_transport",
+    "bevy_replicon_renet2/memory_transport",
+    "renet2/memory_transport"
+]
 
+[dependencies]
+bevy = { workspace = true }
+bevy_cobweb = { workspace = true }
+bevy_replicon = { workspace = true, features = ["parent_sync", "client"] }
+iyes_progress = { workspace = true }
+tracing = { workspace = true }
+wasm-timer = { workspace = true }
+
+ordered-multimap = { version = "0.7" }
+
+bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
+bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+bevy_renet2 = { workspace = true, features = ["native_transport"] }
+bevy_replicon_renet2 = { workspace = true, features = ["client", "native_transport"] }
+renet2 = { workspace = true, features = ["bevy", "native_transport"] }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+bevy_renet2 = { workspace = true, features = ["wt_client_transport"] }
+bevy_replicon_renet2 = { workspace = true, features = ["client", "wt_client_transport"] }
+renet2 = { workspace = true, features = ["bevy", "wt_client_transport"] }

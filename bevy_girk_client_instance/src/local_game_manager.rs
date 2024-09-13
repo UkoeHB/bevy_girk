@@ -1,4 +1,9 @@
 //local shortcuts
+use crate::{ClientFactory, ClientInstanceCommand};
+use bevy_girk_client_fw::ClientInstanceState;
+use bevy_girk_game_fw::GameOverReport;
+use bevy_girk_game_instance::{GameInstance, GameInstanceLauncherLocal, GameInstanceReport};
+use bevy_girk_utils::IoReceiver;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -6,6 +11,7 @@ use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //standard shortcuts
 use std::{fmt::Debug, sync::{Arc, Mutex}};
+use std::time::Duration;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------

@@ -11,11 +11,10 @@ doctest = false
 memory_transport = ["renet2/memory_transport"]
 
 [dependencies]
-bevy                 = { workspace = true }
-bevy_cobweb          = { workspace = true }
-bevy_renet2          = { workspace = true, features = ["transport", "serde"] }
-bevy_replicon        = { workspace = true }
-bevy_replicon_renet2 = { workspace = true }
-bevy_simplenet       = { workspace = true }
-serde                = { workspace = true }
-tracing              = { workspace = true }
+bevy = { workspace = true }
+bevy_replicon = { workspace = true }
+renet2 = { workspace = true, features = ["transport", "serde"] }
+serde = { workspace = true }
+tracing = { workspace = true }
+
+bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }

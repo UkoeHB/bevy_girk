@@ -1,77 +1,12 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_renet2::renet2::transport::{ConnectToken, ServerCertHash};
-use bevy_replicon::prelude::*;
-use serde::{Deserialize, Serialize};
-use serde_with::{Bytes, serde_as};
+use bevy::prelude::*;
+use bevy_replicon::prelude::{ChannelKind, RepliconChannel, RepliconChannels};
+use bevy_girk_game_fw::{ClientPacket, GamePacket};
 
 //standard shortcuts
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
-use std::vec::Vec;
-
-//-------------------------------------------------------------------------------------------------------------------
-
-#[derive(Debug, Copy, Clone)]
-pub struct TargetClient(pub u64);
-#[derive(Debug, Copy, Clone)]
-pub struct TargetAll;
-#[derive(Debug, Copy, Clone)]
-pub struct TargetAllExcept(pub u64);
-
-impl From<TargetClient> for SendMode
-{
-    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(ClientId::new(client.0)) }
-}
-impl From<TargetAll> for SendMode
-{
-    fn from(_: TargetAll) -> SendMode { return SendMode::Broadcast }
-}
-impl From<TargetAllExcept> for SendMode
-{
-    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(ClientId::new(exception.0)) }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-#[derive(Debug, Copy, Clone)]
-pub struct SendUnreliable;
-#[derive(Debug, Copy, Clone)]
-pub struct SendUnordered;
-#[derive(Debug, Copy, Clone)]
-pub struct SendOrdered;
-
-impl From<SendUnreliable> for ChannelKind
-{
-    fn from(_: SendUnreliable) -> ChannelKind { return ChannelKind::Unreliable }
-}
-impl From<SendUnordered> for ChannelKind
-{
-    fn from(_: SendUnordered) -> ChannelKind { return ChannelKind::Unordered }
-}
-impl From<SendOrdered> for ChannelKind
-{
-    fn from(_: SendOrdered) -> ChannelKind { return ChannelKind::Ordered }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Helper trait for converting a message type into its send policy.
-///
-/// Especially useful for enum-type messages where different variants have different send policies.
-pub trait IntoChannelKind
-{
-    fn into_event_type(&self) -> ChannelKind;
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Default implementation for tests.
-impl IntoChannelKind for ()
-{
-    fn into_event_type(&self) -> ChannelKind { ChannelKind::Unreliable }
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 

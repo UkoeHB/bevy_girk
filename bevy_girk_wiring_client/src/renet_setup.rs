@@ -1,5 +1,4 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -14,7 +13,7 @@ use bevy_replicon_renet2::RenetChannelsExt;
 
 //standard shortcuts
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
-use std::time::{SystemTime, UNIX_EPOCH};
+use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -58,17 +57,17 @@ fn create_wasm_client(
     server_channels_config : Vec<ChannelConfig>,
     client_channels_config : Vec<ChannelConfig>,
     authentication         : ClientAuthentication,
-    config                 : WebTransportClientConfig,
+    config                 : renet2::transport::WebTransportClientConfig,
 ) -> (RenetClient, NetcodeClientTransport)
 {
     // make client
     let client = RenetClient::new(
-            ConnectionConfig{
-                    server_channels_config,
-                    client_channels_config,
-                    ..default()
-                }
-        );
+        ConnectionConfig{
+            server_channels_config,
+            client_channels_config,
+            ..default()
+        }
+    );
 
     // make transport
     let current_time = SystemTime::now()
@@ -77,7 +76,7 @@ fn create_wasm_client(
     let client_transport = NetcodeClientTransport::new(
         current_time,
         authentication,
-        WebTransportClient::new(config)
+        renet2::transport::WebTransportClient::new(config)
     ).unwrap();
 
     (client, client_transport)
@@ -91,7 +90,7 @@ fn create_memory_client(
     server_channels_config: Vec<ChannelConfig>,
     client_channels_config: Vec<ChannelConfig>,
     authentication: ClientAuthentication,
-    client_socket: MemorySocketClient,
+    client_socket: renet2::transport::MemorySocketClient,
 ) -> (RenetClient, NetcodeClientTransport)
 {
     // make client
@@ -150,7 +149,7 @@ fn setup_wasm_renet_client(
     In((
         authentication,
         config
-    ))                      : In<(ClientAuthentication, WebTransportClientConfig)>,
+    ))                      : In<(ClientAuthentication, renet2::transport::WebTransportClientConfig)>,
     mut client_app_commands : Commands,
     replicon_channels       : Res<RepliconChannels>,
 ){
@@ -181,7 +180,7 @@ fn setup_memory_renet_client(
     In((
         authentication,
         client
-    ))                      : In<(ClientAuthentication, MemorySocketClient)>,
+    ))                      : In<(ClientAuthentication, renet2::transport::MemorySocketClient)>,
     mut client_app_commands : Commands,
     replicon_channels       : Res<RepliconChannels>,
 ){
