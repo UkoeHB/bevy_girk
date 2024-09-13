@@ -5,6 +5,8 @@ use bevy_girk_game_instance::GameLaunchPack;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::GameStartRequest;
+
 //standard shortcuts
 
 

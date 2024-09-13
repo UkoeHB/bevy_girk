@@ -2,6 +2,8 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_game_fw::Tick;
+use bevy_girk_utils::tps_to_duration;
 
 //standard shortcuts
 use std::time::Duration;

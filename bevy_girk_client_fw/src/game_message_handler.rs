@@ -1,5 +1,5 @@
 //local shortcuts
-use bevy_girk_game_fw::{GameFwMsg, GameMessageData, GamePacket};
+use bevy_girk_game_fw::{AimedMsg, GameFwMsg, GameMessageData, GamePacket, Tick};
 use bevy_girk_utils::{deser_msg, IntoChannelKind};
 
 //third-party shortcuts

@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::{ClientFactoryImpl, ClientInstanceReport};
+use crate::{ClientFactoryImpl, ClientFactoryPlugin, ClientInstanceReport, LocalGamePlugin};
 use bevy_girk_game_instance::GameFactory;
 
 //third-party shortcuts
@@ -28,7 +28,7 @@ impl ClientInstancePlugin
         F: ClientFactoryImpl + Send + Sync + Debug + 'static
     {
         Self{
-            factory: Arc::new(Mutex::new(Some(Box::new(factory_impl)))),
+            factory: Arc::new(Mutex::new(Some(Box::new(client_factory)))),
             local_factory: Arc::new(Mutex::new(local_game_factory)),
         }
     }

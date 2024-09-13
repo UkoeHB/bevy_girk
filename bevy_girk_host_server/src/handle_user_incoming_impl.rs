@@ -78,7 +78,7 @@ pub(crate) fn user_make_lobby(
     // assemble lobby member data
     let Some(env) = users_cache.get_user_env(user_id)
     else { tracing::error!(user_id, "failed getting user env"); return; };
-    let member_data = LobbyMemberData{ env, color: member_color };
+    let member_data = LobbyMemberData{ connection: env.into(), color: member_color };
 
     // make lobby
     let Ok(lobby_id) = lobbies_cache.new_lobby(user_id, member_data, password, custom_data)
@@ -114,7 +114,7 @@ pub(crate) fn user_join_lobby(
     // assemble lobby member data
     let Some(env) = users_cache.get_user_env(user_id)
     else { tracing::error!(user_id, "failed getting user env"); return; };
-    let member_data = LobbyMemberData{ env, color: member_color };
+    let member_data = LobbyMemberData{ connection: env.into(), color: member_color };
 
     // try to join the lobby
     if !lobbies_cache.try_add_member(lobby_id, user_id, member_data, &password)

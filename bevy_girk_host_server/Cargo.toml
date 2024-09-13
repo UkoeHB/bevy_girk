@@ -21,4 +21,5 @@ tracing = { workspace = true }
 bevy_girk_backend_public = { path = "../bevy_girk_backend_public" }
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
+bevy_girk_utils = { path = "../bevy_girk_utils" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }

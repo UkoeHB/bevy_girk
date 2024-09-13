@@ -12,7 +12,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-process = ["dep:tokio", "dep:serde_json"]
+process = ["dep:tokio", "dep:enfync", "dep:serde_json"]
 
 [dependencies]
 bevy = { workspace = true }
@@ -26,5 +26,9 @@ async-channel = { version = "2.1" }
 crossbeam = { version = "0.8" }
 siphasher = { version = "1.0" }
 
+enfync = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true, features = ["io-util", "process", "macros"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rand = { version = "0.8" }

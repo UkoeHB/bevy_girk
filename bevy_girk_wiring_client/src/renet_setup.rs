@@ -3,17 +3,18 @@
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::syscall;
-use bevy_renet2::renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
+use bevy_renet2::renet2::{ChannelConfig, ConnectionConfig, RenetClient};
 use bevy_renet2::renet2::transport::{
-    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerSetupConfig,
+    ClientAuthentication, NativeSocket, NetcodeClientTransport
 };
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
 
 //standard shortcuts
-use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
-use wasm_timer::{SystemTime, UNIX_EPOCH};
+use std::net::{SocketAddr, UdpSocket};
+use wasm_timer::SystemTime;
+
+use crate::ClientConnectPack;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------

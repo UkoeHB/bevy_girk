@@ -7,7 +7,7 @@ publish = false
 [dev-dependencies]
 bevy                     = { workspace = true, features = [ "bevy_state" ] }
 bevy_cobweb              = { workspace = true }
-bevy_renet2              = { workspace = true, features = [ "native_transport" ] }
+bevy_renet2              = { workspace = true }
 bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
 bevy_simplenet           = { workspace = true }
@@ -22,15 +22,20 @@ tracing            = { workspace = true }
 tracing-subscriber = { workspace = true, features = [ "env-filter", "std", "tracing-log" ] }
 url                = { workspace = true }
 
-bevy_girk_backend_public  = { path = "../bevy_girk_backend_public", features = ["client"] }
-bevy_girk_client_fw       = { path = "../bevy_girk_client_fw" }
+bevy_girk_backend_public = { path = "../bevy_girk_backend_public", features = ["client"] }
+bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
 bevy_girk_client_instance = { path = "../bevy_girk_client_instance" }
-bevy_girk_game_fw         = { path = "../bevy_girk_game_fw" }
+bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_hub_server = { path = "../bevy_girk_game_hub_server" }
-bevy_girk_game_instance   = { path = "../bevy_girk_game_instance" }
-bevy_girk_host_server     = { path = "../bevy_girk_host_server" }
-bevy_girk_utils           = { path = "../bevy_girk_utils" }
-bevy_girk_wiring          = { path = "../bevy_girk_wiring" }
+bevy_girk_game_instance = { path = "../bevy_girk_game_instance", features = ["process"] }
+bevy_girk_host_server = { path = "../bevy_girk_host_server" }
+bevy_girk_utils = { path = "../bevy_girk_utils", features = ["process"] }
+bevy_girk_wiring_client = { path = "../bevy_girk_wiring_client", features = ["memory_transport"] }
+bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common", features = ["memory_transport"] }
+
+[dependencies.bevy_girk_wiring_server]
+path = "../bevy_girk_wiring_server"
+features = ["memory_transport", "native_transport", "wasm_transport"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rand = { version = "0.8" }

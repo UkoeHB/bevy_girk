@@ -1,6 +1,6 @@
 //local shortcuts
-use bevy_girk_game_fw::{AimedMsg, ClientPacket, ClientRequestData};
-use bevy_girk_utils::IntoChannelKind;
+use bevy_girk_game_fw::{AimedMsg, ClientFwRequest, ClientPacket, ClientRequestData};
+use bevy_girk_utils::{ser_msg, IntoChannelKind};
 
 //third-party shortcuts
 use bevy::prelude::*;

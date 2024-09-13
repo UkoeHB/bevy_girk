@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::LobbyData;
+use crate::{LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::GameStartInfo;
 use bevy_girk_wiring_common::ServerConnectToken;

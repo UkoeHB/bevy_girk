@@ -30,6 +30,7 @@ tokio = { workspace = true, optional = true, default-features = false, features 
 
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
+bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasmtimer = { version = "0.2" }  # Provides tokio::sleep

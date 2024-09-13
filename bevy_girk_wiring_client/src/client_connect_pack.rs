@@ -1,12 +1,11 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_wiring_commong::{
+use bevy_girk_wiring_common::{
     client_address_from_server_address, connect_token_from_bytes, ServerConnectToken
 };
 
 //third-party shortcuts
 use bevy::prelude::*;
-use renet2::ClientAuthentication;
+use renet2::transport::ClientAuthentication;
 
 //standard shortcuts
 use std::net::SocketAddr;

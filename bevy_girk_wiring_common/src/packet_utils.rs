@@ -2,11 +2,12 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_utils::{SendOrdered, SendUnordered, SendUnreliable};
 use bevy_replicon::prelude::{ChannelKind, RepliconChannel, RepliconChannels};
 use bevy_girk_game_fw::{ClientPacket, GamePacket};
 
 //standard shortcuts
-use std::time::Duration;
+use std::{marker::PhantomData, time::Duration};
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -14,7 +15,7 @@ use std::time::Duration;
 #[derive(Resource)]
 pub struct EventChannel<T>
 {
-    id: u8,
+    pub id: u8,
     marker: PhantomData<T>,
 }
 

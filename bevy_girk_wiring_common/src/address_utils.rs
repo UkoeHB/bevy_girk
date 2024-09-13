@@ -3,7 +3,7 @@
 //third-party shortcuts
 
 //standard shortcuts
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
 
 //-------------------------------------------------------------------------------------------------------------------
 

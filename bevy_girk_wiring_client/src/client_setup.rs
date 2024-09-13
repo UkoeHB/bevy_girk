@@ -1,18 +1,23 @@
 //local shortcuts
-use crate::{ClientConnectPack, ClientEventHandlingPlugin};
-use bevy_girk_client_fw::*;
+use crate::{setup_renet_client, ClientConnectPack, ClientEventHandlingPlugin, ReceiveServerEventsSet};
+use bevy_girk_client_fw::{
+    ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet,ClientFwSetPrivate, ClientFwState,
+    ClientInstanceState
+};
 use bevy_girk_client_instance::ClientInstanceCommand;
 use bevy_girk_game_fw::GameInitProgress;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_renet2::{client_disconnected, client_just_connected, client_just_disconnected};
+use bevy_girk_utils::{just_entered_state, set_and_apply_state};
+use bevy_girk_wiring_common::prepare_network_channels;
+use bevy_renet2::{client_connected, client_disconnected, client_just_connected, client_just_disconnected};
 use bevy_replicon::client::ServerInitTick;
 use bevy_replicon::prelude::{
-    AppRuleExt, ClientSet, RepliconPlugins, ServerPlugin
+    AppRuleExt, ClientSet, RepliconPlugins, ServerEventsPlugin, ServerPlugin
 };
 use bevy_replicon_renet2::RepliconRenetClientPlugin;
-use iyes_progress::Progress;
+use iyes_progress::{Progress, ProgressSystem};
 use renet2::transport::NetcodeClientTransport;
 use renet2::{transport::NetcodeTransportError, RenetClient};
 

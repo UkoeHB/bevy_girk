@@ -1,14 +1,14 @@
 //local shortcuts
 use crate::{setup_combo_renet_server, ServerEventHandlingPlugin};
 use bevy_girk_game_fw::{
-    ClientReadiness, GameFwClients, GameFwConfig, GameFwSetPrivate, GameInitProgress, Readiness
+    ClientReadiness, GameFwClients, GameFwConfig, GameFwPlugin, GameFwSet, GameFwSetPrivate, GameInitProgress, Readiness
 };
-use bevy_girk_wiring_common::{ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm, GameServerSetupConfig};
+use bevy_girk_wiring_common::{prepare_network_channels, ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm, GameServerSetupConfig};
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    ClientPlugin, ClientEventsPlugin, RepliconPlugins, ServerPlugin, TickPolicy, VisibilityPolicy
+    AppRuleExt, ClientEventsPlugin, ClientPlugin, RepliconPlugins, ServerPlugin, TickPolicy, VisibilityPolicy
 };
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
 use bevy_replicon_renet2::RepliconRenetServerPlugin;
@@ -208,7 +208,7 @@ pub fn prepare_game_app_network(
         memory_clients,
         native_count,
         wasm_count,
-        auth_key,
+        &auth_key,
     )
 }
 

@@ -19,6 +19,8 @@ bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 renet2 = { workspace = true, features = ["transport", "serde"] }
 serde = { workspace = true }
+serde_with = { workspace = true }
 tracing = { workspace = true }
 
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
+bevy_girk_utils = { path = "../bevy_girk_utils" }

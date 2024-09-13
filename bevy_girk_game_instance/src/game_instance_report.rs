@@ -1,7 +1,7 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 
+use bevy_girk_wiring_common::{ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm};
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};

@@ -71,7 +71,7 @@ impl RunningGamesCache
         if self.has_game(game_id) { return Err(()); }
 
         // launch the game instance
-        let game_instance = self.game_launcher.launch(false, launch_pack, self.instance_report_sender.clone());
+        let game_instance = self.game_launcher.launch(launch_pack, self.instance_report_sender.clone());
 
         // insert the game
         if let Some(_) = self.games.insert(game_id, (game_instance, start_request, self.timer.elapsed()))

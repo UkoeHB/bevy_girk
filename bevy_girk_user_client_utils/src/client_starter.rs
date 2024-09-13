@@ -1,5 +1,4 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -67,7 +66,7 @@ impl ClientStarter
     pub fn clear(&mut self, game_id: u64)
     {
         if self.game_id != game_id { return; }
-        self.starter = None;
+        self.start_info = None;
     }
 
     /// Clears the starter regardless of the current game id.
@@ -77,7 +76,7 @@ impl ClientStarter
     /// game-start package when you reconnect.
     pub fn force_clear(&mut self)
     {
-        self.starter = None;
+        self.start_info = None;
     }
 }
 

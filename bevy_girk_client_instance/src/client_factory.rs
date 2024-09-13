@@ -1,6 +1,4 @@
 //local shortcuts
-use crate::*;
-use bevy_girk_client_fw::ClientInstanceState;
 use bevy_girk_game_instance::GameStartInfo;
 use bevy_girk_wiring_common::ServerConnectToken;
 

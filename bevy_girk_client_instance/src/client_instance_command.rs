@@ -1,6 +1,6 @@
 //local shortcuts
-use crate::{ClientFactory, ClientFwConfig, ClientInstanceReport, LocalGameManager};
-use bevy_girk_client_fw::ClientInstanceState;
+use crate::{ClientFactory, ClientInstanceReport, LocalGameManager};
+use bevy_girk_client_fw::{ClientFwConfig, ClientInstanceState};
 use bevy_girk_game_instance::{GameLaunchPack, GameStartInfo};
 use bevy_girk_utils::set_and_apply_state;
 use bevy_girk_wiring_common::ServerConnectToken;
@@ -50,7 +50,7 @@ impl Command for ClientInstanceCommand
                 set_and_apply_state(w, ClientInstanceState::Game);
             }
             Self::StartLocal(launch_pack) => {
-                tracing::debug!("starting local game {}", start_info.game_id);
+                tracing::debug!("starting local game {}", launch_pack.game_id);
 
                 // Launch game app.
                 // - The client will be set up automatically once a GameStartReport is detected.

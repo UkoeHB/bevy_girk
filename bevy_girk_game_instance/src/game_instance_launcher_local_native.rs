@@ -1,9 +1,9 @@
 //local shortcuts
-use crate::{GameFactory, game_instance_setup, GameInstanceCommand, GameInstanceReport, GameLaunchPack};
+use crate::{game_instance_setup, GameFactory, GameInstance, GameInstanceCommand, GameInstanceLauncherImpl, GameInstanceReport, GameLaunchPack};
 
 //third-party shortcuts
 use enfync::{AdoptOrDefault, Handle};
-use bevy_girk_utils::IoSender;
+use bevy_girk_utils::{new_io_channel, IoSender};
 
 //standard shortcuts
 
@@ -47,13 +47,14 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                 let Ok(result) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
                         move ||
                         {
+                            let report_sender_clone2 = report_sender_clone.clone();
                             let Ok(mut app) = game_instance_setup(
                                 game_factory,
                                 launch_pack,
                                 report_sender_clone,
                                 command_receiver_clone,
                             ) else {
-                                let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                                let _ = report_sender_clone2.send(GameInstanceReport::GameAborted(game_id));
                                 return false;
                             };
                             app.run();

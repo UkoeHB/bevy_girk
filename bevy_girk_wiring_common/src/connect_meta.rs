@@ -2,11 +2,11 @@
 use crate::*;
 
 //third-party shortcuts
-use renet2::transport::{ConnectToken, ServerCertHash, MemorySocketClient};
+use renet2::transport::{in_memory_server_addr, ConnectToken, MemorySocketClient, ServerCertHash};
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4};
+use std::{net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4}, time::Duration};
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ impl ConnectMetaMemory
     ///
     /// Note that [`ConnectMetaMemory`] can contain sockets for multiple clients. We search available clients for
     /// the requested client id, and return `None` on failure.
-    pub fn connect_token(
+    pub fn new_connect_token(
         &self,
         current_time : Duration,
         client_id    : u64,
@@ -118,7 +118,7 @@ impl ConnectMetaNative
     }
 
     /// Generates a new connect token for a native client.
-    pub fn connect_token(
+    pub fn new_connect_token(
         &self,
         current_time : Duration,
         client_id    : u64,
@@ -156,7 +156,7 @@ pub struct ConnectMetaWasm
 impl ConnectMetaWasm
 {
     /// Generates a new connect token for a wasm client.
-    pub fn connect_token(
+    pub fn new_connect_token(
         &self,
         current_time : Duration,
         client_id    : u64,

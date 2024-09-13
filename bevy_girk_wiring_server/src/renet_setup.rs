@@ -2,13 +2,13 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_cobweb::prelude::syscall;
+use bevy_girk_wiring_common::{ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm, GameServerSetupConfig};
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
-use renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
+use renet2::{ChannelConfig, ConnectionConfig, RenetServer};
 use renet2::transport::{
-    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerSetupConfig, new_memory_sockets, in_memory_server_addr, BoxedSocket
+    in_memory_server_addr, new_memory_sockets, BoxedSocket, NetcodeServerTransport, ServerAuthentication,
+    ServerSetupConfig, TransportSocket
 };
 
 //standard shortcuts
@@ -24,7 +24,7 @@ fn add_memory_socket(
     socket_addresses: &mut Vec<Vec<SocketAddr>>,
     sockets: &mut Vec<BoxedSocket>,
     auth_key: &[u8; 32],
-) -> Option<ConnectMetaWasm>
+) -> Option<ConnectMetaMemory>
 {
     if memory_clients.len() == 0 { return None }
 
@@ -38,10 +38,10 @@ fn add_memory_socket(
         let (server_socket, client_sockets) = new_memory_sockets(memory_clients, true);
         let addrs = vec![in_memory_server_addr()];
 
-        meta = ConnectMetaMemory {
+        let meta = ConnectMetaMemory {
             server_config: config.clone(),
             clients: client_sockets,
-            socket_id: sockets.len(),  // DO THIS BEFORE PUSHING SOCKET
+            socket_id: sockets.len() as u8,  // DO THIS BEFORE PUSHING SOCKET
             auth_key: auth_key.clone(),
         };
 
@@ -61,7 +61,7 @@ fn add_native_socket(
     socket_addresses: &mut Vec<Vec<SocketAddr>>,
     sockets: &mut Vec<BoxedSocket>,
     auth_key: &[u8; 32],
-) -> Option<ConnectMetaWasm>
+) -> Option<ConnectMetaNative>
 {
     if native_count == 0 { return None }
 
@@ -74,13 +74,13 @@ fn add_native_socket(
     {
         let wildcard_addr = SocketAddr::new(config.server_ip.into(), 0);
         let server_socket = std::net::UdpSocket::bind(wildcard_addr).expect("renet server address should be bindable");
-        let socket = NativeSocket::new(server_socket).unwrap();
+        let socket = renet2::transport::NativeSocket::new(server_socket).unwrap();
         let addrs = vec![socket.addr().unwrap()];
 
-        meta = ConnectMetaNative {
+        let meta = ConnectMetaNative {
             server_config: config.clone(),
             server_addresses: addrs.clone(),
-            socket_id: sockets.len(),  // DO THIS BEFORE PUSHING SOCKET
+            socket_id: sockets.len() as u8,  // DO THIS BEFORE PUSHING SOCKET
             auth_key: auth_key.clone(),
         };
 
@@ -111,20 +111,19 @@ fn add_wasm_socket(
 
     #[cfg(feature = "wasm_transport")]
     {
-        if wasm_count > 0
-        {
+        use enfync::AdoptOrDefault;
         let wildcard_addr = SocketAddr::new(config.server_ip.into(), 0);
-        let (wt_config, cert_hash) = WebTransportServerConfig::new_selfsigned(wildcard_addr, wasm_clients);
+        let (wt_config, cert_hash) = renet2::transport::WebTransportServerConfig::new_selfsigned(wildcard_addr, wasm_count);
         let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
-        let socket = WebTransportServer::new(wt_config, handle.0).unwrap();
+        let socket = renet2::transport::WebTransportServer::new(wt_config, handle.0).unwrap();
         let addrs = vec![socket.addr().unwrap()];
 
-        meta = ConnectMetaWasm {
+        let meta = ConnectMetaWasm {
             server_config: config.clone(),
             server_addresses: addrs.clone(),
-            socket_id: sockets.len(),  // DO THIS BEFORE PUSHING SOCKET
+            socket_id: sockets.len() as u8,  // DO THIS BEFORE PUSHING SOCKET
             auth_key: auth_key.clone(),
-            cart_hashes: vec![cert_hash],
+            cert_hashes: vec![cert_hash],
         };
 
         socket_addresses.push(addrs);
@@ -160,7 +159,7 @@ pub(crate) fn create_native_server(
     server_config.socket_addresses = vec![vec![server_socket.local_addr().unwrap()]];
 
     // make transport
-    let server_transport = NetcodeServerTransport::new(server_config, NativeSocket::new(server_socket).unwrap()).unwrap();
+    let server_transport = NetcodeServerTransport::new(server_config, renet2::transport::NativeSocket::new(server_socket).unwrap()).unwrap();
 
     (server, server_transport)
 }
@@ -229,9 +228,9 @@ pub fn setup_combo_renet_server(
     let mut socket_addresses = Vec::default();
     let mut sockets = Vec::default();
 
-    let memory_meta = add_memory_socket(&config, memory_clients, auth_key, &mut socket_addresses, &mut sockets);
-    let native_meta = add_native_socket(&config, memory_clients, auth_key, &mut socket_addresses, &mut sockets);
-    let wasm_meta = add_wasm_socket(&config, memory_clients, auth_key, &mut socket_addresses, &mut sockets);
+    let memory_meta = add_memory_socket(&config, memory_clients, &mut socket_addresses, &mut sockets, auth_key);
+    let native_meta = add_native_socket(&config, native_count, &mut socket_addresses, &mut sockets, auth_key);
+    let wasm_meta = add_wasm_socket(&config, wasm_count, &mut socket_addresses, &mut sockets, auth_key);
 
     // save final addresses
     let server_config = ServerSetupConfig {
