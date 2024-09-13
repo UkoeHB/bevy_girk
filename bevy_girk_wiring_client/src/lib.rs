@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 mod client_connect_pack;
 mod client_setup;
 mod packet_handling;

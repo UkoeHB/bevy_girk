@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 //module tree
 mod connection_type;
 mod game_launch_pack_source;

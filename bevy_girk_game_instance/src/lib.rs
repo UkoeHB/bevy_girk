@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 //module tree
 mod game_factory;
 mod game_instance;

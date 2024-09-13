@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 mod address_utils;
 mod connect_meta;
 mod packet_utils;
