@@ -1,8 +1,7 @@
 //local shortcuts
 use crate::{setup_renet_client, ClientConnectPack, ClientEventHandlingPlugin, ReceiveServerEventsSet};
 use bevy_girk_client_fw::{
-    ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet,ClientFwSetPrivate, ClientFwState,
-    ClientInstanceState
+    ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet, ClientFwSetPrivate, ClientFwState, ClientInitializationState, ClientInstanceState
 };
 use bevy_girk_client_instance::ClientInstanceCommand;
 use bevy_girk_game_fw::GameInitProgress;
@@ -12,12 +11,12 @@ use bevy::prelude::*;
 use bevy_girk_utils::{just_entered_state, set_and_apply_state};
 use bevy_girk_wiring_common::prepare_network_channels;
 use bevy_renet2::{client_connected, client_disconnected, client_just_connected, client_just_disconnected};
-use bevy_replicon::client::ServerInitTick;
+use bevy_replicon::client::ServerUpdateTick;
 use bevy_replicon::prelude::{
     AppRuleExt, ClientSet, RepliconPlugins, ServerEventsPlugin, ServerPlugin
 };
 use bevy_replicon_renet2::RepliconRenetClientPlugin;
-use iyes_progress::{Progress, ProgressSystem};
+use iyes_progress::{Progress, ProgressReturningSystem};
 use renet2::transport::NetcodeClientTransport;
 use renet2::{transport::NetcodeTransportError, RenetClient};
 
@@ -58,7 +57,7 @@ fn track_replication_initialized(
     In(just_connected) : In<bool>,
     mut initialized    : Local<bool>,
     client             : Res<RenetClient>,
-    tick               : Res<ServerInitTick>
+    tick               : Res<ServerUpdateTick>
 ) -> Progress
 {
     // reset initialized
@@ -89,7 +88,7 @@ fn track_replication_initialized(
 
 fn reinitialize_client(mut c: Commands)
 {
-    c.add(ClientInstanceCommand::RequestConnectToken);
+    c.queue(ClientInstanceCommand::RequestConnectToken);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -295,10 +294,10 @@ pub fn prepare_client_app_replication(
                     .run_if(in_state(ClientFwState::Connecting)),
                 // set initialized when just synchronized
                 // - note: this will not run in the first tick of `ClientFwState::Syncing` because we disabled
-                //   `ClientSet::Receive` for that tick, so ServerInitTick will not change (unless the user manually changes
+                //   `ClientSet::Receive` for that tick, so ServerUpdateTick will not change (unless the user manually changes
                 //   it)
                 set_client_init
-                    .run_if(resource_changed::<ServerInitTick>)
+                    .run_if(resource_changed::<ServerUpdateTick>)
                     .run_if(in_state(ClientFwState::Syncing)),
             )
                 .chain()
@@ -317,13 +316,13 @@ pub fn prepare_client_app_replication(
         .add_systems(Update,
             (
                 //track connection status
-                track_connection_state.track_progress(),
+                track_connection_state.track_progress::<ClientInitializationState>(),
                 //track whether the first replication message post-connect has been received
                 //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
                 //        when a client connects
                 client_just_connected
                     .pipe(track_replication_initialized)
-                    .track_progress(),
+                    .track_progress::<ClientInitializationState>(),
                 //track whether the client is initialized
                 //- note: this leverages the fact that `iyes_progress` collects progress in PostUpdate to ensure
                 //        `ClientInitializationState::Done` will not be entered until `ClientFwState::Init` has run
@@ -331,7 +330,7 @@ pub fn prepare_client_app_replication(
                 //        `ClientInitializationState::Done` has been entered, which can happen in the second Init tick
                 //        at earliest)
                 track_initialization_state
-                    .track_progress()
+                    .track_progress::<ClientInitializationState>()
             )
                 .in_set(ClientFwLoadingSet)
         )

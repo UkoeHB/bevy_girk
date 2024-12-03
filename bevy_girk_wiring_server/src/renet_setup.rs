@@ -145,11 +145,7 @@ pub(crate) fn create_native_server(
 {
     // make server
     let server = RenetServer::new(
-            ConnectionConfig{
-                    server_channels_config,
-                    client_channels_config,
-                    ..default()
-                }
+            ConnectionConfig::from_channels(server_channels_config, client_channels_config)
         );
 
     // prepare udp socket
@@ -217,11 +213,7 @@ pub fn setup_combo_renet_server(
     let client_channels_config = replicon_channels.get_client_configs();
 
     let server = RenetServer::new(
-        ConnectionConfig{
-            server_channels_config,
-            client_channels_config,
-            ..default()
-        }
+        ConnectionConfig::from_channels(server_channels_config, client_channels_config)
     );
 
     // add sockets

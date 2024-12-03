@@ -31,7 +31,7 @@ struct SerializedGamePacket
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Serializes change ticks into a message.
-fn serialize_bytes_with_init_tick(
+fn serialize_bytes_with_update_tick(
     cached      : Option<SerializedGamePacket>,
     change_tick : RepliconTick,
     data        : &[u8],
@@ -99,7 +99,7 @@ fn send_server_packets(
         else { tracing::debug!(?client_id, "ignoring game packet sent to disconnected client"); continue; };
 
         // construct the final message, using the cached bytes if possible
-        let Ok(message) = serialize_bytes_with_init_tick(cached, client.init_tick(), &packet.event.message)
+        let Ok(message) = serialize_bytes_with_update_tick(cached, client.update_tick(), &packet.event.message)
         else { tracing::error!(?client_id, "failed serializing game packet for client"); continue; };
 
         match packet.event.send_policy

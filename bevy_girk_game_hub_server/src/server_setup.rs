@@ -128,7 +128,7 @@ pub fn make_game_hub_server(
                     on_tick_counter(game_hub_server_config.running_game_purge_period_ticks)
                 ),
             update_capacity,
-            handle_shutdown.run_if(on_event::<AppExit>()),
+            handle_shutdown.run_if(on_event::<AppExit>),
         ).chain()
     );
 

@@ -58,7 +58,7 @@ impl ClientStarter
     pub fn start(&self, c: &mut Commands, token: ServerConnectToken) -> Result<(), ()>
     {
         let Some(start_info) = &self.start_info else { return Err(()); };
-        c.add(ClientInstanceCommand::Start(token, start_info.clone()));
+        c.queue(ClientInstanceCommand::Start(token, start_info.clone()));
         Ok(())
     }
 

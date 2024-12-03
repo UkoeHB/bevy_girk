@@ -5,7 +5,7 @@ use bevy_girk_utils::{deser_bytes_partial, SendUnreliable, SendUnordered, SendOr
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_girk_wiring_common::EventChannel;
-use bevy_replicon::client::{ClientSet, ServerInitTick};
+use bevy_replicon::client::{ClientSet, ServerUpdateTick};
 use bevy_replicon::core::common_conditions::client_connected;
 use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::prelude::{
@@ -18,9 +18,9 @@ use ordered_multimap::ListOrderedMultimap;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Applies all queued events if their tick is less or equal to `ServerInitTick`.
+/// Applies all queued events if their tick is less or equal to `ServerUpdateTick`.
 fn pop_game_packet_queue(
-    init_tick: Res<ServerInitTick>,
+    init_tick: Res<ServerUpdateTick>,
     mut server_events: EventWriter<GamePacket>,
     mut event_queue: ResMut<GamePacketQueue>,
 ){
@@ -109,7 +109,7 @@ fn receive_server_packets(
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(GamePacket, SendOrdered)>>,
     mut packet_queue   : ResMut<GamePacketQueue>,
-    replicon_tick      : Res<ServerInitTick>,
+    replicon_tick      : Res<ServerUpdateTick>,
 ){
     // receive ordered messages first since they are probably oldest
     for &(channel_id, send_policy) in

@@ -6,6 +6,7 @@ For the library architecture, see `ARCHITECTURE.md`.
 
 To navigate the types and functions in this document it is recommended to open it in a text editor and use 'go to definition'.
 
+TODO: This document is outdated. We no longer use `bevy_replicon_repair`, clients no longer have a split binary, and now both native and WASM support local and networked games.
 
 
 ## Overview

@@ -28,11 +28,7 @@ fn create_native_client(
 {
     // make client
     let client = RenetClient::new(
-            ConnectionConfig{
-                    server_channels_config,
-                    client_channels_config,
-                    ..default()
-                }
+            ConnectionConfig::from_channels(server_channels_config, client_channels_config)
         );
 
     // make transport
@@ -96,11 +92,7 @@ fn create_memory_client(
 {
     // make client
     let client = RenetClient::new(
-        ConnectionConfig{
-            server_channels_config,
-            client_channels_config,
-            ..default()
-        }
+        ConnectionConfig::from_channels(server_channels_config, client_channels_config)
     );
 
     // make transport

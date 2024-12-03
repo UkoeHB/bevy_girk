@@ -4,8 +4,8 @@ use bevy_girk_game_fw::ClientFwRequest;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::core::Replicated;
-use iyes_progress::prelude::ProgressCounter;
+use bevy_replicon::prelude::Replicated;
+use iyes_progress::prelude::ProgressTracker;
 
 //standard shortcuts
 
@@ -29,12 +29,12 @@ pub(crate) fn prep_replicated_entities(
 ///
 /// Note: The `ProgressCounter` resource is removed when it reaches 100%, but we may still need the initialization cache.
 pub(crate) fn update_initialization_cache(
-    progress_counter : Option<Res<ProgressCounter>>,
+    progress_counter : Option<Res<ProgressTracker::<ClientInitializationState>>>,
     mut cache        : ResMut<InitializationProgressCache>,
 ){
     match &progress_counter
     {
-        Some(counter) => cache.set_progress(counter.progress_complete()),
+        Some(counter) => cache.set_progress(counter.get_global_progress()),
         None          => cache.set_progress_complete()
     }
 }

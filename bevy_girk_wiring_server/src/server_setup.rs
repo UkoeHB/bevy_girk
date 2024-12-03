@@ -100,7 +100,7 @@ pub fn prepare_game_app_framework(game_app: &mut App, clients: GameFwClients, co
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a game app.
-pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, update_timeout: Duration)
+pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, mutations_timeout: Duration)
 {
     // depends on game framework
     if !game_app.is_plugin_added::<bevy::time::TimePlugin>() {
@@ -124,7 +124,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, u
                 .set(ServerPlugin{
                     tick_policy: TickPolicy::EveryFrame,
                     visibility_policy: VisibilityPolicy::Whitelist,
-                    update_timeout,
+                    mutations_timeout,
                     replicate_after_connect: true,
                 })
         )
