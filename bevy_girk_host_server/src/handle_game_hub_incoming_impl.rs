@@ -192,9 +192,8 @@ pub(crate) fn hub_start_game(
     let ongoing_game = OngoingGame{
         game_id,
         game_hub_id,
-        native_meta : game_start_report.native_meta,
-        wasm_meta   : game_start_report.wasm_meta,
-        start_infos : game_start_report.start_infos,
+        metas: game_start_report.metas,
+        start_infos: game_start_report.start_infos,
     };
     if let Err(_) = ongoing_games_cache.add_ongoing_game(ongoing_game)
     {

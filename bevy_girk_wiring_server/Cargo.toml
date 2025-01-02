@@ -15,7 +15,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 test = [
     "memory_transport",
     "native_transport",
-    "wasm_transport"
+    "wasm_transport_wt",
+    "wasm_transport_ws"
 ]
 
 transport = []
@@ -23,17 +24,26 @@ transport = []
 memory_transport = [
     "transport",
     "bevy_replicon_renet2/memory_transport",
-    "renet2/memory_transport"
+    "renet2_netcode/memory_transport"
 ]
 native_transport = [
     "transport",
     "bevy_replicon_renet2/native_transport",
-    "renet2/native_transport"
+    "renet2_netcode/native_transport"
 ]
-wasm_transport = [
+# WebTransport
+wasm_transport_wt = [
     "transport",
     "bevy_replicon_renet2/wt_server_transport",
-    "renet2/wt_server_transport",
+    "renet2_netcode/wt_server_transport",
+    "dep:enfync",
+    "enfync/builtin"  #todo: this brings in tokio dependency
+]
+# WebSockets
+wasm_transport_ws = [
+    "transport",
+    "bevy_replicon_renet2/ws_server_transport",
+    "renet2_netcode/ws_server_transport",
     "dep:enfync",
     "enfync/builtin"  #todo: this brings in tokio dependency
 ]
@@ -46,6 +56,7 @@ bevy_replicon_renet2 = { workspace = true, features = ["server"] }
 bincode = { workspace = true }
 bytes = { workspace = true }
 renet2 = { workspace = true, features = ["bevy"] }
+renet2_netcode = { workspace = true, features = ["bevy"] }
 tracing  = { workspace = true }
 wasm-timer = { workspace = true }
 

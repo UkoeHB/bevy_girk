@@ -26,7 +26,7 @@ pub enum ClientInstanceState
 /// These states only run in [`ClientInstanceState::Game`].
 #[derive(SubStates, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
 #[source(ClientInstanceState = ClientInstanceState::Game)]
-pub enum ClientInitializationState
+pub enum ClientInitState
 {
     /// Client fw state when the client fw is initializing or reinitializing.
     #[default]
@@ -98,17 +98,17 @@ pub enum ClientFwState
     /// - Client requests sent while in this state will succeed unless the client disconnects or the game shuts down.
     /// - Game messages will be consumed in this tick, including any messages buffered while `Syncing`.
     ///
-    /// Initialization ends when in state [`ClientInitializationState::Done`] and the game is no longer in
+    /// Initialization ends when in state [`ClientInitState::Done`] and the game is no longer in
     /// [`GameFwState::Init`].
     ///
     /// ### Explanation
     ///
     /// This runs at least one full tick after synchronizing because we ignore game framework messages that contain
-    /// state changes until we are in [`ClientInitializationState::Done`].
-    /// Meanwhile, [`ClientInitializationState::Done`] will not be entered until `iyes_progress` has fully initialized,
+    /// state changes until we are in [`ClientInitState::Done`].
+    /// Meanwhile, [`ClientInitState::Done`] will not be entered until `iyes_progress` has fully initialized,
     /// and we do not fully initialize until the first tick that `Init` runs.
     /// Importantly, `iyes_progress` is configured to run in PostUpdate at the end of each tick, which means the end
-    /// of the first tick in state [`ClientFwState::Init`] is the first tick where [`ClientInitializationState::Done`]
+    /// of the first tick in state [`ClientFwState::Init`] is the first tick where [`ClientInitState::Done`]
     /// may be entered (which means only the next client tick may enter [`ClientFwState::Game`] or [`ClientFwState::End`]).
     Init,
     /// Runs in [`GameFwState::Game`] when the client is not initializing.

@@ -33,7 +33,7 @@ fn cache_lobbies_basic()
     let owner_id = 1000u128;
     let lobby_id = cache.new_lobby(
             owner_id,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"),
             Vec::default()
         ).unwrap();
@@ -50,13 +50,13 @@ fn cache_lobbies_basic()
     assert!(cache.try_add_member(
             lobby_id,
             1u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             &String::from("test")
         ));
     assert!(!cache.try_add_member(
             lobby_id,
             2u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             &String::from("bad_pass")
         ));
     let lobby_ref_mut = cache.lobby_ref_mut(lobby_id).expect("should have mut lobby");
@@ -104,7 +104,7 @@ fn cache_lobbies_owner_member_type()
     let owner_id = 1000u128;
     let _lobby_id = cache.new_lobby(
             owner_id,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"),
             Vec::default()
         ).unwrap();
@@ -113,7 +113,7 @@ fn cache_lobbies_owner_member_type()
     let owner_id = 1001u128;
     let Err(_) = cache.new_lobby(
             owner_id,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Watcher.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Watcher.into() },
             String::from("test"),
             Vec::default()
         )
@@ -145,7 +145,7 @@ fn cache_lobbies_added_member_type()
     let owner_id = 1000u128;
     let lobby_id = cache.new_lobby(
             owner_id,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"), Vec::default()
         ).unwrap();
     let lobby_ref = cache.lobby_ref(lobby_id).expect("should have lobby");
@@ -156,13 +156,13 @@ fn cache_lobbies_added_member_type()
     assert!(cache.try_add_member(
             lobby_id,
             1u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Watcher.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Watcher.into() },
             &String::from("test")
         ));
     assert!(!cache.try_add_member(
             lobby_id,
             1u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             &String::from("test")
         ));
     let lobby_ref = cache.lobby_ref(lobby_id).expect("should have lobby");
@@ -173,13 +173,13 @@ fn cache_lobbies_added_member_type()
     assert!(!cache.try_add_member(
             lobby_id,
             2u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             &String::from("test")
         ));
     assert!(!cache.try_add_member(
             lobby_id,
             2u128,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Watcher.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Watcher.into() },
             &String::from("test")
         ));
     let lobby_ref = cache.lobby_ref(lobby_id).expect("should have lobby");
@@ -228,7 +228,7 @@ fn cache_lobbies_search()
     let owner_id = 11u128;
     let first_lobby_id = cache.new_lobby(
             owner_id,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"),
             Vec::default()
         ).unwrap();
@@ -256,13 +256,13 @@ fn cache_lobbies_search()
     let owner_id = 11u128;
     let second_lobby_id = cache.new_lobby(
             owner_id + 1,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"),
             Vec::default()
         ).unwrap();
     let third_lobby_id = cache.new_lobby(
             owner_id + 2,
-            LobbyMemberData{ env: bevy_simplenet::env_type(), color: BasicLobbyMemberType::Player.into() },
+            LobbyMemberData{ connection: ConnectionType::inferred(), color: BasicLobbyMemberType::Player.into() },
             String::from("test"),
             Vec::default()
         ).unwrap();

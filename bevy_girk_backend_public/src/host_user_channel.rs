@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::{LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
+use crate::{ConnectionType, LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::GameStartInfo;
 use bevy_girk_wiring_common::ServerConnectToken;
@@ -40,7 +40,6 @@ pub enum HostToUserResponse
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum UserToHostMsg
 {
@@ -83,11 +82,28 @@ pub enum UserToHostRequest
 
 //-------------------------------------------------------------------------------------------------------------------
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HostUserConnectMsg
+{
+    pub connection_type: ConnectionType
+}
+
+impl HostUserConnectMsg
+{
+    /// Makes a new connect message.
+    pub fn new() -> Self
+    {
+        Self{ connection_type: ConnectionType::inferred() }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 #[derive(Debug, Clone)]
 pub struct HostUserChannel;
 impl bevy_simplenet::ChannelPack for HostUserChannel
 {
-    type ConnectMsg = ();
+    type ConnectMsg = HostUserConnectMsg;
     type ServerMsg = HostToUserMsg;
     type ServerResponse = HostToUserResponse;
     type ClientMsg = UserToHostMsg;

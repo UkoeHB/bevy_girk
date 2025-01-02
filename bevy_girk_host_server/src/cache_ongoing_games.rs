@@ -1,16 +1,18 @@
+use bevy_girk_backend_public::ConnectionType;
 //local shortcuts
 use bevy_girk_game_instance::*;
-use bevy_girk_wiring_common::{ConnectMetaNative, ConnectMetaWasm, ServerConnectToken};
+use bevy_girk_wiring_common::{ConnectMetas, ConnectMetaNative, ConnectMetaWasmWt, ConnectMetaWasmWs, ServerConnectToken};
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_simplenet::EnvType;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
 use std::collections::HashMap;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use std::vec::Vec;
+
+use crate::UserInfo;
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -26,7 +28,18 @@ fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn prep_connect_token_wasm(connect_meta: &ConnectMetaWasm, client_id: u64) -> Option<ServerConnectToken>
+fn prep_connect_token_wasm_wt(connect_meta: &ConnectMetaWasmWt, client_id: u64) -> Option<ServerConnectToken>
+{
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap();
+    connect_meta.new_connect_token(current_time, client_id)
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn prep_connect_token_wasm_ws(connect_meta: &ConnectMetaWasmWs, client_id: u64) -> Option<ServerConnectToken>
 {
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -44,10 +57,8 @@ pub struct OngoingGame
     pub game_id: u64,
     /// Id of game hub hosting this game.
     pub game_hub_id: u128,
-    /// Metadata for generating native-target connect tokens for the game.
-    pub native_meta: Option<ConnectMetaNative>,
-    /// Metadata for generating wasm-target connect tokens for the game.
-    pub wasm_meta: Option<ConnectMetaWasm>,
+    /// Metadata for generating connect tokens for the game.
+    pub metas: ConnectMetas,
     /// Game startup information for users (cached in case of reconnections).
     pub start_infos: Vec<GameStartInfo>,
 }
@@ -155,7 +166,7 @@ impl OngoingGamesCache
     }
 
     /// Get game id and game start info for a specific user (if possible).
-    pub fn get_user_start_info(&self, user_id: u128, user_env: EnvType) -> Option<(u64, ServerConnectToken, &GameStartInfo)>
+    pub fn get_user_start_info(&self, user_id: u128, user_info: &UserInfo) -> Option<(u64, ServerConnectToken, &GameStartInfo)>
     {
         // get the game the user is in
         let Some(game_id) = self.users.get(&user_id)
@@ -170,22 +181,39 @@ impl OngoingGamesCache
         else { tracing::error!(game_id, user_id, "tried to get user start info for missing user"); return None; };
 
         // make connect token for user
-        let connect_token = match user_env
+        let connect_token = match user_info.connection()
         {
-            EnvType::Native =>
+            ConnectionType::Memory | ConnectionType::Native =>
             {
-                let Some(meta) = &ongoing_game.native_meta
+                let Some(meta) = &ongoing_game.metas.native
                 else { tracing::debug!(user_id, game_id, "no native connect meta for native client"); return None; };
                 let Some(connect_token) = prep_connect_token_native(meta, start_info.client_id)
                 else { tracing::error!(user_id, game_id, "failed preparing native connect token"); return None; };
                 connect_token
             }
-            EnvType::Wasm =>
+            ConnectionType::WasmWt =>
             {
-                let Some(meta) = &ongoing_game.wasm_meta
-                else { tracing::debug!(user_id, game_id, "no wasm connect meta for wasm client"); return None; };
-                let Some(connect_token) = prep_connect_token_wasm(meta, start_info.client_id)
-                else { tracing::error!(user_id, game_id, "failed preparing wasm connect token"); return None; };
+                // Clients that request webtransport can fall back to websockets.
+                if let Some(meta) = &ongoing_game.metas.wasm_wt
+                {
+                    let Some(connect_token) = prep_connect_token_wasm_wt(meta, start_info.client_id)
+                    else { tracing::error!(user_id, game_id, "failed preparing wasm wt connect token"); return None; };
+                    connect_token
+                }
+                else if let Some(meta) = &ongoing_game.metas.wasm_ws
+                {
+                    let Some(connect_token) = prep_connect_token_wasm_ws(meta, start_info.client_id)
+                    else { tracing::error!(user_id, game_id, "failed preparing wasm ws connect token"); return None; };
+                    connect_token
+                }
+                else { tracing::debug!(user_id, game_id, "no wasm webtransport connect meta for wasm client"); return None; }
+            }
+            ConnectionType::WasmWs =>
+            {
+                let Some(meta) = &ongoing_game.metas.wasm_ws
+                else { tracing::debug!(user_id, game_id, "no wasm websocket connect meta for wasm client"); return None; };
+                let Some(connect_token) = prep_connect_token_wasm_ws(meta, start_info.client_id)
+                else { tracing::error!(user_id, game_id, "failed preparing wasm ws connect token"); return None; };
                 connect_token
             }
         };
@@ -194,9 +222,9 @@ impl OngoingGamesCache
     }
 
     /// Get game id and game connect token for a specific user (if possible).
-    pub fn get_user_connect_token(&self, user_id: u128, user_env: EnvType) -> Option<(u64, ServerConnectToken)>
+    pub fn get_user_connect_token(&self, user_id: u128, user_info: &UserInfo) -> Option<(u64, ServerConnectToken)>
     {
-        self.get_user_start_info(user_id, user_env).map(|(id, token, _)| (id, token))
+        self.get_user_start_info(user_id, user_info).map(|(id, token, _)| (id, token))
     }
 
     /// Get start infos associated with a game.

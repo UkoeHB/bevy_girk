@@ -26,3 +26,6 @@ bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+renet2_netcode = { workspace = true, features = ["wt_client_transport"] }

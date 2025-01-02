@@ -102,7 +102,7 @@ pub fn make_test_host_user_client_with_id(id: u128, user_server_url: url::Url) -
                 user_server_url,
                 auth,
                 bevy_simplenet::ClientConfig::default(),
-                ()
+                HostUserConnectMsg::new()
             )
     )
 }
@@ -124,7 +124,7 @@ pub fn dummy_game_start_report(user_ids: Vec<u128>) -> GameStartReport
         start_infos.push(GameStartInfo { user_id: *user_id, ..default() });
     }
 
-    GameStartReport{ native_meta: Some(ConnectMetaNative::dummy()), wasm_meta: None, start_infos }
+    GameStartReport{ metas: ConnectMetas{ native: Some(ConnectMetaNative::dummy()), ..Default::default() }, start_infos }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

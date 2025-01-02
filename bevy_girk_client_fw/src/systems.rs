@@ -15,7 +15,7 @@ use iyes_progress::prelude::ProgressTracker;
 /// Make sure all replicated entities are scoped properly.
 pub(crate) fn prep_replicated_entities(
     mut c: Commands,
-    replicated: Query<Entity, (Added<Replicated>, Without<StateScoped<ClientInstanceState>>)>
+    replicated: Query<Entity, (With<Replicated>, Without<StateScoped<ClientInstanceState>>)>
 )
 {
     for entity in replicated.iter() {
@@ -29,8 +29,8 @@ pub(crate) fn prep_replicated_entities(
 ///
 /// Note: The `ProgressCounter` resource is removed when it reaches 100%, but we may still need the initialization cache.
 pub(crate) fn update_initialization_cache(
-    progress_counter : Option<Res<ProgressTracker::<ClientInitializationState>>>,
-    mut cache        : ResMut<InitializationProgressCache>,
+    progress_counter : Option<Res<ProgressTracker<ClientInitState>>>,
+    mut cache        : ResMut<InitProgressCache>,
 ){
     match &progress_counter
     {
@@ -43,7 +43,7 @@ pub(crate) fn update_initialization_cache(
 
 /// Sends client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
-    cache      : Res<InitializationProgressCache>,
+    cache      : Res<InitProgressCache>,
     mut sender : ClientRequestSender
 ){
     // don't send if no intialization progress has been made since last frame

@@ -16,7 +16,6 @@ memory_transport = [
     "bevy_girk_wiring_common/memory_transport",
     "bevy_renet2/memory_transport",
     "bevy_replicon_renet2/memory_transport",
-    "renet2/memory_transport"
 ]
 
 [dependencies]
@@ -38,9 +37,7 @@ bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 bevy_renet2 = { workspace = true, features = ["native_transport"] }
 bevy_replicon_renet2 = { workspace = true, features = ["client", "native_transport"] }
-renet2 = { workspace = true, features = ["bevy", "native_transport"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-bevy_renet2 = { workspace = true, features = ["wt_client_transport"] }
-bevy_replicon_renet2 = { workspace = true, features = ["client", "wt_client_transport"] }
-renet2 = { workspace = true, features = ["bevy", "wt_client_transport"] }
+bevy_renet2 = { workspace = true, features = ["wt_client_transport", "ws_client_transport"] }
+bevy_replicon_renet2 = { workspace = true, features = ["client", "wt_client_transport", "ws_client_transport"] }

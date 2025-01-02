@@ -1,7 +1,6 @@
 //local shortcuts
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy_simplenet::EnvType;
@@ -26,19 +25,21 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(ConnectMetaNative::dummy()),
-                    wasm_meta: None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
         ).expect("add should work");
 
     assert_eq!(cache.get_start_infos(game_id).expect("should have game").len(), 2);
     let None = cache.get_start_infos(game_id + 1) else { panic!("game should be unknown"); };
-    let (query_game_id, _, _) = cache.get_user_start_info(user_id_1, EnvType::Native).expect("user should have connect info");
+    let (query_game_id, _, _) = cache.get_user_start_info(user_id_1, &UserInfo::test()).expect("user should have connect info");
     assert_eq!(query_game_id, game_id);
-    let (query_game_id, _, _) = cache.get_user_start_info(user_id_2, EnvType::Native).expect("user should have connect info");
+    let (query_game_id, _, _) = cache.get_user_start_info(user_id_2, &UserInfo::test()).expect("user should have connect info");
     assert_eq!(query_game_id, game_id);
-    let None = cache.get_user_start_info(user_id_2 + 1, EnvType::Native)
+    let None = cache.get_user_start_info(user_id_2 + 1, &UserInfo::test())
     else { panic!("unknown user should not have connect info"); };
 
     // try to add the game again
@@ -46,8 +47,10 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(ConnectMetaNative::dummy()),
-                    wasm_meta: None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
         ) else { panic!("adding the same game should fail"); };
@@ -58,8 +61,10 @@ fn cache_ongoing_games_basic()
             OngoingGame{
                     game_id: game_id_2,
                     game_hub_id,
-                    native_meta: Some(ConnectMetaNative::dummy()),
-                    wasm_meta: None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
         ) else { panic!("adding a game with users that are in-game should fail"); };
@@ -69,7 +74,7 @@ fn cache_ongoing_games_basic()
     let Err(_) = cache.remove_ongoing_game(game_id) else { panic!("removing duplicate ongoing game should fail"); };
 
     let None = cache.get_start_infos(game_id) else { panic!("game should be unknown"); };
-    let None = cache.get_user_start_info(user_id_1, EnvType::Native)
+    let None = cache.get_user_start_info(user_id_1, &UserInfo::test())
     else { panic!("removed user should not have connect info"); };
 }
 
@@ -90,16 +95,19 @@ fn cache_ongoing_games_envtype()
             OngoingGame{
                     game_id,
                     game_hub_id,
-                    native_meta: Some(ConnectMetaNative::dummy()),
-                    wasm_meta: None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1), GameStartInfo::new_from_id(user_id_2)],
                 }
         ).expect("add should work");
 
-    let (query_game_id, _, _) = cache.get_user_start_info(user_id_1, EnvType::Native).expect("user should have connect info");
+    let (query_game_id, _, _) = cache.get_user_start_info(user_id_1, &UserInfo::test()).expect("user should have connect info");
     assert_eq!(query_game_id, game_id);
-    let None = cache.get_user_start_info(user_id_2, EnvType::Wasm) else { panic!("wasm user should not have connect info"); };
-    let (query_game_id, _, _) = cache.get_user_start_info(user_id_2, EnvType::Native).expect("user should have connect info");
+    let user_info = UserInfo::new(EnvType::Wasm, ConnectionType::WasmWt);
+    let None = cache.get_user_start_info(user_id_2, &user_info) else { panic!("wasm user should not have connect info"); };
+    let (query_game_id, _, _) = cache.get_user_start_info(user_id_2, &UserInfo::test()).expect("user should have connect info");
     assert_eq!(query_game_id, game_id);
 }
 
@@ -122,8 +130,10 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_1,
                     game_hub_id : 0u128,
-                    native_meta : Some(ConnectMetaNative::dummy()),
-                    wasm_meta   : None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1)],
                 }
         ).expect("add should work");
@@ -138,8 +148,10 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_2,
                     game_hub_id : 0u128,
-                    native_meta : Some(ConnectMetaNative::dummy()),
-                    wasm_meta   : None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_2)],
                 }
         ).expect("add should work");
@@ -170,8 +182,10 @@ fn cache_ongoing_games_expiration()
             OngoingGame{
                     game_id     : game_id_3,
                     game_hub_id : 0u128,
-                    native_meta : Some(ConnectMetaNative::dummy()),
-                    wasm_meta   : None,
+                    metas: ConnectMetas{
+                        native: Some(ConnectMetaNative::dummy()),
+                        ..Default::default()
+                    },
                     start_infos : vec![GameStartInfo::new_from_id(user_id_1)],
                 }
         ).expect("add should work");
@@ -187,7 +201,7 @@ fn cache_ongoing_games_expiration()
     let None = cache.get_start_infos(game_id_1) else { panic!("game 1 should be removed"); };
     let None = cache.get_start_infos(game_id_2) else { panic!("game 1 should be removed"); };
     assert_eq!(cache.get_start_infos(game_id_3).unwrap().len(), 1);
-    let Some((query_game_id, _, _)) = cache.get_user_start_info(user_id_1, EnvType::Native)
+    let Some((query_game_id, _, _)) = cache.get_user_start_info(user_id_1, &UserInfo::test())
     else { panic!("user 1 should have game") };
     assert_eq!(query_game_id, game_id_3);
 }

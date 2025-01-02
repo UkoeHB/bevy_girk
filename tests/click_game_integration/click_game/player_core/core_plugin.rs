@@ -134,12 +134,12 @@ impl Plugin for ClientCoreTickPlugin
                         handle_player_inputs_prep.in_set(ClientSet::Prep),
                         handle_player_inputs_play.in_set(ClientSet::Play),
                         handle_player_inputs_gameover.in_set(ClientSet::GameOver),
-                    ).chain().in_set(ClientFwSet::Admin)
+                    ).chain().in_set(GirkClientSet::Admin)
                 );
 
         // Misc
         // Systems that should run when the client is fully initialized.
-        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_state);
+        app.add_systems(OnEnter(ClientInitState::Done), request_game_state);
     }
 }
 

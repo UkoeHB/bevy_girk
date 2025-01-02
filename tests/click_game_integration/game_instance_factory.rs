@@ -157,7 +157,7 @@ fn game_instance_factory_demo()
         {
             client.update();
 
-            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitState>>() != ClientInitState::Done
             { continue; }
 
             assert!(client.world().resource::<RenetClient>().is_connected());

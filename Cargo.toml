@@ -28,20 +28,17 @@ members  = [
 
 [workspace.dependencies]
 bevy                     = { version = "0.15", default-features = false }
-bevy_cobweb              = { version = "0.13" }
+bevy_cobweb              = { version = "0.14" }
 bevy_replicon            = { version = "0.29", default-features = false }
 bevy_replicon_attributes = { version = "0.8" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
 bevy_simplenet           = { version = "0.14", default-features = false }
 iyes_progress            = { version = "0.13", features = [ "assets" ] }
 
-#bevy_renet = { version = "0.0.11", default-features = false }
-bevy_renet2 = { git = "https://github.com/UkoeHB/renet2", rev = "c3e52ba", package = "bevy_renet2", default-features = false }
-#bevy_renet = { git = "https://github.com/lucaspoffo/renet", rev = "cb80542", default-features = false }
-#bevy_replicon_renet = { version = "0.3", default-features = false }
-bevy_replicon_renet2 = { git = "https://github.com/UkoeHB/renet2", rev = "c3e52ba", package = "bevy_replicon_renet2", default-features = false }
-#renet = { version = "0.0.15", default-features = false }
-renet2 = { git = "https://github.com/UkoeHB/renet2", rev = "c3e52ba", package = "renet2", default-features = false }
+bevy_renet2 = { version = "0.1.0", default-features = false }
+bevy_replicon_renet2 = { version = "0.1.0", default-features = false }
+renet2 = { version = "0.1.0", default-features = false }
+renet2_netcode = { version = "0.1.0", default-features = false }
 
 bincode            = { version = "1.3" }
 bytes              = { version = "1.1" }

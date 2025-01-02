@@ -17,15 +17,15 @@ pub struct TargetAllExcept(pub u64);
 
 impl From<TargetClient> for SendMode
 {
-    fn from(client: TargetClient) -> SendMode { return SendMode::Direct(ClientId::new(client.0)) }
+    fn from(client: TargetClient) -> SendMode { SendMode::Direct(ClientId::new(client.0)) }
 }
 impl From<TargetAll> for SendMode
 {
-    fn from(_: TargetAll) -> SendMode { return SendMode::Broadcast }
+    fn from(_: TargetAll) -> SendMode { SendMode::Broadcast }
 }
 impl From<TargetAllExcept> for SendMode
 {
-    fn from(exception: TargetAllExcept) -> SendMode { return SendMode::BroadcastExcept(ClientId::new(exception.0)) }
+    fn from(exception: TargetAllExcept) -> SendMode { SendMode::BroadcastExcept(ClientId::new(exception.0)) }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -39,15 +39,15 @@ pub struct SendOrdered;
 
 impl From<SendUnreliable> for ChannelKind
 {
-    fn from(_: SendUnreliable) -> ChannelKind { return ChannelKind::Unreliable }
+    fn from(_: SendUnreliable) -> ChannelKind { ChannelKind::Unreliable }
 }
 impl From<SendUnordered> for ChannelKind
 {
-    fn from(_: SendUnordered) -> ChannelKind { return ChannelKind::Unordered }
+    fn from(_: SendUnordered) -> ChannelKind { ChannelKind::Unordered }
 }
 impl From<SendOrdered> for ChannelKind
 {
-    fn from(_: SendOrdered) -> ChannelKind { return ChannelKind::Ordered }
+    fn from(_: SendOrdered) -> ChannelKind { ChannelKind::Ordered }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

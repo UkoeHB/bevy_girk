@@ -1,9 +1,12 @@
 //local shortcuts
 use crate::{setup_combo_renet_server, ServerEventHandlingPlugin};
 use bevy_girk_game_fw::{
-    ClientReadiness, GameFwClients, GameFwConfig, GameFwPlugin, GameFwSet, GameFwSetPrivate, GameInitProgress, Readiness
+    ClientReadiness, GameFwClients, GameFwConfig, GameFwPlugin, GameFwSet,
+    GameInitProgress, Readiness
 };
-use bevy_girk_wiring_common::{prepare_network_channels, ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm, GameServerSetupConfig};
+use bevy_girk_wiring_common::{
+    prepare_network_channels, ConnectMetas, GameServerSetupConfig
+};
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -31,7 +34,7 @@ fn log_server_events(mut server_events: EventReader<renet2::ServerEvent>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn log_transport_errors(mut transport_errors: EventReader<renet2::transport::NetcodeTransportError>)
+fn log_transport_errors(mut transport_errors: EventReader<renet2_netcode::NetcodeTransportError>)
 {
     for error in transport_errors.read()
     {
@@ -75,8 +78,10 @@ pub struct GirkServerConfig
     pub memory_clients: Vec<u16>,
     /// The number of native clients that will connect.
     pub native_count: usize,
-    /// The number of WASM clients that will connect.
-    pub wasm_count: usize,
+    /// The number of WASM webtransport clients that will connect.
+    pub wasm_wt_count: usize,
+    /// The number of WASM websocket clients that will connect.
+    pub wasm_ws_count: usize,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -141,27 +146,26 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, m
         //<-- RenetReceive {renet}: receive network packets from clients
         //<-- ServerSet::ReceivePackets {replicon}: collect renet packets
         //<-- ServerSet::Receive {replicon}: process client acks and connection events
-        //<-- GameFwSetPrivate::FwStart {girk}: prepares the app for this tick
+        //<-- reset_clients_on_disconnect
+        //<-- GameFwSet::Start {girk}: prepares the app for this tick
         .configure_sets(PreUpdate,
-            GameFwSetPrivate::FwStart
+            GameFwSet::Start
                 .after(bevy_replicon::prelude::ServerSet::Receive)
         )
-
-        //# UPDATE #
-        //<-- GameFwSet::{Admin, Start} {girk}: ordinal sets for user logic
-        //<-- GameFwSetPrivate::FwHandleRequests {girk}: handle client requests; we do this in the middle of
-        //      the ordinal sets so the game tick and game state updaters (and user-defined tick initialization logic) can
-        //      run first
-        //<-- GameFwSet::{PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
-        .add_systems(Update, reset_clients_on_disconnect.in_set(GameFwSet::Admin))
+        .add_systems(
+            PreUpdate,
+            reset_clients_on_disconnect
+                .after(bevy_replicon::prelude::ServerSet::Receive)
+                .before(GameFwSet::Start)
+        )
 
         //# POSTUPDATE
-        //<-- GameFwSetPrivate::FwEnd {girk}: dispatch server messages to replicon
+        //<-- GameFwSet::End {girk}: dispatch server messages to replicon
         //<-- ServerSet::StoreHierarchy {replicon}: store hierarchy information that needs to be replicated
         //<-- ServerSet::Send {replicon}: dispatch replication messages and server messages to renet
         //<-- RenetSend {renet}: dispatch network packets to clients
         .configure_sets(PostUpdate,
-            GameFwSetPrivate::FwEnd
+            GameFwSet::End
                 .before(bevy_replicon::prelude::ServerSet::StoreHierarchy)
         )
         //log server events and errors
@@ -179,8 +183,9 @@ pub fn prepare_game_app_network(
     game_server_config: GameServerSetupConfig,
     memory_clients: Vec<u16>,
     native_count: usize,
-    wasm_count: usize,
-) -> (Option<ConnectMetaMemory>, Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
+    wasm_wt_count: usize,
+    wasm_ws_count: usize,
+) -> ConnectMetas
 {
     // set up renet server
     // - we use a unique auth key so clients can only interact with the server created here
@@ -188,18 +193,19 @@ pub fn prepare_game_app_network(
         // We assume this is only used for local-player on web.
         #[cfg(target_family = "wasm")]
         {
+            let wasm_count = wasm_wt_count + wasm_ws_count;
             if native_count > 0 || wasm_count > 0
             {
                 panic!("aborting game app networking construction; target family is WASM where only in-memory \
                     transports are permitted, but found other transport requests (memory: {}, native: {}, wasm: {})",
-                    native_count, wasm_count, memory_clients);
+                    memory_clients, native_count, wasm_count);
             }
 
             wasm_timer::SystemTime::now().duration_since(wasm_timer::UNIX_EPOCH).unwrap_or_default().as_nanos()
         }
 
         #[cfg(not(target_family = "wasm"))]
-        renet2::transport::generate_random_bytes::<32>()
+        renet2_netcode::generate_random_bytes::<32>()
     };
 
     setup_combo_renet_server(
@@ -207,7 +213,8 @@ pub fn prepare_game_app_network(
         game_server_config,
         memory_clients,
         native_count,
-        wasm_count,
+        wasm_wt_count,
+        wasm_ws_count,
         &auth_key,
     )
 }
@@ -220,10 +227,7 @@ pub fn prepare_game_app_network(
 /// - Sets up renet servers based on the requested transports.
 ///
 /// Returns metadata for generating connect tokens for clients to connect to the the renet server.
-pub fn prepare_girk_game_app(
-    game_app : &mut App,
-    config   : GirkServerConfig
-) -> (Option<ConnectMetaMemory>, Option<ConnectMetaNative>, Option<ConnectMetaWasm>)
+pub fn prepare_girk_game_app(game_app: &mut App, config: GirkServerConfig) -> ConnectMetas
 {
     prepare_game_app_framework(game_app, config.clients, config.config);
     prepare_game_app_replication(
@@ -236,7 +240,8 @@ pub fn prepare_girk_game_app(
         config.game_server_config,
         config.memory_clients,
         config.native_count,
-        config.wasm_count
+        config.wasm_wt_count,
+        config.wasm_ws_count
     )
 }
 

@@ -16,11 +16,11 @@ fn cache_users()
 
     // add a user
     let user_id_1 = 1u128;
-    let _ = cache.add_user(user_id_1, bevy_simplenet::env_type()).expect("adding user should succeed");
+    let _ = cache.add_user(user_id_1, UserInfo::test()).expect("adding user should succeed");
     assert_eq!(cache.get_user_state(user_id_1).expect("user should exist"), UserState::Idle);
 
     // try to add the user again
-    let Err(_) = cache.add_user(user_id_1, bevy_simplenet::env_type()) else { panic!("readding user should fail"); };
+    let Err(_) = cache.add_user(user_id_1, UserInfo::test()) else { panic!("readding user should fail"); };
 
     // try to remove a user that doesn't exist
     let Err(_) = cache.remove_user(5782u128) else { panic!("removing unknown user should fail"); };
@@ -34,7 +34,7 @@ fn cache_users()
 
     // add another user
     let user_id_2 = 2u128;
-    let _ = cache.add_user(user_id_2, bevy_simplenet::env_type()).expect("adding user should succeed");
+    let _ = cache.add_user(user_id_2, UserInfo::test()).expect("adding user should succeed");
 
     // update user
     let new_state = UserState::InLobby(0u64);

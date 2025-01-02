@@ -174,7 +174,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
         {
             client.update();
 
-            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitState>>() != ClientInitState::Done
             { continue; }
 
             assert!(client.world().resource::<RenetClient>().is_connected());

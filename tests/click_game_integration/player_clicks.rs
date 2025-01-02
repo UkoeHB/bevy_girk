@@ -107,14 +107,14 @@ fn player_clicks()
         .configure_sets(PreUpdate,
             (
                 GameFwSetPrivate::FwStart,
-                ClientFwSetPrivate::FwStart
+                ClientFwSet::Start
             ).chain()
         )
-        .configure_sets(Update, (GameFwSet::End, ClientFwSet::Admin).chain())
+        .configure_sets(Update, (GameFwSet::End, GirkClientSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
                 GameFwSetPrivate::FwEnd,
-                ClientFwSetPrivate::FwEnd,
+                ClientFwSet::End,
             ).chain()
         )
         .add_systems(PreUpdate, forward_client_packets.before(GameFwSetPrivate::FwStart))

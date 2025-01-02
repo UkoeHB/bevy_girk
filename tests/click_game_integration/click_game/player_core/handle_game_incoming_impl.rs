@@ -14,13 +14,13 @@ use bevy_cobweb::prelude::*;
 
 /// Use current game state to update client state.
 fn update_client_state(
-    In(current_game_state)      : In<GameState>,
-    client_initialization_state : Res<State<ClientInitializationState>>,
-    current_client_state        : Res<State<ClientCoreState>>,
-    mut next_client_state       : ResMut<NextState<ClientCoreState>>
+    In(current_game_state) : In<GameState>,
+    client_init_state      : Res<State<ClientInitState>>,
+    current_client_state   : Res<State<ClientCoreState>>,
+    mut next_client_state  : ResMut<NextState<ClientCoreState>>
 ){
     // do not update game state if we are in the process of initializing the client
-    if *client_initialization_state != ClientInitializationState::Done { return; }
+    if *client_init_state != ClientInitState::Done { return; }
 
     // update game state
     let new_client_state =

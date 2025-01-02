@@ -53,7 +53,7 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
                 return Some(game_id);
             };
 
-            let Some(meta) = &start_report.memory_meta else {
+            let Some(meta) = &start_report.metas.memory else {
                 tracing::error!("ignoring game start report for local game; in-memory meta is missing for \
                     setting up renet client");
                 return Some(game_id);

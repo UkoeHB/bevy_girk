@@ -16,18 +16,29 @@ pub enum ConnectionType
     Memory,
     /// Use this when the client has [`bevy_simplenet::EnvType::Native`].
     Native,
-    /// Use this when the client has [`bevy_simplenet::EnvType::Wasm`].
-    Wasm,
+    /// Use this when the client has [`bevy_simplenet::EnvType::Wasm`] and webtransport with cert hashes is
+    /// supported.
+    WasmWt,
+    /// Use this when the client has [`bevy_simplenet::EnvType::Wasm`] and webtransport is not supported.
+    WasmWs,
 }
 
-impl From<bevy_simplenet::EnvType> for ConnectionType
+impl ConnectionType
 {
-    fn from(env: bevy_simplenet::EnvType) -> Self
+    /// Infers the connection type from the environment.
+    pub fn inferred() -> Self
     {
-        match env
+        #[cfg(not(target_family = "wasm"))]
         {
-            bevy_simplenet::EnvType::Native => Self::Native,
-            bevy_simplenet::EnvType::Wasm => Self::Wasm,
+            ConnectionType::Native
+        }
+
+        #[cfg(target_family = "wasm")]
+        {
+            match renet2_netcode::webtransport_is_available_with_cert_hashes() {
+                true => ConnectionType::WasmWt,
+                false => ConnectionType::WasmWs,
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
-use renet2::transport::{in_memory_server_addr, ConnectToken, MemorySocketClient, ServerCertHash};
+use renet2_netcode::{in_memory_server_addr, ConnectToken, MemorySocketClient, ServerCertHash};
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -144,7 +144,7 @@ impl ConnectMetaNative
 
 /// Metadata required to generate connect tokens for wasm-target clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectMetaWasm
+pub struct ConnectMetaWasmWt
 {
     pub server_config    : GameServerSetupConfig,
     pub server_addresses : Vec<SocketAddr>,
@@ -153,7 +153,7 @@ pub struct ConnectMetaWasm
     pub cert_hashes      : Vec<ServerCertHash>,
 }
 
-impl ConnectMetaWasm
+impl ConnectMetaWasmWt
 {
     /// Generates a new connect token for a wasm client.
     pub fn new_connect_token(
@@ -174,11 +174,65 @@ impl ConnectMetaWasm
             &self.auth_key,
         ).ok()?;
 
-        Some(ServerConnectToken::Wasm{
+        Some(ServerConnectToken::WasmWt{
             token: connect_token_to_bytes(&token)?,
             cert_hashes: self.cert_hashes.clone()
         })
     }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Metadata required to generate connect tokens for wasm-target clients.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectMetaWasmWs
+{
+    pub server_config    : GameServerSetupConfig,
+    pub server_addresses : Vec<SocketAddr>,
+    pub socket_id        : u8,
+    pub auth_key         : [u8; 32],
+    pub url              : url::Url,
+}
+
+impl ConnectMetaWasmWs
+{
+    /// Generates a new connect token for a wasm client.
+    pub fn new_connect_token(
+        &self,
+        current_time : Duration,
+        client_id    : u64,
+    ) -> Option<ServerConnectToken>
+    {
+        let token = ConnectToken::generate(
+            current_time,
+            self.server_config.protocol_id,
+            self.server_config.expire_secs,
+            client_id,
+            self.server_config.timeout_secs,
+            self.socket_id,
+            self.server_addresses.clone(),
+            None,
+            &self.auth_key,
+        ).ok()?;
+
+        Some(ServerConnectToken::WasmWs{
+            token: connect_token_to_bytes(&token)?,
+            url: self.url.clone()
+        })
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
+/// Metadata required to generate connect tokens for girk clients.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectMetas
+{
+    #[serde(skip)]
+    pub memory: Option<ConnectMetaMemory>,
+    pub native: Option<ConnectMetaNative>,
+    pub wasm_wt: Option<ConnectMetaWasmWt>,
+    pub wasm_ws: Option<ConnectMetaWasmWs>
 }
 
 //-------------------------------------------------------------------------------------------------------------------

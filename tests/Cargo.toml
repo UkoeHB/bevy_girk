@@ -35,7 +35,7 @@ bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common", features = ["me
 
 [dependencies.bevy_girk_wiring_server]
 path = "../bevy_girk_wiring_server"
-features = ["memory_transport", "native_transport", "wasm_transport"]
+features = ["memory_transport", "native_transport", "wasm_transport_wt", "wasm_transport_ws"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rand = { version = "0.8" }

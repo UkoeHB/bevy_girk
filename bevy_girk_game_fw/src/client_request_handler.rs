@@ -13,7 +13,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`ClientPacket`] into a client request.
-pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
+fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
     client_id     : ClientId,
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>
@@ -45,28 +45,6 @@ pub fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoCha
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Wraps an injected function for handling client requests.
-///
-/// The function is expected to return a `Some(ClientFwRequest)` if that's the deserialization result, or a `None`
-/// if handling the client reqeust fails.
-/// It is recommended to use [`deserialize_client_request`].
-/// We allow access to the client framework request in case a user wants to read it or transform a custom client
-/// request into a framework request (not recommended).
-///
-/// Example:
-/**
-```no_run
-# use bevy::prelude::*;
-# use bevy_girk_game_fw::*;
-# use std::vec::Vec;
-fn handler(world: &mut World, client_id: ClientId, client_packet: ClientPacket) -> Result<(), Option<ClientFwRequest>>
-{
-    let request = deserialize_client_request::<MyClientRequestType>(client_id, &client_packet)?;
-
-    //handle deserialized message
-    Ok(())
-}
-```
-*/
 #[derive(Resource)]
 pub struct ClientRequestHandler
 {
@@ -75,11 +53,17 @@ pub struct ClientRequestHandler
 
 impl ClientRequestHandler
 {
-    pub fn new(
-        handler: impl Fn(&mut World, ClientId, &ClientPacket) -> Result<(), Option<ClientFwRequest>> + Sync + Send + 'static
-    ) -> ClientRequestHandler
+    pub fn new<T>(handler: impl Fn(&mut World, ClientId, T) + Sync + Send + 'static) -> Self
+    where
+        T: Debug + for<'de> Deserialize<'de> + IntoChannelKind
     {
-        ClientRequestHandler{ handler: Box::new(handler) }
+        Self{
+            handler: Box::new(move |world, id, packet| {
+                let client_req = deserialize_client_request(id, packet)?;
+                (handler)(world, id, client_req);
+                Ok(())
+            })
+        }
     }
 
     pub fn try_call(&self,

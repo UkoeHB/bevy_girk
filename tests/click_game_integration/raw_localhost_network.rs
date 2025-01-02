@@ -150,7 +150,7 @@ fn raw_localhost_network_demo(num_players: usize)
         {
             client.update();
 
-            if *client.world().resource::<State<ClientInitializationState>>() != ClientInitializationState::Done
+            if *client.world().resource::<State<ClientInitState>>() != ClientInitState::Done
             { continue; }
 
             assert!(client.world().resource::<RenetClient>().is_connected());

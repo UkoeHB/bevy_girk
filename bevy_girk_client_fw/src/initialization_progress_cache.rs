@@ -10,25 +10,25 @@ use iyes_progress::prelude::Progress;
 //-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Resource)]
-pub(crate) struct InitializationProgressCache
+pub(crate) struct InitProgressCache
 {
     prev_progress : Progress,
     progress      : Progress
 }
 
-impl Default for InitializationProgressCache
+impl Default for InitProgressCache
 {
-    fn default() -> InitializationProgressCache
+    fn default() -> InitProgressCache
     {
         // values must be different at the start so progress_changed_last_update() will be true on construction
-        InitializationProgressCache{
+        InitProgressCache{
                 prev_progress : Progress{ done: 1, total: 0 },
                 progress      : Progress::default()
             }
     }
 }
 
-impl InitializationProgressCache
+impl InitProgressCache
 {
     pub(crate) fn set_progress(&mut self, progress: Progress)
     {

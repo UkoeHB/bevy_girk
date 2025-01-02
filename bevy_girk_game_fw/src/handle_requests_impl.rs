@@ -26,9 +26,8 @@ pub(crate) fn handle_set_client_init_progress(
 pub(crate) fn handle_ping_request(
     In((client_id, request)) : In<(ClientId, PingRequest)>,
     mut manager              : GameMessageSender,
-    attributes               : ClientAttributes,
 ){
-    manager.fw_send(&attributes, GameFwMsg::PingResponse(PingResponse{ request }), vis!(Client(client_id)));
+    manager.fw_send(GameFwMsg::PingResponse(PingResponse{ request }), vis!(Client(client_id)));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -14,8 +14,8 @@ use iyes_progress::prelude::ProgressPlugin;
 
 fn add_progress_plugin(app: &mut App)
 {
-    let progress_plugin = ProgressPlugin::<ClientInitializationState>::new()
-        .with_state_transition(ClientInitializationState::InProgress, ClientInitializationState::Done)
+    let progress_plugin = ProgressPlugin::<ClientInitState>::new()
+        .with_state_transition(ClientInitState::InProgress, ClientInitState::Done)
         // we check progress in PostUpdate so initialization progress can be collected and networked immediately
         .check_progress_in(PostUpdate)
         .with_asset_tracking();
@@ -30,7 +30,6 @@ fn add_progress_plugin(app: &mut App)
 fn build_precheck(world: &World)
 {
     if !world.contains_resource::<ClientFwConfig>() { panic!("ClientFwConfig is missing on startup!"); }
-
     if !world.contains_resource::<Time>() { panic!("bevy::Time is missing on startup!"); }
 }
 
@@ -77,7 +76,7 @@ impl Plugin for ClientFwStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<ClientInitializationState>()
+        app.init_state::<ClientInitState>()
             .init_state::<ClientFwState>()
             .add_systems(OnExit(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
             .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
@@ -91,35 +90,26 @@ impl Plugin for ClientFwStartupPlugin
 ///
 /// These sets are ordinal per-schedule.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ClientFwSetPrivate
-{
-    /// In schedule `PreUpdate`.
-    FwStart,
-    /// In schedule `PostUpdate`.
-    FwEnd
-}
-
-/// Public client fw sets.
-///
-/// Client implementations should put game-related logic in these sets.
-///
-/// These sets are ordinal in schedule `Update`.
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ClientFwSet
 {
-    Admin,
+    /// In schedule `PreUpdate`.
     Start,
-    PreLogic,
-    Logic,
-    PostLogic,
+    /// System set for all client logic.
+    /// - `PreUpdate`: Runs after [`Self::Start`].
+    /// - `FixedUpdate`
+    /// - `Update`
+    /// - `PostUpdate`: Runs before [`Self::End`].
+    ///
+    /// Only runs in [`ClientInstanceState::Game`].
+    /// Client implementations should put game-related logic in this set.
+    Update,
+    /// In schedule `PostUpdate`.
     End
 }
 
-/// Runs when in [`ClientInitializationState::InProgress`].
+/// Runs in [`Update`] when in [`ClientInitState::InProgress`].
 ///
 /// This happens when initially connecting to the game, and whenever the client reconnects to the game.
-///
-/// This set is modal in schedule `Update`.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct ClientFwLoadingSet;
 
@@ -135,24 +125,24 @@ impl Plugin for ClientFwTickPlugin
         add_progress_plugin(app);
 
         app.configure_sets(PreUpdate,
-                ClientFwSetPrivate::FwStart
+                ClientFwSet::Start
                     .run_if(in_state(ClientInstanceState::Game))
             );
-        app.configure_sets(Update,
-                (
-                    ClientFwSet::Admin,
-                    ClientFwSet::Start,
-                    ClientFwSet::PreLogic,
-                    ClientFwSet::Logic,
-                    ClientFwSet::PostLogic,
-                    ClientFwSet::End,
-                )
-                    .chain()
-                    .run_if(in_state(ClientInstanceState::Game))
-            );
-        app.configure_sets(Update, ClientFwLoadingSet.run_if(in_state(ClientInitializationState::InProgress)));
+
+        app.configure_sets(PreUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)).after(ClientFwSet::Start));
+        app.configure_sets(FixedUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)));
+        app.configure_sets(Update, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)));
+        app.configure_sets(
+            PostUpdate,
+            ClientFwSet::Update
+                .run_if(in_state(ClientInstanceState::Game))
+                .before(iyes_progress::CheckProgressSet)
+                .before(ClientFwSet::End)
+        );
+
+        app.configure_sets(Update, ClientFwLoadingSet.run_if(in_state(ClientInitState::InProgress)));
         app.configure_sets(PostUpdate,
-                ClientFwSetPrivate::FwEnd
+                ClientFwSet::End
                     .after(iyes_progress::CheckProgressSet)
                     .run_if(in_state(ClientInstanceState::Game))
             );
@@ -164,44 +154,32 @@ impl Plugin for ClientFwTickPlugin
                     // - We want connection-related state changes to be applied here since game state changes will be ignored if
                     //   initializing.
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
-                    // - ClientInitializationState, ClientFwState
+                    // - ClientInitState, ClientFwState
                     apply_state_transitions,
                     handle_game_incoming,
                     // The game may have caused a state change (will be ignored if in the middle of initializing).
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
                     // - ClientFwState
                     apply_state_transitions,
-                ).chain().in_set(ClientFwSetPrivate::FwStart)
+                ).chain().in_set(ClientFwSet::Start)
             );
-
-        // ADMIN
-
-        // START
-
-        // PRELOGIC
-
-        // LOGIC
-
-        // POSTLOGIC
-
-        // END
 
         // FWEND
         app.add_systems(PostUpdate,
                 (
-                    // capture ClientInitializationState changes
+                    // capture ClientInitState changes
                     apply_state_transitions,
                     update_initialization_cache.run_if(client_is_initializing()),
                     send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()
-                    .in_set(ClientFwSetPrivate::FwEnd)
+                    .in_set(ClientFwSet::End)
             );
 
 
         // MISC
 
         // Systems that should run when the client is fully initialized.
-        app.add_systems(OnEnter(ClientInitializationState::Done), request_game_fw_state);
+        app.add_systems(OnEnter(ClientInitState::Done), request_game_fw_state);
     }
 }
 

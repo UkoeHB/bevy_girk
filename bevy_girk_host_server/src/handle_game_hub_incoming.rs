@@ -28,7 +28,7 @@ fn handle_game_hub_message(world: &mut World, game_hub_id: u128, game_hub_msg: H
     match game_hub_msg
     {
         HubToHostMsg::Capacity(capacity)             => syscall(world, (game_hub_id, capacity), hub_update_capacity),
-        HubToHostMsg::Abort{id}                  => syscall(world, (game_hub_id, id), hub_abort_game),
+        HubToHostMsg::Abort{id}                      => syscall(world, (game_hub_id, id), hub_abort_game),
         HubToHostMsg::GameStart{id, request, report} => syscall(world, (game_hub_id, id, request, report), hub_start_game),
         HubToHostMsg::GameOver{id, report}           => syscall(world, (game_hub_id, id, report), hub_game_over),
     }

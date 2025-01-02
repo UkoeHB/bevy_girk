@@ -1,7 +1,7 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
+use bevy_girk_wiring_common::ConnectMetas;
 
-use bevy_girk_wiring_common::{ConnectMetaMemory, ConnectMetaNative, ConnectMetaWasm};
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
@@ -49,13 +49,8 @@ impl GameStartInfo
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameStartReport
 {
-    /// Metadata for generating in-memory connect tokens for the game.
-    #[serde(skip)]
-    pub memory_meta: Option<ConnectMetaMemory>,
-    /// Metadata for generating native-target connect tokens for the game.
-    pub native_meta: Option<ConnectMetaNative>,
-    /// Metadata for generating wasm-target connect tokens for the game.
-    pub wasm_meta: Option<ConnectMetaWasm>,
+    /// Metadata for generating connect tokens for the game.
+    pub metas: ConnectMetas,
     /// Contains information needed by clients in order to set up their local game clients.
     pub start_infos: Vec<GameStartInfo>,
 }

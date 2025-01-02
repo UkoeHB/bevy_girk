@@ -1,7 +1,7 @@
 //local shortcuts
 
 //third-party shortcuts
-use renet2::transport::{ConnectToken, ServerCertHash};
+use renet2_netcode::{ConnectToken, ServerCertHash};
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
@@ -36,13 +36,22 @@ pub enum ServerConnectToken
         #[serde_as(as = "Bytes")]
         token: Vec<u8>
     },
+    /// WebTransport
     //todo: consider making this more flexible in case you don't want the cert hash workflow
-    Wasm{
+    WasmWt{
         /// A renet [`ConnectToken`].
         #[serde_as(as = "Bytes")]
         token: Vec<u8>,
         /// Cert hashes for connecting to self-signed servers.
         cert_hashes: Vec<ServerCertHash>
+    },
+    /// WebSocket
+    WasmWs{
+        /// A renet [`ConnectToken`].
+        #[serde_as(as = "Bytes")]
+        token: Vec<u8>,
+        /// Url for connecting to websocket server.
+        url: url::Url
     },
     #[cfg(feature = "memory_transport")]
     #[serde(skip)]
@@ -50,7 +59,7 @@ pub enum ServerConnectToken
         /// A renet [`ConnectToken`].
         token: Vec<u8>,
         /// In-memory channel the client will use to talk to the renet server.
-        client: renet2::transport::MemorySocketClient,
+        client: renet2_netcode::MemorySocketClient,
     }
 }
 

@@ -12,7 +12,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`GamePacket`] into a specified game message type.
-pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
+fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
     game_packet: &GamePacket,
 ) -> Result<(Tick, T), Option<(Tick, GameFwMsg)>>
 {
@@ -43,27 +43,6 @@ pub fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChann
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Wraps an injected function for handling game messages.
-///
-/// The function is expected to return a `Some((Tick, GameFwMsg))` if that's the deserialization result, or a `None`
-/// if handling the game message fails.
-/// It is recommended to use [`deserialize_game_message`].
-/// We allow access to the game framework message in case a user wants to read it or transform a custom game
-/// message into a framework message (not recommended).
-///
-/// Example:
-/**
-```no_run
-# use bevy::prelude::*;
-# use bevy_girk_game_fw::*;
-fn handler(world: &mut World, game_packet: GamePacket) -> Result<(), Option<(Tick, GameFwMsg)>>
-{
-    let Some((ticks, message)) = deserialize_game_message::<MyGameMessageType>(&game_packet) else { return false; };
-
-    //handle deserialized message
-    true
-}
-```
-*/
 #[derive(Resource)]
 pub struct GameMessageHandler
 {
@@ -72,11 +51,17 @@ pub struct GameMessageHandler
 
 impl GameMessageHandler
 {
-    pub fn new(
-        handler: impl Fn(&mut World, &GamePacket) -> Result<(), Option<(Tick, GameFwMsg)>> + Sync + Send + 'static
-    ) -> GameMessageHandler
+    pub fn new<T>(handler: impl Fn(&mut World, Tick, T) + Sync + Send + 'static) -> Self
+    where
+        T: Debug + for<'de> Deserialize<'de> + IntoChannelKind
     {
-        GameMessageHandler{ handler: Box::new(handler) }
+        Self{
+            handler: Box::new(move |world, packet| {
+                let (tick, game_msg) = deserialize_game_message(packet)?;
+                (handler)(world, tick, game_msg);
+                Ok(())
+            })
+        }
     }
 
     pub fn try_call(&self, world: &mut World, game_packet: &GamePacket) -> Result<(), Option<(Tick, GameFwMsg)>>

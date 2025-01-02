@@ -81,7 +81,7 @@ fn game_lifecycle()
     // request game start
     let game_id = 0u64;
     let mut members = std::collections::HashMap::<u128, LobbyMemberData>::default();
-    members.insert(0u128, LobbyMemberData{ env: bevy_simplenet::env_type(), color: LobbyMemberColor(0u64)});
+    members.insert(0u128, LobbyMemberData{ connection: ConnectionType::inferred(), color: LobbyMemberColor(0u64)});
     let start_request = GameStartRequest{ lobby_data: LobbyData{ id: game_id, members, ..Default::default() } };
     host_hub_server.send(connected_hub_id, HostToHubMsg::StartGame(start_request));
     std::thread::sleep(Duration::from_millis(15));

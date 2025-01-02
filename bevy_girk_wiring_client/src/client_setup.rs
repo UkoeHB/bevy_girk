@@ -1,7 +1,8 @@
 //local shortcuts
 use crate::{setup_renet_client, ClientConnectPack, ClientEventHandlingPlugin, ReceiveServerEventsSet};
 use bevy_girk_client_fw::{
-    ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet, ClientFwSetPrivate, ClientFwState, ClientInitializationState, ClientInstanceState
+    ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet, ClientFwState,
+    ClientInitState, ClientInstanceState
 };
 use bevy_girk_client_instance::ClientInstanceCommand;
 use bevy_girk_game_fw::GameInitProgress;
@@ -10,15 +11,16 @@ use bevy_girk_game_fw::GameInitProgress;
 use bevy::prelude::*;
 use bevy_girk_utils::{just_entered_state, set_and_apply_state};
 use bevy_girk_wiring_common::prepare_network_channels;
-use bevy_renet2::{client_connected, client_disconnected, client_just_connected, client_just_disconnected};
+use bevy_renet2::prelude::{
+    client_connected, client_disconnected, client_just_connected, client_just_disconnected, RenetClient
+};
+use bevy_renet2::netcode::{NetcodeClientTransport, NetcodeTransportError};
 use bevy_replicon::client::ServerUpdateTick;
 use bevy_replicon::prelude::{
     AppRuleExt, ClientSet, RepliconPlugins, ServerEventsPlugin, ServerPlugin
 };
 use bevy_replicon_renet2::RepliconRenetClientPlugin;
 use iyes_progress::{Progress, ProgressReturningSystem};
-use renet2::transport::NetcodeClientTransport;
-use renet2::{transport::NetcodeTransportError, RenetClient};
 
 //standard shortcuts
 use std::time::Duration;
@@ -245,7 +247,7 @@ pub fn prepare_client_app_replication(
         //<-- ClientSet::SyncHierarchy {replicon}: synchronizes replicated entity hierarchies
         //<-- ReceiveServerEventsSet {girk}: collects GamePacket messages
         //<-- girk connection initialization management
-        //<-- ClientFwSetPrivate::FwStart {girk}: handles client fw commands and network messages, prepares the
+        //<-- ClientFwSet::Start {girk}: handles client fw commands and network messages, prepares the
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
         //    game state (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
@@ -262,7 +264,7 @@ pub fn prepare_client_app_replication(
                     .run_if(not(client_just_connected)),
                 ClientSet::SyncHierarchy,
                 ReceiveServerEventsSet,
-                ClientFwSetPrivate::FwStart,
+                ClientFwSet::Start,
             )
                 .chain()
         )
@@ -275,7 +277,7 @@ pub fn prepare_client_app_replication(
                 // - at game end the server will shut down, we don't want to reinitialize in that case
                 // - note: there should not be a race condition here because the client fw only moves to End if
                 //   the server sends an End state message, but this will only be called in a tick where we are disconnected
-                //   and hence won't receive a game End state message in `ClientFwSetPrivate::FwStart` after this
+                //   and hence won't receive a game End state message in `ClientFwSet::Start` after this
                 reinitialize_client
                     .run_if(client_disconnected)
                     .run_if(not(in_state(ClientFwState::Setup)))
@@ -302,48 +304,48 @@ pub fn prepare_client_app_replication(
             )
                 .chain()
                 .after(ReceiveServerEventsSet)
-                .before(ClientFwSetPrivate::FwStart)
+                .before(ClientFwSet::Start)
                 .run_if(in_state(ClientInstanceState::Game)),
         )
         .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_resources)
 
         //# UPDATE #
-        //<-- ClientFwSet::{Admin, Start, PreLogic, Logic, PostLogic, End} {girk}: ordinal sets for user logic
-        //<-- ClientFwLoadingSet (in state ClientInitializationState::InProgress) {girk}: should contain all user
+        //<-- ClientFwSet::Update {girk}: user logic
+        //<-- ClientFwLoadingSet (in state ClientInitState::InProgress) {girk}: should contain all user
         //    loading systems for setting up a game (systems with `.track_progress()`), but NOT app-setup systems
         //    which need to run on startup in ClientInstanceState::Client
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .add_systems(Update,
             (
                 //track connection status
-                track_connection_state.track_progress::<ClientInitializationState>(),
+                track_connection_state.track_progress::<ClientInitState>(),
                 //track whether the first replication message post-connect has been received
                 //- note: we spawn an empty replicated entity in the game framework to ensure an init message is always sent
                 //        when a client connects
                 client_just_connected
                     .pipe(track_replication_initialized)
-                    .track_progress::<ClientInitializationState>(),
+                    .track_progress::<ClientInitState>(),
                 //track whether the client is initialized
                 //- note: this leverages the fact that `iyes_progress` collects progress in PostUpdate to ensure
-                //        `ClientInitializationState::Done` will not be entered until `ClientFwState::Init` has run
+                //        `ClientInitState::Done` will not be entered until `ClientFwState::Init` has run
                 //        for at least one tick (because the client fw will not try to leave `ClientFwState::Init` until
-                //        `ClientInitializationState::Done` has been entered, which can happen in the second Init tick
+                //        `ClientInitState::Done` has been entered, which can happen in the second Init tick
                 //        at earliest)
                 track_initialization_state
-                    .track_progress::<ClientInitializationState>()
+                    .track_progress::<ClientInitState>()
             )
                 .in_set(ClientFwLoadingSet)
         )
-        .configure_sets(Update, ClientFwSet::End.before(iyes_progress::prelude::AssetsTrackProgress))
+        .configure_sets(Update, ClientFwSet::Update.before(iyes_progress::prelude::AssetsTrackProgress))
 
         //# POSTUPDATE #
         //<-- CheckProgressSet {iyes_progress}: checks initialization progress
-        //<-- ClientFwSetPrivate::FwEnd {girk}: dispatches messages to replicon, performs final tick cleanup
+        //<-- ClientFwSet::End {girk}: dispatches messages to replicon, performs final tick cleanup
         //<-- ClientSet::Send (if connected) {replicon}: dispatches messages to renet (`send_client_packets`)
         //<-- ClientSet::SendPackets {replicon}: forwards packets to renet
         //<-- RenetSend {renet}: dispatches packets to the server
         .configure_sets(PostUpdate,
-            ClientFwSetPrivate::FwEnd
+            ClientFwSet::End
                 .before(ClientSet::Send)
         )
 
@@ -369,7 +371,7 @@ pub fn prepare_client_app_network(client_app: &mut App)
             // - We want `client_disconnected` to return true for the first tick of `ClientFwState::Setup`.
             setup_renet_client.map(Result::unwrap)
                 // add ordering constraint
-                .before(bevy_renet2::RenetReceive)
+                .before(bevy_renet2::prelude::RenetReceive)
                 // ignore for first full tick after entering the game
                 .run_if(not(just_entered_state(ClientInstanceState::Game)))
                 // only try to set up the client while in game

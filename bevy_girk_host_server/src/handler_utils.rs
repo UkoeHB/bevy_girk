@@ -192,11 +192,11 @@ pub(crate) fn handle_ack_failure(
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn try_register_user(
-    In((user_id, env_type)) : In<(u128, bevy_simplenet::EnvType)>,
+    In((user_id, user_info)) : In<(u128, UserInfo)>,
     mut users_cache         : ResMut<UsersCache>,
 ) -> bool
 {
-    if let Err(_) = users_cache.add_user(user_id, env_type)
+    if let Err(_) = users_cache.add_user(user_id, user_info)
     { tracing::error!(user_id, "failed registering user"); return false; }
 
     true
@@ -216,11 +216,11 @@ pub(crate) fn try_connect_user_to_game(
     { tracing::warn!(user_id, "trying to connect a user, but user is already in-game"); return true; };
 
     // get the user's environment
-    let Some(user_env) = users_cache.get_user_env(user_id)
+    let Some(user_info) = users_cache.get_user_info(user_id)
     else { tracing::trace!(user_id, "failed connecting user, user is unknown"); return false; };
 
     // get start info
-    let Some((game_id, connect, start)) = ongoing_games_cache.get_user_start_info(user_id, user_env)
+    let Some((game_id, connect, start)) = ongoing_games_cache.get_user_start_info(user_id, user_info)
     else { tracing::trace!(user_id, "trying to connect a user, user is not in a game"); return false; };
 
     // send game start info to user

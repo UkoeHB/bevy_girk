@@ -5,7 +5,7 @@ use bevy_girk_wiring_common::{
 
 //third-party shortcuts
 use bevy::prelude::*;
-use renet2::transport::ClientAuthentication;
+use bevy_renet2::netcode::ClientAuthentication;
 
 //standard shortcuts
 use std::net::SocketAddr;
@@ -25,11 +25,14 @@ pub enum ClientConnectPack
     /// 
     /// Note: The client address should be tailored to the server address type (Ipv4/Ipv6).
     Native(ClientAuthentication, SocketAddr),
-    /// Connection information for wasm transports.
+    /// Connection information for wasm webtransport transports.
     #[cfg(target_family = "wasm")]
-    Wasm(ClientAuthentication, renet2::transport::WebTransportClientConfig),
+    WasmWt(ClientAuthentication, bevy_renet2::netcode::WebTransportClientConfig),
+    /// Connection information for wasm websocket transports.
+    #[cfg(target_family = "wasm")]
+    WasmWs(ClientAuthentication, bevy_renet2::netcode::WebSocketClientConfig),
     #[cfg(feature = "memory_transport")]
-    Memory(ClientAuthentication, renet2::transport::MemorySocketClient),
+    Memory(ClientAuthentication, bevy_renet2::netcode::MemorySocketClient),
 }
 
 impl ClientConnectPack
@@ -53,7 +56,7 @@ impl ClientConnectPack
 
                 Ok(Self::Native(ClientAuthentication::Secure{ connect_token }, client_address))
             }
-            ServerConnectToken::Wasm{ token, cert_hashes } =>
+            ServerConnectToken::WasmWt{ token, cert_hashes } =>
             {
                 #[cfg(target_family = "wasm")]
                 {
@@ -65,14 +68,36 @@ impl ClientConnectPack
                     // prepare client config based on server address
                     let Some(server_addr) = connect_token.server_addresses[0]
                     else { return Err(String::from("server address is missing")); };
-                    let config = renet2::transport::WebTransportClientConfig::new_with_certs(server_addr, cert_hashes);
+                    let config = bevy_renet2::netcode::WebTransportClientConfig::new_with_certs(server_addr, cert_hashes);
 
-                    Ok(Self::Wasm(ClientAuthentication::Secure{ connect_token }, config))
+                    Ok(Self::WasmWt(ClientAuthentication::Secure{ connect_token }, config))
                 }
                 #[cfg(not(target_family = "wasm"))]
                 {
                     let (_, _) = (token, cert_hashes);
-                    panic!("ServerConnectToken::Wasm can only be converted to ClientConnectPack in WASM");
+                    panic!("ServerConnectToken::WasmWt can only be converted to ClientConnectPack in WASM");
+                }
+            }
+            ServerConnectToken::WasmWs{ token, url } =>
+            {
+                #[cfg(target_family = "wasm")]
+                {
+                    // Extract renet ConnectToken.
+                    let connect_token = connect_token_from_bytes(&token)
+                        .ok_or(String::from("failed deserializing renet connect token"))?;
+                    if connect_token.protocol_id != expected_protocol_id { return Err(String::from("protocol id mismatch")); }
+
+                    // prepare client config based on server url
+                    if connect_token.server_addresses[0].is_none()
+                    { return Err(String::from("server address is missing")); };
+                    let config = bevy_renet2::netcode::WebSocketClientConfig{ server_url: url };
+
+                    Ok(Self::WasmWs(ClientAuthentication::Secure{ connect_token }, config))
+                }
+                #[cfg(not(target_family = "wasm"))]
+                {
+                    let (_, _) = (token, url);
+                    panic!("ServerConnectToken::WasmWs can only be converted to ClientConnectPack in WASM");
                 }
             }
             #[cfg(feature = "memory_transport")]

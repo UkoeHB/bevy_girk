@@ -58,111 +58,41 @@ impl Plugin for GameFwStartupPlugin
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Private game fw sets, these sandwich the public sets.
-///
-/// These sets are ordinal per-schedule.
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GameFwSetPrivate
-{
-    /// In schedule `PreUpdate`.
-    FwStart,
-    /// In schedule `Update`. Runs between [`GameFwSet::Start`] and [`GameFwSet::PreLogic`].
-    FwHandleRequests,
-    /// In schedule `PostUpdate`.
-    FwEnd
-}
-
-/// Public game fw sets (exclusively ordered).
-/// 
-/// Game implementations should put game-related logic in these sets.
-///
-/// These sets are ordinal in schedule `Update`.
+/// System sets for the girk game framework.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum GameFwSet
 {
-    Admin,
+    /// In schedule `PreUpdate`.
     Start,
-    PreLogic,
-    Logic,
-    PostLogic,
+    /// In schedule `PostUpdate`.
     End
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Game framework tick plugin. Depends on [`GameFwStartupPlugin`].
-///
-/// We treat a tick as a span of time in which events occur: |__stuff_happening__|. Our logic for handling the stuff that
-/// happened in a span runs after all 'real-space' events of that span have occurred.
-///
-/// Each tick is assigned one game state, represented by [`GameFwState`].
-/// We determine the game state for the next tick at the start of the current tick, using the state of the current tick.
-///
-/// Transition logic can use the `OnEnter(GameFwState::*)` and `OnExit(GameFwState::*)` schedules.
-/// Keep in mind that [`GameFwTick`] will equal the *current* tick (i.e. the first tick of the on-entered state ) when
-/// these schedules run.
-///
-/// In practice, since all our game logic is located at the end of a tick span in real time, the order of events in a
-/// tick is:
-/// 1) Elapse a time span (tick).
-/// 2) Increment [`GameFwTick`] for the current tick.
-/// 3) Determine state for the current tick.
-/// 4) Execute logic for the current tick.
-///
-/// Tick 1's game state is always [`GameFwState::Init`].
 pub struct GameFwTickPlugin;
 
 impl Plugin for GameFwTickPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.configure_sets(Update,
-                (
-                    GameFwSet::Admin,
-                    GameFwSet::Start,
-                    GameFwSetPrivate::FwHandleRequests,
-                    GameFwSet::PreLogic,
-                    GameFwSet::Logic,
-                    GameFwSet::PostLogic,
-                    GameFwSet::End,
-                ).chain()
-            );
-
         // FWSTART
         app.add_systems(PreUpdate,
                 (
+                    // handle requests that showed up before this tick started (i.e. at the end of the previous tick)
+                    handle_requests,
+                    refresh_game_init_progress,
                     // begin the current tick
                     advance_game_fw_tick,
                     update_game_fw_state,
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
                     // - GameFwState
                     |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
-                ).chain().in_set(GameFwSetPrivate::FwStart)
+                ).chain().in_set(GameFwSet::Start)
             );
-
-        // ADMIN
-
-        // START
-
-        // FWHANDLEREQUESTS
-        // note: we handle inputs after the game fw and game core have updated their ticks and states (in their start sets)
-        app.add_systems(Update,
-                (
-                    handle_requests,
-                    refresh_game_init_progress,
-                ).chain().in_set(GameFwSetPrivate::FwHandleRequests)
-            );
-
-        // PRELOGIC
-
-        // LOGIC
-
-        // POSTLOGIC
-
-        // END
 
         // FWEND
-
 
         // MISC
 

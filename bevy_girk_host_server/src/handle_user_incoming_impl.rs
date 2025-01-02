@@ -11,11 +11,11 @@ use bevy_cobweb::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn register_user(In((user_id, env_type)): In<(u128, bevy_simplenet::EnvType)>, world: &mut World)
+pub(crate) fn register_user(In((user_id, user_info)): In<(u128, UserInfo)>, world: &mut World)
 {
     // register user
-    if syscall(world, (user_id, env_type), try_register_user)
-    { tracing::trace!(user_id, ?env_type, "registered user"); }
+    if syscall(world, (user_id, user_info), try_register_user)
+    { tracing::trace!("registered user (id={user_id}, info={user_info:?})"); }
     else
     { tracing::error!(user_id, "failed trying to register a user"); }
 
@@ -76,9 +76,9 @@ pub(crate) fn user_make_lobby(
     else { tracing::trace!(user_id, "could not make lobby, user is not idle"); return; };
 
     // assemble lobby member data
-    let Some(env) = users_cache.get_user_env(user_id)
+    let Some(user_info) = users_cache.get_user_info(user_id)
     else { tracing::error!(user_id, "failed getting user env"); return; };
-    let member_data = LobbyMemberData{ connection: env.into(), color: member_color };
+    let member_data = LobbyMemberData{ connection: user_info.connection(), color: member_color };
 
     // make lobby
     let Ok(lobby_id) = lobbies_cache.new_lobby(user_id, member_data, password, custom_data)
@@ -112,9 +112,9 @@ pub(crate) fn user_join_lobby(
     else { tracing::trace!(lobby_id, user_id, "could not join lobby, user is not idle"); return; };
 
     // assemble lobby member data
-    let Some(env) = users_cache.get_user_env(user_id)
+    let Some(user_info) = users_cache.get_user_info(user_id)
     else { tracing::error!(user_id, "failed getting user env"); return; };
-    let member_data = LobbyMemberData{ connection: env.into(), color: member_color };
+    let member_data = LobbyMemberData{ connection: user_info.connection(), color: member_color };
 
     // try to join the lobby
     if !lobbies_cache.try_add_member(lobby_id, user_id, member_data, &password)
@@ -210,7 +210,7 @@ pub(crate) fn user_get_connect_token(
 ){
     // get the user's environment
     let user_id = token.client_id();
-    let Some(user_env) = users_cache.get_user_env(user_id)
+    let Some(user_info) = users_cache.get_user_info(user_id)
     else { tracing::trace!(user_id, lobby_id, "failed getting connect token, user is unknown"); return; };
 
     // get id of game the user is in
@@ -222,7 +222,7 @@ pub(crate) fn user_get_connect_token(
     { tracing::trace!(user_id, lobby_id, users_game_id, "failed getting connect token for invalid game"); return; };
 
     // get a connect token for the user for the game
-    let Some((game_id, connect)) = ongoing_games_cache.get_user_connect_token(user_id, user_env)
+    let Some((game_id, connect)) = ongoing_games_cache.get_user_connect_token(user_id, user_info)
     else { tracing::error!(user_id, "user is missing in ongoing games cache on get connect token"); return; };
 
     // send game connect info to user

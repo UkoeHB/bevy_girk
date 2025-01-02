@@ -16,8 +16,11 @@ fn handle_user_connection_report(world: &mut World, user_id: u128, report: HostU
 {
     match report
     {
-        HostHubServerReport::Connected(env_type, ()) => syscall(world, (user_id, env_type), register_user),
-        HostHubServerReport::Disconnected            => syscall(world, user_id, unregister_user),
+        HostUserServerReport::Connected(env_type, connect_msg) => world.syscall(
+            (user_id, UserInfo::new(env_type, connect_msg.connection_type)),
+            register_user
+        ),
+        HostUserServerReport::Disconnected => world.syscall(user_id, unregister_user),
     }
 }
 
@@ -28,8 +31,8 @@ fn handle_user_message(world: &mut World, user_id: u128, user_msg: UserToHostMsg
 {
     match user_msg
     {
-        UserToHostMsg::NackPendingLobby{ id } => syscall(world, (user_id, id), user_nack_pending_lobby),
-        UserToHostMsg::AckPendingLobby{ id }  => syscall(world, (user_id, id), user_ack_pending_lobby),
+        UserToHostMsg::NackPendingLobby{ id } => world.syscall((user_id, id), user_nack_pending_lobby),
+        UserToHostMsg::AckPendingLobby{ id }  => world.syscall((user_id, id), user_ack_pending_lobby),
     }
 }
 
@@ -40,12 +43,12 @@ fn handle_user_request(world: &mut World, token: bevy_simplenet::RequestToken, u
 {
     match user_req
     {
-        UserToHostRequest::LobbySearch(query)             => syscall(world, (token, query), user_get_lobby),
-        UserToHostRequest::MakeLobby{ mcolor, pwd, data } => syscall(world, (token, mcolor, pwd, data), user_make_lobby),
-        UserToHostRequest::JoinLobby{ id, mcolor, pwd }   => syscall(world, (token, id, mcolor, pwd), user_join_lobby),
-        UserToHostRequest::LeaveLobby{ id }               => syscall(world, (token, id), user_leave_lobby),
-        UserToHostRequest::LaunchLobbyGame{ id }          => syscall(world, (token, id), user_launch_lobby_game),
-        UserToHostRequest::GetConnectToken{ id }          => syscall(world, (token, id), user_get_connect_token),
+        UserToHostRequest::LobbySearch(query)             => world.syscall((token, query), user_get_lobby),
+        UserToHostRequest::MakeLobby{ mcolor, pwd, data } => world.syscall((token, mcolor, pwd, data), user_make_lobby),
+        UserToHostRequest::JoinLobby{ id, mcolor, pwd }   => world.syscall((token, id, mcolor, pwd), user_join_lobby),
+        UserToHostRequest::LeaveLobby{ id }               => world.syscall((token, id), user_leave_lobby),
+        UserToHostRequest::LaunchLobbyGame{ id }          => world.syscall((token, id), user_launch_lobby_game),
+        UserToHostRequest::GetConnectToken{ id }          => world.syscall((token, id), user_get_connect_token),
     }
 }
 

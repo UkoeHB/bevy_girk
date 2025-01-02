@@ -1,4 +1,5 @@
 //local shortcuts
+use bevy_girk_backend_public::ConnectionType;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -7,20 +8,51 @@ use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 //-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Debug)]
-struct User
+#[derive(Debug, Copy, Clone)]
+pub struct UserInfo
 {
     /// this user's environment type
     env_type: bevy_simplenet::EnvType,
+    /// this user's connection type
+    connection: ConnectionType,
     /// this user's state
     user_state: UserState,
 }
 
-impl Default for User { fn default() -> Self { unreachable!() } }
+impl UserInfo
+{
+    pub fn new(env_type: bevy_simplenet::EnvType, connection: ConnectionType) -> Self
+    {
+        Self{ env_type, connection, user_state: UserState::default() }
+    }
 
-//-------------------------------------------------------------------------------------------------------------------
+    pub fn env_type(&self) -> bevy_simplenet::EnvType
+    {
+        self.env_type
+    }
+
+    pub fn connection(&self) -> ConnectionType
+    {
+        self.connection
+    }
+
+    pub fn user_state(&self) -> UserState
+    {
+        self.user_state
+    }
+
+    /// Constructs self for testing.
+    pub fn test() -> Self
+    {
+        Self{
+            env_type: bevy_simplenet::EnvType::Native,
+            connection: ConnectionType::Native,
+            user_state: UserState::default(),
+        }
+    }
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
@@ -39,19 +71,26 @@ pub enum UserState
 #[derive(Resource, Default, Debug)]
 pub struct UsersCache
 {
-    users: HashMap<u128, User>
+    users: HashMap<u128, UserInfo>
 }
 
 impl UsersCache
 {
     /// Add user.
     /// - Returns `Err(())` if the user already exists.
-    pub fn add_user(&mut self, user_id: u128, env_type: bevy_simplenet::EnvType) -> Result<(), ()>
+    pub fn add_user(&mut self, user_id: u128, mut user_info: UserInfo) -> Result<(), ()>
     {
         tracing::trace!(user_id, "add user");
 
+        // checks
+        if user_info.connection == ConnectionType::Memory {
+            tracing::debug!("adding user {user_id} that requested ConnectionType::Memory; converting to \
+                ConnectionType::Native");
+            user_info.connection = ConnectionType::Native;
+        }
+
         // try to add the user
-        let None = self.users.insert(user_id, User{ env_type, user_state: UserState::Idle })
+        let None = self.users.insert(user_id, user_info)
         else { tracing::error!(user_id, "tried to add user that already exists"); return Err(()); };
 
         Ok(())
@@ -102,33 +141,24 @@ impl UsersCache
         Ok(())
     }
 
+    /// Get a user's environment type.
+    /// - Returns `None` if the user doesn't exist.
+    pub fn get_user_info(&self, user_id: u128) -> Option<&UserInfo>
+    {
+        self.users.get(&user_id)
+    }
+
     /// Get a user's current state.
     /// - Returns `None` if the user doesn't exist.
     pub fn get_user_state(&self, user_id: u128) -> Option<UserState>
     {
-        // try to access the target user
-        let user = self.users.get(&user_id)?;
-
-        Some(user.user_state)
-    }
-
-    /// Get a user's environment type.
-    /// - Returns `None` if the user doesn't exist.
-    pub fn get_user_env(&self, user_id: u128) -> Option<bevy_simplenet::EnvType>
-    {
-        // try to access the target user
-        let user = self.users.get(&user_id)?;
-
-        Some(user.env_type)
+        self.get_user_info(user_id).map(|info| info.user_state)
     }
 
     /// Returns true if a user exists.
     pub fn has_user(&self, user_id: u128) -> bool
     {
-        // try to access the target user
-        let Some(_) = self.users.get(&user_id) else { return false; };
-
-        true
+        self.users.contains_key(&user_id)
     }
 }
 

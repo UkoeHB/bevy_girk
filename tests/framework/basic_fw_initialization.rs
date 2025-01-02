@@ -80,7 +80,7 @@ fn basic_fw_initialization()
         //add client
         .add_plugins(DummyClientCorePlugin)
         //configure execution flow
-        .configure_sets(Update, (GameFwSet::End, ClientFwSet::Admin).chain())
+        .configure_sets(Update, (GameFwSet::End, GirkClientSet::Admin).chain())
         .run();
 
     //todo: validate initialization worked?

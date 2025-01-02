@@ -10,7 +10,7 @@ use bevy_girk_backend_public::*;
 
 /// SERVER
 pub type HostUserServer       = bevy_simplenet::Server<HostUserChannel>;
-pub type HostUserServerReport = bevy_simplenet::ServerReport<()>;
+pub type HostUserServerReport = bevy_simplenet::ServerReport<HostUserConnectMsg>;
 pub type HostUserServerEvent  = bevy_simplenet::ServerEventFrom<HostUserChannel>;
 
 /// server factory

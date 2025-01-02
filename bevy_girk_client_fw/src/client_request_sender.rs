@@ -35,6 +35,8 @@ impl ClientRequestType
 /// Requests are sent via `bevy_replicon`, which means the sender will synchronize with client connection events.
 /// Client requests are guaranteed to be dropped between a client disconnect and the client re-entering
 /// [`ClientFwState::Syncing`].
+///
+/// Can be read by `ClientRequestHandler` on the server.
 #[derive(SystemParam)]
 pub struct ClientRequestSender<'w>
 {
@@ -47,7 +49,7 @@ impl<'w> ClientRequestSender<'w>
     /// Sends a client framework request.
     pub fn fw_request(&mut self, request: ClientFwRequest)
     {
-        tracing::trace!(?request, "sending fw request");
+        tracing::trace!("sending fw request: {request:?}");
 
         let send_policy = request.into_event_type();
         let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<_, ()>::Fw(request) }));
@@ -61,7 +63,7 @@ impl<'w> ClientRequestSender<'w>
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.req_type);
 
-        tracing::trace!(?request, "sending core request");
+        tracing::trace!("sending core request: {request:?}");
 
         let send_policy = request.into_event_type();
         let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<ClientFwRequest, _>::Core(request) }));
