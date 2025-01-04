@@ -28,7 +28,7 @@ fn basic_game()
     // make game instance
     let game_id = 1u64;
     let launch_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
-    let launch_pack = GameLaunchPack::new(game_id, ser_msg(&launch_pack));
+    let launch_pack = GameLaunchPack::new(game_id, launch_pack);
     let mut instance = game_launcher.launch(launch_pack, report_sender);
     assert!(instance.is_running());
     assert!(instance.try_get().is_none());
@@ -72,7 +72,7 @@ fn two_games()
     // make game instance 1
     let game_id1 = 1u64;
     let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
-    let launch_pack1 = GameLaunchPack::new(game_id1, ser_msg(&dummy_pack));
+    let launch_pack1 = GameLaunchPack::new(game_id1, dummy_pack.clone());
     let mut instance1 = game_launcher.launch(launch_pack1, report_sender.clone());
     assert!(instance1.is_running());
 
@@ -84,7 +84,7 @@ fn two_games()
     // make game instance 2
     let game_id2 = 2u64;
     let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
-    let launch_pack2 = GameLaunchPack::new(game_id2, ser_msg(&dummy_pack));
+    let launch_pack2 = GameLaunchPack::new(game_id2, dummy_pack.clone());
     let mut instance2 = game_launcher.launch(launch_pack2, report_sender);
     assert!(instance2.is_running());
     std::thread::sleep(Duration::from_millis(5));
@@ -142,7 +142,7 @@ fn abort_game()
     // make game instance
     let game_id = 1u64;
     let dummy_pack = DummyLaunchPack{ config: game_config, clients: Vec::default() };
-    let launch_pack = GameLaunchPack::new(game_id, ser_msg(&dummy_pack));
+    let launch_pack = GameLaunchPack::new(game_id, dummy_pack.clone());
     let mut instance = game_launcher.launch(launch_pack, report_sender);
     assert!(instance.is_running());
     std::thread::sleep(Duration::from_millis(5));

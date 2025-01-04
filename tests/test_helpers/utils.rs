@@ -71,10 +71,13 @@ pub fn make_test_runner(num_ticks: u32) -> impl Fn(App) -> AppExit + Send + 'sta
     {
         app.add_systems(OnEnter(GameFwState::End), add_game_over_flag);
 
-        for _ in 0..num_ticks
+        for i in 0..num_ticks
         {
             if app.world().contains_resource::<GameOverFlag>()
-            { panic!("test runner failed: game over flag found too early (should appear in the last tick)!"); }
+            {
+                panic!("test runner failed: game over flag found at tick {} (expected: {num_ticks}) \
+                    (should appear in the last tick)!", i);
+            }
 
             app.update();
         }

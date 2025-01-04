@@ -65,7 +65,7 @@ impl Command for ClientInstanceCommand
                 }
                 let game_id = w.resource::<ClientFwConfig>().game_id();
                 tracing::warn!("closing game {game_id} to request connect token");
-                w.resource_mut::<Events<ClientInstanceReport>>().send(ClientInstanceReport::RequestConnectToken);
+                w.resource_mut::<Events<ClientInstanceReport>>().send(ClientInstanceReport::RequestConnectToken(game_id));
                 set_and_apply_state(w, ClientInstanceState::Client);
             }
             Self::End => {

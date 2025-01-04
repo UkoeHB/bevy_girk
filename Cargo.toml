@@ -33,7 +33,8 @@ bevy_replicon            = { version = "0.29", default-features = false }
 bevy_replicon_attributes = { version = "0.8" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
 bevy_simplenet           = { version = "0.14", default-features = false }
-iyes_progress            = { version = "0.13", features = [ "assets" ] }
+#iyes_progress            = { version = "0.13", features = [ "assets" ] }
+iyes_progress            = { git = "https://github.com/UkoeHB/iyes_progress", rev = "343879e", features = [ "assets" ] }
 
 bevy_renet2 = { version = "0.1.0", default-features = false }
 bevy_replicon_renet2 = { version = "0.1.0", default-features = false }

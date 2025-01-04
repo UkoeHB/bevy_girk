@@ -53,8 +53,9 @@ fn startup_postcheck(world: &World)
 pub fn client_is_initializing() -> impl Condition<()>
 {
     IntoSystem::into_system(
-        |current_state: Res<State<ClientFwState>>| -> bool
+        |current_state: Option<Res<State<ClientFwState>>>| -> bool
         {
+            let Some(current_state) = current_state else { return false };
             match **current_state
             {
                 ClientFwState::Setup |
@@ -76,9 +77,11 @@ impl Plugin for ClientFwStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<ClientInitState>()
-            .init_state::<ClientFwState>()
-            .add_systems(OnExit(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
+        app.init_state::<ClientInstanceState>()
+            .enable_state_scoped_entities::<ClientInstanceState>()
+            .add_sub_state::<ClientInitState>()
+            .add_sub_state::<ClientFwState>()
+            .add_systems(OnEnter(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
             .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
             .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_fw_state);
     }
@@ -127,18 +130,17 @@ impl Plugin for ClientFwTickPlugin
         app.configure_sets(PreUpdate,
                 ClientFwSet::Start
                     .run_if(in_state(ClientInstanceState::Game))
+            )
+            .configure_sets(FixedUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)))
+            .configure_sets(PreUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)).after(ClientFwSet::Start))
+            .configure_sets(Update, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)))
+            .configure_sets(
+                PostUpdate,
+                ClientFwSet::Update
+                    .run_if(in_state(ClientInstanceState::Game))
+                    .before(iyes_progress::CheckProgressSet)
+                    .before(ClientFwSet::End)
             );
-
-        app.configure_sets(PreUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)).after(ClientFwSet::Start));
-        app.configure_sets(FixedUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)));
-        app.configure_sets(Update, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)));
-        app.configure_sets(
-            PostUpdate,
-            ClientFwSet::Update
-                .run_if(in_state(ClientInstanceState::Game))
-                .before(iyes_progress::CheckProgressSet)
-                .before(ClientFwSet::End)
-        );
 
         app.configure_sets(Update, ClientFwLoadingSet.run_if(in_state(ClientInitState::InProgress)));
         app.configure_sets(PostUpdate,

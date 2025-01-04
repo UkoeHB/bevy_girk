@@ -28,8 +28,12 @@ use std::time::Duration;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn track_connection_state(client: Res<RenetClient>) -> Progress
+fn track_connection_state(client: Option<Res<RenetClient>>) -> Progress
 {
+    let Some(client) = client else {
+        return Progress{ done: 0, total: 1 };
+    };
+    
     if client.is_disconnected() { return Progress{ done: 0, total: 2 }; }
     if client.is_connecting()   { return Progress{ done: 1, total: 2 }; }
     if client.is_connected()    { return Progress{ done: 2, total: 2 }; }
@@ -48,7 +52,7 @@ fn track_initialization_state(state: Res<State<ClientFwState>>) -> Progress
         ClientFwState::Connecting => Progress{ done: 1, total: 3 },
         ClientFwState::Syncing    => Progress{ done: 2, total: 3 },
         ClientFwState::Init       => Progress{ done: 3, total: 3 },
-        _                         => Progress{ done: 4, total: 3 },
+        _                         => Progress{ done: 3, total: 3 },
     }
 }
 
@@ -324,7 +328,8 @@ pub fn prepare_client_app_replication(
                 //        when a client connects
                 client_just_connected
                     .pipe(track_replication_initialized)
-                    .track_progress::<ClientInitState>(),
+                    .track_progress::<ClientInitState>()
+                    .run_if(resource_exists::<RenetClient>),
                 //track whether the client is initialized
                 //- note: this leverages the fact that `iyes_progress` collects progress in PostUpdate to ensure
                 //        `ClientInitState::Done` will not be entered until `ClientFwState::Init` has run
@@ -335,6 +340,7 @@ pub fn prepare_client_app_replication(
                     .track_progress::<ClientInitState>()
             )
                 .in_set(ClientFwLoadingSet)
+                .run_if(in_state(ClientInstanceState::Game))
         )
         .configure_sets(Update, ClientFwSet::Update.before(iyes_progress::prelude::AssetsTrackProgress))
 

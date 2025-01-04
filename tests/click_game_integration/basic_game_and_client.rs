@@ -19,8 +19,26 @@ use bevy_replicon_attributes::*;
 fn check_client_ping_tracker(ping_tracker: Res<PingTracker>, mut flag: ResMut<PanicOnDrop>)
 {
     let (estimated_game_tick, _) = ping_tracker.estimate_game_tick(0u64);
-    assert_eq!(estimated_game_tick, Tick(1));
+    assert_eq!(estimated_game_tick, Tick(2));
     flag.take();
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn setup_test(mut next: ResMut<NextState<ClientInstanceState>>)
+{
+    next.set(ClientInstanceState::Game);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
+fn request_ping(mut sender: ClientRequestSender)
+{
+    sender.fw_request(ClientFwRequest::GetPing(PingRequest{
+        timestamp_ns: 0u64
+    }));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -60,31 +78,17 @@ fn basic_game_and_client()
         }
     });
 
-    // send ping request
-    app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-        client_id: ClientId::SERVER,
-        event: ClientPacket{
-            send_policy : SendUnordered.into(),
-            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
-                PingRequest{
-                    timestamp_ns: 0u64
-                })
-            )}))
-        }
-    });
-
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
-            num_players,
-            GameDurationConfig::new(2),
-        );
+        num_players,
+        GameDurationConfig::new(2),
+    );
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            ClientId::SERVER,
-            *game_initializer.game_context.duration_config()
-        );
+        ClientId::SERVER,
+        *game_initializer.game_context.duration_config()
+    );
     let player_initializer = ClickPlayerInitializer{ player_context };
 
     app
@@ -109,7 +113,7 @@ fn basic_game_and_client()
         .insert_resource(GameFwConfig::new(ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
-        .set_runner(make_test_runner(5))
+        .set_runner(make_test_runner(4))
         .add_plugins(GameFwPlugin)
         .add_plugins(ClientFwPlugin)
         .add_plugins(GamePlugins)
@@ -142,9 +146,14 @@ fn basic_game_and_client()
         .insert_resource(player_input_reader)
         // TEST: validate ping (in second tick because client fw needs an extra tick to collect ping response)
         .insert_resource(PanicOnDrop::default())
+        .add_systems(Startup, setup_test)
+        .add_systems(OnEnter(ClientFwState::Game), request_ping)
         .add_systems(Last, check_client_ping_tracker.run_if(
                 |game_fw_tick: Res<GameFwTick>|
-                ***game_fw_tick >= 4
+                {
+                    tracing::debug!("{game_fw_tick:?}");
+                    ***game_fw_tick >= 4
+                }
             )
         )
         .run();

@@ -15,7 +15,7 @@ use bevy::prelude::*;
 pub enum ClientInstanceReport
 {
     /// The client game ended because it needs a new connect token.
-    RequestConnectToken,
+    RequestConnectToken(u64),
     /// The client game ended normally.
     Ended(u64),
     /// The client game was aborted.

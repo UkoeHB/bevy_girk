@@ -12,7 +12,7 @@ use bevy::prelude::*;
 
 pub(crate) fn setup_player_state(world: &mut World)
 {
-    let player_initializer = world.remove_resource::<ClickPlayerInitializer>().expect("initializer missing");
+    let Some(player_initializer) = world.remove_resource::<ClickPlayerInitializer>() else { return };
     world.insert_resource(player_initializer.player_context);
 }
 

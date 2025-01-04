@@ -36,11 +36,11 @@ impl PingTracker
     {
         if ticks_per_sec == 0 { panic!("PingTracker: ticks per second is zero!"); }
         PingTracker{
-                tick_duration_ns     : Duration::as_nanos(&tps_to_duration(ticks_per_sec)) as u64,
-                roundtrip_latency_ns : 0u64,
-                game_ticks_elapsed   : Tick(0),
-                game_tick_time_ns    : u64::MAX
-            }
+            tick_duration_ns     : Duration::as_nanos(&tps_to_duration(ticks_per_sec)) as u64,
+            roundtrip_latency_ns : 0u64,
+            game_ticks_elapsed   : Tick(0),
+            game_tick_time_ns    : u64::MAX
+        }
     }
 
     /// Adds a ping cycle to the tracker.

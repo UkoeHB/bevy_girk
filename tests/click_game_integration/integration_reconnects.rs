@@ -2,12 +2,12 @@
 use bevy_girk_backend_public::*;
 use bevy_girk_client_fw::*;
 use bevy_girk_client_instance::ClientFactory;
+use bevy_girk_client_instance::ClientInstanceReport;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_client::*;
 use bevy_girk_wiring_common::*;
 use crate::click_game_integration::*;
 use crate::host_server::*;
@@ -150,11 +150,12 @@ fn make_test_game_hub_server(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
+fn game_is_initialized(game_init_progress: Query<(&GameInitProgress, &StateScoped<ClientInstanceState>)>) -> bool
 {
-    let progress = *game_init_progress.single();
+    let (progress, scoped) = game_init_progress.single();
     tracing::debug!(?progress, "game init progress");
-    Readiness::new(*progress).is_ready()
+    assert_eq!(scoped.0, ClientInstanceState::Game);
+    Readiness::new(**progress).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -298,13 +299,16 @@ fn launch_game(
 
     // users 1, 2 make game clients
     // - we only make the cores here, no client skins
-    let mut client_factory = ClientFactory::new(ClickClientFactory::new(get_test_protocol_id()));
+    let mut client_factory1 = ClientFactory::new(ClickClientFactory::new(get_test_protocol_id()));
+    let mut client_factory2 = ClientFactory::new(ClickClientFactory::new(get_test_protocol_id()));
     let mut client_app1 = App::new();
     let mut client_app2 = App::new();
-    client_factory.add_plugins(&mut client_app1);
-    client_factory.add_plugins(&mut client_app2);
-    client_factory.setup_game(client_app1.world_mut(), token1, start1.clone());
-    client_factory.setup_game(client_app2.world_mut(), token2, start2.clone());
+    client_factory1.add_plugins(&mut client_app1);
+    client_factory2.add_plugins(&mut client_app2);
+    client_factory1.setup_game(client_app1.world_mut(), token1, start1.clone());
+    client_factory2.setup_game(client_app2.world_mut(), token2, start2.clone());
+    client_app1.insert_resource(client_factory1);
+    client_app2.insert_resource(client_factory2);
 
 
     // tick clients until the game is fully initialized
@@ -468,18 +472,24 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // launch game
-    let (game_id,mut client_app1,mut client_app2, _, _) = launch_game(&mut host_server, &mut hub_server, &mut user1, &mut user2);
+    let (game_id,mut client_app1,mut client_app2, start1, _) = launch_game(&mut host_server, &mut hub_server, &mut user1, &mut user2);
 
 
     // disconnect game client 1 from renet server
+    assert_eq!(*client_app1.world().resource::<State<ClientInstanceState>>().get(), ClientInstanceState::Game);
     client_app1.world_mut().resource_mut::<RenetClient>().disconnect();
     client_app1.update();
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
     client_app1.update(); std::thread::sleep(Duration::from_millis(45));
-    assert!(client_app1.world().resource::<RenetClient>().is_disconnected());
-    assert_eq!(*client_app1.world().resource::<State<ClientInitState>>().get(), ClientInitState::InProgress);
-
+    assert!(client_app1.world().get_resource::<RenetClient>().is_none());
+    assert!(client_app1.world().get_resource::<State<ClientInitState>>().is_none());
+    assert_eq!(*client_app1.world().resource::<State<ClientInstanceState>>().get(), ClientInstanceState::Client);
+    
     // request new connect token for client 1
+    let Some(ClientInstanceReport::RequestConnectToken(req_id)) = client_app1.world_mut().resource_mut::<Events<ClientInstanceReport>>().drain().next() else {
+        panic!("client did not receive connect token req");
+    };
+    assert_eq!(req_id, game_id);
     user1.request(UserToHostRequest::GetConnectToken{ id: game_id });
     std::thread::sleep(Duration::from_millis(15));
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
@@ -491,9 +501,9 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // reconnect game client app
-    let connect_pack = ClientConnectPack::new(get_test_protocol_id(), token).unwrap();
-    client_app1.insert_resource(connect_pack);
-
+    client_app1.world_mut().resource_scope(|world: &mut World, mut factory: Mut<ClientFactory>| {
+        factory.setup_game(world, token, start1);
+    });
 
     // tick clients until the game is fully initialized for the reconnected client
     tick_clients_until_game_initialized(vec![&mut client_app1, &mut client_app2]);

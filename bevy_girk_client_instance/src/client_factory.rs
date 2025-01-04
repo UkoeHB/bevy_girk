@@ -12,6 +12,8 @@ use std::any::type_name;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
+use crate::ClientInstanceReport;
+
 //-------------------------------------------------------------------------------------------------------------------
 
 enum ClientFactoryCommand<'a>
@@ -100,6 +102,9 @@ impl ClientFactory
     /// Sets up a client in the current world.
     pub fn add_plugins(&mut self, app: &mut App)
     {
+        // Add this event here instead of the ClientInstancePlugin for easier testing.
+        app.add_event::<ClientInstanceReport>();
+
         (self.callback)(ClientFactoryCommand::AddPlugins(app))
     }
 

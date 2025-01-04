@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::{ClientFactory, ClientFactoryImpl, ClientFactoryPlugin, ClientInstanceReport, LocalGamePlugin};
+use crate::{ClientFactory, ClientFactoryImpl, ClientFactoryPlugin, LocalGamePlugin};
 use bevy_girk_game_instance::GameFactory;
 
 //third-party shortcuts
@@ -39,8 +39,7 @@ impl Plugin for ClientInstancePlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.add_event::<ClientInstanceReport>()
-            .add_plugins(LocalGamePlugin{ local_factory: self.local_factory.clone() })
+        app.add_plugins(LocalGamePlugin{ local_factory: self.local_factory.clone() })
             .add_plugins(ClientFactoryPlugin{ factory: self.factory.clone() });
     }
 }

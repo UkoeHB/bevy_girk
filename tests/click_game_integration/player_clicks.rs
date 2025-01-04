@@ -33,6 +33,14 @@ fn check_player_score(players: Query<&PlayerScore, With<PlayerId>>, mut flag: Re
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn setup_test(mut next: ResMut<NextState<ClientInstanceState>>)
+{
+    next.set(ClientInstanceState::Game);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Test player clicks: PlayerInput -> GameMsg -> reaction
 #[test]
 fn player_clicks()
@@ -59,14 +67,14 @@ fn player_clicks()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::new(0u64),
-            event: ClientPacket{
-                    send_policy : SendOrdered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                            req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                        }))
-                }
-        });
+        client_id: ClientId::new(0u64),
+        event: ClientPacket{
+            send_policy: SendOrdered.into(),
+            request: bytes::Bytes::from(ser_msg(&ClientRequestData{
+                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+            }))
+        }
+    });
 
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
@@ -98,7 +106,7 @@ fn player_clicks()
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup components
-        .set_runner(make_test_runner(8))
+        .set_runner(make_test_runner(5))
         .add_plugins(GameFwPlugin)
         .add_plugins(ClientFwPlugin)
         .add_plugins(GamePlugins)
@@ -128,6 +136,7 @@ fn player_clicks()
         // TEST: player clicks
         .insert_resource(PanicOnDrop::default())
         .insert_resource(player_input_sender)
+        .add_systems(Startup, setup_test)
         .add_systems(OnEnter(ClientCoreState::Play), send_player_click)  //this should succeed
         .add_systems(OnEnter(ClientCoreState::GameOver), check_player_score)
         .run();

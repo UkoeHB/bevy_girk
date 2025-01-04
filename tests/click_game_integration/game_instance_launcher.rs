@@ -126,7 +126,7 @@ fn game_instance_launcher_demo()
     // make new game instance
     let (report_sender, mut report_receiver) = new_io_channel::<GameInstanceReport>();
     let launch_pack = ClickLaunchPackData{ config: game_factory_config, clients: client_init_data};
-    let launch_pack = GameLaunchPack::new(0u64, ser_msg(&launch_pack));
+    let launch_pack = GameLaunchPack::new(0u64, launch_pack);
     let mut game_instance = game_launcher.launch(launch_pack, report_sender);
     std::thread::sleep(Duration::from_millis(30));
     assert!(game_instance.is_running());

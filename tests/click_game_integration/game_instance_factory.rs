@@ -56,13 +56,20 @@ fn check_player_scores(app: &mut App, expected_num_players: u32, expected_num_cl
 #[test]
 fn game_instance_factory_demo()
 {
+    /*
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    */
+
     // game info
     let num_players = 2;
     let num_watchers = 1;
 
     // config
     let ticks_per_sec   = 1;
-    let max_init_ticks  = 200;
+    let max_init_ticks  = 50;
     let game_play_ticks = 200;
 
     // server setup config
@@ -106,7 +113,7 @@ fn game_instance_factory_demo()
 
     // make new game
     let launch_pack = ClickLaunchPackData{ config: game_factory_config, clients: client_init_data};
-    let launch_pack = GameLaunchPack::new(0u64, ser_msg(&launch_pack));
+    let launch_pack = GameLaunchPack::new(0u64, launch_pack);
     let mut game_server_app = App::default();
     let mut game_start_report = game_factory.new_game(&mut game_server_app, launch_pack).unwrap();
 

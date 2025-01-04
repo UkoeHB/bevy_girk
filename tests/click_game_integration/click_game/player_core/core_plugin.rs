@@ -14,7 +14,6 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::{prelude::*, app::PluginGroupBuilder};
-use bevy_girk_utils::*;
 
 //standard shortcuts
 
@@ -26,7 +25,7 @@ fn check_client_framework_consistency(client_fw_config: &ClientFwConfig, player_
 {
     // check the client id
     if client_fw_config.client_id() != player_initializer.player_context.id()
-        { panic!("client id mismatch with client framework!"); }
+    { panic!("client id mismatch with client framework!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -35,17 +34,13 @@ fn check_client_framework_consistency(client_fw_config: &ClientFwConfig, player_
 /// Validate resources that should exist before client startup.
 fn build_precheck(world: &World)
 {
-    // check for expected resources
-    if !world.contains_resource::<ClickPlayerInitializer>()
-        { panic!("ClickPlayerInitializer is missing on startup!"); }
-    if !world.contains_resource::<Receiver<PlayerInput>>()
-        { panic!("Receiver<PlayerInput> is missing on startup!"); }
-
     // validate consistency between client framework and core
     if !world.contains_resource::<ClientFwConfig>()
-        { panic!("ClientFwConfig is missing on startup!"); }
+    { panic!("ClientFwConfig is missing on startup!"); }
 
-    check_client_framework_consistency(world.resource::<ClientFwConfig>(), world.resource::<ClickPlayerInitializer>());
+    if let Some(player_init) = world.get_resource::<ClickPlayerInitializer>() {
+        check_client_framework_consistency(world.resource::<ClientFwConfig>(), player_init);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

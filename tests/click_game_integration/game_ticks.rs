@@ -56,7 +56,7 @@ fn test_game_ticks(num_players: usize, num_game_ticks: u32)
         })
         .add_event::<bevy_replicon::prelude::ServerEvent>()
         //setup app
-        .set_runner(make_test_runner(num_game_ticks + 3))
+        .set_runner(make_test_runner(num_game_ticks + 2))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
