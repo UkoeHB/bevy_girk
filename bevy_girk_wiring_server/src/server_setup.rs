@@ -5,7 +5,7 @@ use bevy_girk_game_fw::{
     GameInitProgress, Readiness
 };
 use bevy_girk_wiring_common::{
-    prepare_network_channels, ConnectMetas, GameServerSetupConfig
+    prepare_network_channels, ConnectMetas, ConnectionType, GameServerSetupConfig
 };
 
 //third-party shortcuts
@@ -60,6 +60,47 @@ fn reset_clients_on_disconnect(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// The number of clients that will connect to a server with different connection types.
+#[derive(Debug, Default, Clone)]
+pub struct ServerClientCounts
+{
+    /// The ids of in-memory clients that will connect.
+    pub memory_clients: Vec<u16>,
+    /// The number of native clients that will connect.
+    pub native_count: usize,
+    /// The number of WASM webtransport clients that will connect.
+    pub wasm_wt_count: usize,
+    /// The number of WASM websocket clients that will connect.
+    pub wasm_ws_count: usize,
+}
+
+impl ServerClientCounts
+{
+    /// The `client_id` is used for in-memory clients.
+    pub fn add(&mut self, connection: ConnectionType, client_id: u64)
+    {
+        match connection
+        {
+            ConnectionType::Memory => {
+                self.memory_clients.push(
+                    u16::try_from(client_id).expect("large client ids not supported for in-memory connections")
+                );
+            }
+            ConnectionType::Native => self.native_count += 1,
+            ConnectionType::WasmWt => self.wasm_wt_count += 1,
+            ConnectionType::WasmWs => self.wasm_ws_count += 1,
+        }
+    }
+
+    /// The total number of clients.
+    pub fn total(&self) -> usize
+    {
+        self.memory_clients.len() + self.native_count + self.wasm_wt_count + self.wasm_ws_count
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Configuration details for setting up a `bevy_girk` server app.
 ///
 /// See [`prepare_girk_game_app`].
@@ -74,14 +115,8 @@ pub struct GirkServerConfig
     pub resend_time: Duration,
     /// Config for setting up a game server.
     pub game_server_config: GameServerSetupConfig,
-    /// The ids of in-memory clients that will connect.
-    pub memory_clients: Vec<u16>,
-    /// The number of native clients that will connect.
-    pub native_count: usize,
-    /// The number of WASM webtransport clients that will connect.
-    pub wasm_wt_count: usize,
-    /// The number of WASM websocket clients that will connect.
-    pub wasm_ws_count: usize,
+    /// The number of clients that will connect.
+    pub client_counts: ServerClientCounts,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -181,10 +216,7 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, m
 pub fn prepare_game_app_network(
     game_app: &mut App,
     game_server_config: GameServerSetupConfig,
-    memory_clients: Vec<u16>,
-    native_count: usize,
-    wasm_wt_count: usize,
-    wasm_ws_count: usize,
+    client_counts: ServerClientCounts,
 ) -> ConnectMetas
 {
     // set up renet server
@@ -193,12 +225,12 @@ pub fn prepare_game_app_network(
         // We assume this is only used for local-player on web.
         #[cfg(target_family = "wasm")]
         {
-            let wasm_count = wasm_wt_count + wasm_ws_count;
-            if native_count > 0 || wasm_count > 0
+            let wasm_count = client_counts.wasm_wt_count + client_counts.wasm_ws_count;
+            if client_counts.native_count > 0 || wasm_count > 0
             {
                 panic!("aborting game app networking construction; target family is WASM where only in-memory \
                     transports are permitted, but found other transport requests (memory: {}, native: {}, wasm: {})",
-                    memory_clients, native_count, wasm_count);
+                    client_counts.memory_clients, client_counts.native_count, wasm_count);
             }
 
             wasm_timer::SystemTime::now().duration_since(wasm_timer::UNIX_EPOCH).unwrap_or_default().as_nanos()
@@ -208,15 +240,7 @@ pub fn prepare_game_app_network(
         renet2_netcode::generate_random_bytes::<32>()
     };
 
-    setup_combo_renet_server(
-        game_app,
-        game_server_config,
-        memory_clients,
-        native_count,
-        wasm_wt_count,
-        wasm_ws_count,
-        &auth_key,
-    )
+    setup_combo_renet_server(game_app, game_server_config, client_counts, &auth_key)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -235,14 +259,7 @@ pub fn prepare_girk_game_app(game_app: &mut App, config: GirkServerConfig) -> Co
         config.resend_time,
         Duration::from_secs((config.game_server_config.timeout_secs * 2).min(1i32) as u64),
     );
-    prepare_game_app_network(
-        game_app,
-        config.game_server_config,
-        config.memory_clients,
-        config.native_count,
-        config.wasm_wt_count,
-        config.wasm_ws_count
-    )
+    prepare_game_app_network(game_app, config.game_server_config, config.client_counts)
 }
 
 //-------------------------------------------------------------------------------------------------------------------

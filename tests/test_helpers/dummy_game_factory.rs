@@ -51,11 +51,10 @@ pub struct DummyGameFactory;
 
 impl GameFactoryImpl for DummyGameFactory
 {
-    fn new_game(&self, app: &mut App, launch_pack: GameLaunchPack) -> Result<GameStartReport, ()>
-    {
-        // extract factory config
-        let Some(pack) = deser_msg::<DummyLaunchPack>(&launch_pack.game_launch_data) else { return Err(()); };
+    type Launch = DummyLaunchPack;
 
+    fn new_game(&self, app: &mut App, _game_id: u64, pack: DummyLaunchPack) -> Result<GameStartReport, ()>
+    {
         // get player ids
         let player_ids: Vec<u128> = pack.clients.iter().map(|m| m.user_id).collect();
 
@@ -68,14 +67,14 @@ impl GameFactoryImpl for DummyGameFactory
 
         // make the client ready
         app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: ClientId::SERVER,
-                event: ClientPacket{
-                        send_policy : SendOrdered.into(),
-                        request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                            }))
-                    }
-            });
+            client_id: ClientId::SERVER,
+            event: ClientPacket{
+                send_policy: SendOrdered.into(),
+                request: bytes::Bytes::from(ser_msg(&ClientRequestData{
+                    req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                }))
+            }
+        });
 
         // prepare app
         app
@@ -103,9 +102,7 @@ impl GameFactoryImpl for DummyGameFactory
             .insert_resource(prepare_player_client_contexts(player_ids.len() + 1))
             .insert_resource(GameMessageType::new::<()>())
             //setup client framework
-            .insert_resource(
-                ClientFwConfig::new( pack.config.ticks_per_sec, ClientId::SERVER )
-            )
+            .insert_resource(ClientFwConfig::new( pack.config.ticks_per_sec, 0, ClientId::SERVER ))
             .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestType::new::<()>())
             //setup game core
@@ -117,18 +114,17 @@ impl GameFactoryImpl for DummyGameFactory
             //add game
             .add_plugins(DummyGameCorePlugin)
             //add client
-            .add_plugins(DummyClientCorePlugin)
-            //configure execution flow
-            .configure_sets(Update, (GameFwSet::End, GirkClientSet::Admin).chain());
+            .add_plugins(DummyClientCorePlugin);
 
         // prepare dummy token meta
-        let native_meta = Some(ConnectMetaNative::dummy());
+        let mut metas = ConnectMetas::default();
+        metas.native = Some(ConnectMetaNative::dummy());
 
         // prepare dummy connect infos
         let start_infos: Vec<GameStartInfo> = player_ids.iter().map(|id| GameStartInfo::new_from_id(*id)).collect();
 
         // prepare dummy game start report
-        let game_start_report = GameStartReport{ native_meta, wasm_meta: None, start_infos };
+        let game_start_report = GameStartReport{ metas, start_infos };
 
         Ok(game_start_report)
     }

@@ -200,7 +200,7 @@ fn tick_clients_until_game_initialized(mut game_clients: Vec<&mut App>)
 
 fn check_game_over_report(expected_scores: &HashMap<ClientId, PlayerScore>, game_over_report: GameOverReport)
 {
-    let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.serialized_game_over_data).unwrap();
+    let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.data).unwrap();
     assert_eq!(expected_scores.len(), game_over_report.player_reports.len());
 
     for ClickPlayerReport{ client_id, score } in game_over_report.player_reports.iter()

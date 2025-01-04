@@ -1,5 +1,6 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
+use bevy_girk_utils::ser_msg;
 use bevy_girk_wiring_common::ConnectMetas;
 
 //third-party shortcuts
@@ -29,6 +30,13 @@ pub struct GameStartInfo
 
 impl GameStartInfo
 {
+    /// Makes a new type-erased start info from `T`.
+    pub fn new<T: Serialize>(game_id: u64, user_id: u128, client_id: u64, start_data: T) -> Self
+    {
+        let serialized_start_data = ser_msg(&start_data);
+        Self{ game_id, user_id, client_id, serialized_start_data }
+    }
+
     /// Generate an empty start info from a user id.
     ///
     /// Used for testing.

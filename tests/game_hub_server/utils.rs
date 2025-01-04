@@ -24,19 +24,19 @@ fn make_test_host_hub_client_with_id(
     let auth = bevy_simplenet::AuthRequest::None{ client_id };
 
     host_hub_client_factory().new_client(
-            enfync::builtin::native::TokioHandle::default(),
-            hub_server_url,
-            auth,
-            bevy_simplenet::ClientConfig{
-                    reconnect_on_disconnect: true,
-                    reconnect_on_server_close,
-                    // Use a small interval for testing since we manually close the server and then need it to
-                    // immediately reconnect instead of waiting.
-                    reconnect_interval: std::time::Duration::from_millis(5),
-                    ..Default::default()
-                },
-            ()
-        )
+        enfync::builtin::native::TokioHandle::default(),
+        hub_server_url,
+        auth,
+        bevy_simplenet::ClientConfig{
+                reconnect_on_disconnect: true,
+                reconnect_on_server_close,
+                // Use a small interval for testing since we manually close the server and then need it to
+                // immediately reconnect instead of waiting.
+                reconnect_interval: std::time::Duration::from_millis(5),
+                ..Default::default()
+            },
+        ()
+    )
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -59,21 +59,21 @@ pub fn make_test_game_hub_server(
 
     // game config
     let game_config = DummyGameConfig{
-            ticks_per_sec       : game_ticks_per_sec,
-            game_duration_ticks : game_num_ticks,
-        };
+        ticks_per_sec       : game_ticks_per_sec,
+        game_duration_ticks : game_num_ticks,
+    };
     let game_launch_pack_source = GameLaunchPackSource::new(
-            DummyGameLaunchPackSource::new(game_config, lp_source_works)
-        );
+        DummyGameLaunchPackSource::new(game_config, lp_source_works)
+    );
 
     // server app
     let server_app = make_game_hub_server(
-            startup_pack,
-            command_receiver,
-            host_hub_client,
-            game_launch_pack_source,
-            game_launcher,
-        );
+        startup_pack,
+        command_receiver,
+        host_hub_client,
+        game_launch_pack_source,
+        game_launcher,
+    );
 
     (command_sender, server_app)
 }
@@ -84,20 +84,20 @@ pub fn make_test_host_hub_server() -> HostHubServer
 {
     // host-hub server
     host_hub_server_factory().new_server(
-            enfync::builtin::Handle::default(),
-            "127.0.0.1:0",
-            bevy_simplenet::AcceptorConfig::Default,
-            bevy_simplenet::Authenticator::None,
-            bevy_simplenet::ServerConfig{
-                max_connections   : 10,
-                max_msg_size      : 10_000,
-                rate_limit_config : bevy_simplenet::RateLimitConfig{
-                        period    : Duration::from_millis(15),
-                        max_count : 500
-                    },
-                ..Default::default()
-            }
-        )
+        enfync::builtin::Handle::default(),
+        "127.0.0.1:0",
+        bevy_simplenet::AcceptorConfig::Default,
+        bevy_simplenet::Authenticator::None,
+        bevy_simplenet::ServerConfig{
+            max_connections   : 10,
+            max_msg_size      : 10_000,
+            rate_limit_config : bevy_simplenet::RateLimitConfig{
+                    period    : Duration::from_millis(15),
+                    max_count : 500
+                },
+            ..Default::default()
+        }
+    )
 }
 
 //-------------------------------------------------------------------------------------------------------------------

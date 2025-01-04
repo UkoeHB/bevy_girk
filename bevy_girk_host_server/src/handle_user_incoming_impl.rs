@@ -14,13 +14,13 @@ use bevy_cobweb::prelude::*;
 pub(crate) fn register_user(In((user_id, user_info)): In<(u128, UserInfo)>, world: &mut World)
 {
     // register user
-    if syscall(world, (user_id, user_info), try_register_user)
+    if world.syscall((user_id, user_info), try_register_user)
     { tracing::trace!("registered user (id={user_id}, info={user_info:?})"); }
     else
     { tracing::error!(user_id, "failed trying to register a user"); }
 
     // reconnect to game if in a game
-    if syscall(world, user_id, try_reconnect_user_to_game)
+    if world.syscall(user_id, try_reconnect_user_to_game)
     { tracing::trace!(user_id, "reconnected user to game"); }
 }
 
@@ -29,15 +29,15 @@ pub(crate) fn register_user(In((user_id, user_info)): In<(u128, UserInfo)>, worl
 pub(crate) fn unregister_user(In(user_id): In<u128>, world: &mut World)
 {
     // nack pending lobby the user is in
-    if syscall(world, (user_id, None), force_nack_pending_lobby)
+    if world.syscall((user_id, None), force_nack_pending_lobby)
     { tracing::trace!(user_id, "force nacked pending lobby while unregistering user"); }
 
     // remove user from lobby
-    if syscall(world, (user_id, None), try_remove_user_from_lobby)
+    if world.syscall((user_id, None), try_remove_user_from_lobby)
     { tracing::trace!(user_id, "removed user from lobby while unregistering user"); }
 
     // unregister the user
-    if syscall(world, user_id, try_remove_user_from_cache)
+    if world.syscall(user_id, try_remove_user_from_cache)
     { tracing::trace!(user_id, "unregistered user"); }
     else
     { tracing::error!(user_id, "failed removing user from cache while unregistering user"); }
@@ -142,11 +142,11 @@ pub(crate) fn user_leave_lobby(In((token, lobby_id)): In<(bevy_simplenet::Reques
 
     // nack pending lobby the user is in
     // - if the pending lobby is fully acked then nothing will happen
-    if syscall(world, (user_id, lobby_id), try_nack_pending_lobby)
+    if world.syscall((user_id, lobby_id), try_nack_pending_lobby)
     { tracing::trace!(user_id, lobby_id, "nacked pending lobby because user left lobby"); }
 
     // remove user from lobby
-    if syscall(world, (user_id, Some(lobby_id)), try_remove_user_from_lobby)
+    if world.syscall((user_id, Some(lobby_id)), try_remove_user_from_lobby)
     { tracing::trace!(user_id, lobby_id, "removed user from lobby because user left lobby"); }
 
     // send request ack if we actually left a lobby
@@ -235,7 +235,7 @@ pub(crate) fn user_nack_pending_lobby(In((user_id, lobby_id)): In<(u128, u64)>, 
 {
     // nack pending lobby the user is in
     // - if the pending lobby is fully acked then nothing will happen
-    if syscall(world, (user_id, lobby_id), try_nack_pending_lobby)
+    if world.syscall((user_id, lobby_id), try_nack_pending_lobby)
     { tracing::trace!(user_id, lobby_id, "nacked pending lobby because user rejected ack"); }
 }
 
@@ -244,7 +244,7 @@ pub(crate) fn user_nack_pending_lobby(In((user_id, lobby_id)): In<(u128, u64)>, 
 pub(crate) fn user_ack_pending_lobby(In((user_id, lobby_id)): In<(u128, u64)>, world: &mut World)
 {
     // try to ack the user's current pending lobby
-    if !syscall(world, (user_id, lobby_id), try_ack_pending_lobby)
+    if !world.syscall((user_id, lobby_id), try_ack_pending_lobby)
     { tracing::trace!(user_id, lobby_id, "failed trying to ack pending lobby"); return; }
     else
     { tracing::trace!(user_id, lobby_id, "acked pending lobby"); }

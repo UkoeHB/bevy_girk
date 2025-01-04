@@ -23,14 +23,7 @@ fn update_client_state(
     if *client_init_state != ClientInitState::Done { return; }
 
     // update game state
-    let new_client_state =
-        match current_game_state
-        {
-            GameState::Init     => ClientCoreState::Init,
-            GameState::Prep     => ClientCoreState::Prep,
-            GameState::Play     => ClientCoreState::Play,
-            GameState::GameOver => ClientCoreState::GameOver,
-        };
+    let new_client_state = ClientCoreState::from(current_game_state);
 
     if new_client_state == **current_client_state { return; }
     next_client_state.set(new_client_state);
@@ -43,7 +36,7 @@ fn update_client_state(
 /// Handle current game state.
 pub(crate) fn handle_current_game_state(In(current_game_state): In<GameState>, world: &mut World)
 {
-    syscall(world, current_game_state, update_client_state);
+    world.syscall(current_game_state, update_client_state);
     //todo: this is heavy-handed, re-evaluate mode-change handling
     // - ClientCoreState
     let _ = world.try_run_schedule(StateTransition);

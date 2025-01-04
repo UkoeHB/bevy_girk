@@ -98,7 +98,7 @@ pub(crate) fn handle_host_incoming(world: &mut World)
         {
             HostHubClientEvent::Report(report) => match report
             {
-                ClientReport::Connected         => syscall(world, (), host_connected),
+                ClientReport::Connected         => world.syscall((), host_connected),
                 ClientReport::Disconnected      => (),
                 ClientReport::ClosedByServer(_) => (),
                 ClientReport::ClosedBySelf      => (),
@@ -110,8 +110,8 @@ pub(crate) fn handle_host_incoming(world: &mut World)
             }
             HostHubClientEvent::Msg(host_message) => match host_message
             {
-                HostToHubMsg::StartGame(req) => syscall(world, req, host_start_game),
-                HostToHubMsg::Abort{id}  => syscall(world, id, host_abort_game),
+                HostToHubMsg::StartGame(req) => world.syscall(req, host_start_game),
+                HostToHubMsg::Abort{id}  => world.syscall(id, host_abort_game),
             }
             _ => tracing::warn!("received unexpected host-hub client event")
         }

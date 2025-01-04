@@ -5,7 +5,6 @@ use crate::*;
 use bevy_girk_utils::*;
 
 //standard shortcuts
-use std::fmt::Debug;
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -13,7 +12,7 @@ use std::fmt::Debug;
 ///
 /// Note that all launchers should send a [`GameInstanceReport::Aborted`] on any error that causes `false`
 /// to be returned by the game instance. This reduces the need for users to poll game instances for results.
-pub trait GameInstanceLauncherImpl: Debug + Send + Sync + 'static
+pub trait GameInstanceLauncherImpl: Send + Sync + 'static
 {
     /// Launches a game and returns a [`GameInstance`] for monitoring it.
     ///
@@ -28,7 +27,6 @@ pub trait GameInstanceLauncherImpl: Debug + Send + Sync + 'static
 
 //-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Debug)]
 pub struct GameInstanceLauncher
 {
     launcher: Box<dyn GameInstanceLauncherImpl>,

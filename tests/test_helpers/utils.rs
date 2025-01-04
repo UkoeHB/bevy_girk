@@ -60,14 +60,14 @@ impl Plugin for AddMockMessageChannelsPlugin
         for client_id in 0..10
         {
             app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                    client_id: ClientId::new(client_id as u64),
-                    event: ClientPacket{
-                            send_policy : SendOrdered.into(),
-                            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                                    req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                                }))
-                        }
-                });
+                client_id: ClientId::new(client_id as u64),
+                event: ClientPacket{
+                    send_policy: SendOrdered.into(),
+                    request: bytes::Bytes::from(ser_msg(&ClientRequestData{
+                        req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+                    }))
+                }
+            });
         }
     }
 }

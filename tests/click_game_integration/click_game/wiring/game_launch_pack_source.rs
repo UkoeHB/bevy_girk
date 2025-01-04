@@ -1,7 +1,6 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -10,8 +9,6 @@ use bevy_replicon::prelude::ClientId;
 //standard shortcuts
 #[cfg(not(target_family = "wasm"))]
 use rand::thread_rng;
-#[cfg(not(target_family = "wasm"))]
-use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -35,13 +32,13 @@ fn get_protocol_id() -> u64
 fn make_player_init_data(connection: ConnectionType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
-            connection,
-            user_id,
-            init: ClickClientInit::Player{
-                client_id   : client_id,
-                player_name : String::from("player") + stringify!(?client_id),
-            },
-        }
+        connection,
+        user_id,
+        client_id,
+        init: ClickClientInit::Player{
+            player_name : String::from("player") + stringify!(?client_id),
+        },
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -50,10 +47,11 @@ fn make_player_init_data(connection: ConnectionType, user_id: u128, client_id: C
 fn make_watcher_init_data(connection: ConnectionType, user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     ClickClientInitDataForGame{
-            connection,
-            user_id,
-            init: ClickClientInit::Watcher{ client_id },
-        }
+        connection,
+        user_id,
+        client_id,
+        init: ClickClientInit::Watcher,
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -93,7 +91,7 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
     let launch_pack = ClickLaunchPackData{ config: game_factory_config.clone(), clients: client_init_data };
 
     // launch pack
-    let launch_pack = GameLaunchPack::new(start_request.game_id(), ser_msg(&launch_pack));
+    let launch_pack = GameLaunchPack::new(start_request.game_id(), launch_pack);
 
     Ok(launch_pack)
 }

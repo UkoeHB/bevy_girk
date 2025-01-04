@@ -11,7 +11,6 @@ use bevy_girk_utils::{new_io_channel, IoSender};
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Launch a game instance in a new thread.
-#[derive(Debug)]
 pub struct GameInstanceLauncherLocal
 {
     game_factory: GameFactory,

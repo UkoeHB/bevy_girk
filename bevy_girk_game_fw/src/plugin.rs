@@ -79,18 +79,18 @@ impl Plugin for GameFwTickPlugin
     {
         // FWSTART
         app.add_systems(PreUpdate,
-                (
-                    // handle requests that showed up before this tick started (i.e. at the end of the previous tick)
-                    handle_requests,
-                    refresh_game_init_progress,
-                    // begin the current tick
-                    advance_game_fw_tick,
-                    update_game_fw_state,
-                    // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
-                    // - GameFwState
-                    |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
-                ).chain().in_set(GameFwSet::Start)
-            );
+            (
+                // handle requests that showed up before this tick started (i.e. at the end of the previous tick)
+                handle_requests,
+                refresh_game_init_progress,
+                // begin the current tick
+                advance_game_fw_tick,
+                update_game_fw_state,
+                // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
+                // - GameFwState
+                |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
+            ).chain().in_set(GameFwSet::Start)
+        );
 
         // FWEND
 
@@ -99,7 +99,8 @@ impl Plugin for GameFwTickPlugin
         // Respond to state transitions
         app.add_systems(PostStartup, notify_game_fw_state_all)  // GameFwState::Init runs before startup systems
             .add_systems(OnEnter(GameFwState::Game), notify_game_fw_state_all)
-            .add_systems(OnEnter(GameFwState::End),
+            .add_systems(
+                OnEnter(GameFwState::End),
                 (
                     notify_game_fw_state_all,
                     start_end_countdown,

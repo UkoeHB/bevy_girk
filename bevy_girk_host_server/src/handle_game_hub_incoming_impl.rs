@@ -136,11 +136,11 @@ pub(crate) fn hub_abort_game(In((game_hub_id, lobby_id)): In<(u128, u64)>, world
     tracing::trace!(game_hub_id, lobby_id, "received abort game from game hub");
 
     // try to abort pending game
-    if syscall(world, (game_hub_id, lobby_id), try_abort_hub_pending_game)
+    if world.syscall((game_hub_id, lobby_id), try_abort_hub_pending_game)
     { tracing::trace!(game_hub_id, lobby_id, "aborted pending game"); return; }
 
     // try to abort ongoing game
-    if syscall(world, (game_hub_id, lobby_id), try_abort_hub_ongoing_game)
+    if world.syscall((game_hub_id, lobby_id), try_abort_hub_ongoing_game)
     { tracing::trace!(game_hub_id, lobby_id, "aborted ongoing game"); return; }
 
     tracing::error!(game_hub_id, lobby_id, "unable to abort the hub's game");

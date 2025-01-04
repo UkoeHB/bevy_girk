@@ -1,7 +1,8 @@
-use bevy_girk_backend_public::ConnectionType;
 //local shortcuts
 use bevy_girk_game_instance::*;
-use bevy_girk_wiring_common::{ConnectMetas, ConnectMetaNative, ConnectMetaWasmWt, ConnectMetaWasmWs, ServerConnectToken};
+use bevy_girk_wiring_common::{
+    ConnectMetas, ConnectionType, ConnectMetaNative, ConnectMetaWasmWt, ConnectMetaWasmWs, ServerConnectToken
+};
 
 //third-party shortcuts
 use bevy::prelude::*;

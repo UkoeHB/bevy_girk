@@ -16,15 +16,6 @@ pub enum PlayerInputInit
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Inputs that may come from a player during Prep state.
-#[derive(Debug)]
-pub enum PlayerInputPrep
-{
-    None,
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 /// Inputs that may come from a player during Play state.
 #[derive(Debug)]
 pub enum PlayerInputPlay
@@ -49,7 +40,6 @@ pub enum PlayerInputGameOver
 pub enum PlayerInput
 {
     Init(PlayerInputInit),
-    Prep(PlayerInputPrep),
     Play(PlayerInputPlay),
     GameOver(PlayerInputGameOver),
 }

@@ -49,8 +49,7 @@ impl Plugin for GameStartupPlugin
             .add_systems(Startup,
                 (
                     setup_game_state,
-                    setup_game_input_handler,
-                    setup_game_message_buffer,
+                    setup_game_fw_reqs,
                 ).chain()
             );
     }
@@ -64,7 +63,6 @@ impl Plugin for GameStartupPlugin
 pub enum GameSet
 {
     PostInit,
-    Prep,
     Play,
     GameOver,
     End
@@ -86,13 +84,6 @@ impl Plugin for GameTickPlugin
                     .run_if(not(in_state(GameFwState::Init)))
             );
 
-        // GAME Prep systems.
-        app.configure_sets(Update,
-                    GameSet::Prep
-                        .run_if(in_state(GameFwState::Game))
-                        .run_if(in_state(GameState::Prep))
-                );
-
         // GAME Play systems.
         app.configure_sets(Update,
                     GameSet::Play
@@ -101,10 +92,8 @@ impl Plugin for GameTickPlugin
                 );
 
         // GAME GameOver systems.
-        //todo: this will only run in the short delay between entering 'game over' and the GameFwState moving to 'End'
         app.configure_sets(Update,
                     GameSet::GameOver
-                        .run_if(in_state(GameFwState::Game))
                         .run_if(in_state(GameState::GameOver))
                 );
 
@@ -118,10 +107,9 @@ impl Plugin for GameTickPlugin
                     {|w: &mut World| { let _ = w.try_run_schedule(StateTransition); }}.in_set(GameSet::PostInit),
                     // elapse the previous tick
                     advance_game_tick.in_set(GameSet::PostInit),
-                    advance_prep_tick.in_set(GameSet::Prep),
                     advance_play_tick.in_set(GameSet::Play),
                     advance_game_over_tick.in_set(GameSet::GameOver),
-                ).chain().in_set(GameFwSet::Admin)
+                ).chain()
             );
 
 
@@ -129,7 +117,6 @@ impl Plugin for GameTickPlugin
 
         // Respond to state transitions
         app.add_systems(PostStartup, notify_game_state_all);  // GameState::Init runs before startup systems
-        app.add_systems(OnEnter(GameState::Prep), notify_game_state_all);
         app.add_systems(OnEnter(GameState::Play), notify_game_state_all);
         app.add_systems(OnEnter(GameState::GameOver),
                 (

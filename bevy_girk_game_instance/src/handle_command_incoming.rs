@@ -36,7 +36,7 @@ fn handle_command(world: &mut World, command: GameInstanceCommand)
 {
     match command
     {
-        GameInstanceCommand::Abort => syscall(world, (), handle_command_abort),
+        GameInstanceCommand::Abort => world.syscall((), handle_command_abort),
     }
 }
 

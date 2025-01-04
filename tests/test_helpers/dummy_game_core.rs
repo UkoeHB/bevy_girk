@@ -3,7 +3,6 @@ use bevy_girk_game_fw::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::*;
 
 //standard shortcuts
 
@@ -23,7 +22,7 @@ pub struct DummyGameDurationConfig
 fn build_precheck(world: &World)
 {
     if !world.contains_resource::<DummyGameDurationConfig>()
-        { panic!("DummyGameDurationConfig is missing on startup!"); }
+    { panic!("DummyGameDurationConfig is missing on startup!"); }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -50,12 +49,7 @@ impl Plugin for DummyGameCorePlugin
     fn build(&self, app: &mut App)
     {
         // core request handler
-        app.insert_resource(ClientRequestHandler::new(
-                | _: &mut World, id: ClientId, packet: &ClientPacket | -> Result<(), Option<ClientFwRequest>>
-                {
-                    deserialize_client_request(id, packet)
-                }
-            ));
+        app.insert_resource(ClientRequestHandler::new(|_, _, _: ()| {}));
 
         // startup check
         build_precheck(app.world());

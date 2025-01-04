@@ -71,7 +71,7 @@ pub(crate) fn clean_game_hub_dc_buffer(world: &mut World)
         tracing::trace!(disconnected_hub_id, "unregistering expired disconnected game hub");
 
         // unregister the game hub
-        syscall(world, disconnected_hub_id, unregister_game_hub);
+        world.syscall(disconnected_hub_id, unregister_game_hub);
     }
 }
 

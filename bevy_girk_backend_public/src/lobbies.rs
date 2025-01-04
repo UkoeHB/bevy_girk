@@ -1,6 +1,6 @@
 //local shortcuts
-use crate::ConnectionType;
 
+use bevy_girk_wiring_common::ConnectionType;
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};

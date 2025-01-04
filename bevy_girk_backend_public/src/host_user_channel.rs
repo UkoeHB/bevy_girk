@@ -1,8 +1,8 @@
 //local shortcuts
-use crate::{ConnectionType, LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
+use crate::{LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::GameStartInfo;
-use bevy_girk_wiring_common::ServerConnectToken;
+use bevy_girk_wiring_common::{ConnectionType, ServerConnectToken};
 
 //third-party shortcuts
 use serde::{Deserialize, Serialize};

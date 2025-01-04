@@ -17,6 +17,8 @@ use renet2_netcode::{
 use std::net::SocketAddr;
 use wasm_timer::{SystemTime, UNIX_EPOCH};
 
+use crate::ServerClientCounts;
+
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -244,16 +246,13 @@ pub fn setup_native_renet_server(server_app: &mut App, server_config: ServerSetu
 pub fn setup_combo_renet_server(
     server_app: &mut App,
     config: GameServerSetupConfig,
-    memory_clients: Vec<u16>,
-    native_count: usize,
-    wasm_wt_count: usize,
-    wasm_ws_count: usize,
+    counts: ServerClientCounts,
     auth_key: &[u8; 32],
 ) -> ConnectMetas
 {
     tracing::info!("setting up renet server");
 
-    let memory_count = memory_clients.len();
+    let max_clients = counts.total();
 
     // get server/client channels
     let replicon_channels = server_app.world().resource::<RepliconChannels>();
@@ -268,15 +267,15 @@ pub fn setup_combo_renet_server(
     let mut socket_addresses = Vec::default();
     let mut sockets = Vec::default();
 
-    let memory_meta = add_memory_socket(&config, memory_clients, &mut socket_addresses, &mut sockets, auth_key);
-    let native_meta = add_native_socket(&config, native_count, &mut socket_addresses, &mut sockets, auth_key);
-    let wasm_wt_meta = add_wasm_wt_socket(&config, wasm_wt_count, &mut socket_addresses, &mut sockets, auth_key);
-    let wasm_ws_meta = add_wasm_ws_socket(&config, wasm_ws_count, &mut socket_addresses, &mut sockets, auth_key);
+    let memory_meta = add_memory_socket(&config, counts.memory_clients, &mut socket_addresses, &mut sockets, auth_key);
+    let native_meta = add_native_socket(&config, counts.native_count, &mut socket_addresses, &mut sockets, auth_key);
+    let wasm_wt_meta = add_wasm_wt_socket(&config, counts.wasm_wt_count, &mut socket_addresses, &mut sockets, auth_key);
+    let wasm_ws_meta = add_wasm_ws_socket(&config, counts.wasm_ws_count, &mut socket_addresses, &mut sockets, auth_key);
 
     // save final addresses
     let server_config = ServerSetupConfig {
         current_time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default(),
-        max_clients: memory_count + native_count + wasm_wt_count + wasm_ws_count,
+        max_clients,
         protocol_id: config.protocol_id,
         socket_addresses,
         authentication: ServerAuthentication::Secure{ private_key: *auth_key },

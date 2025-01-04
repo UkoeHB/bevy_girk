@@ -3,8 +3,11 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_utils::deser_msg;
+use serde::Deserialize;
 
 //standard shortcuts
+use std::any::type_name;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -13,28 +16,43 @@ use std::sync::Arc;
 /// Trait for game factory implementations.
 pub trait GameFactoryImpl: Debug
 {
+    /// Type of the launch pack for this factory.
+    type Launch: for<'de> Deserialize<'de>;
+
+    /// Makes a new game in the provided app.
     fn new_game(
         &self,
         app: &mut App,
-        launch_pack: GameLaunchPack
+        game_id: u64,
+        data: Self::Launch
     ) -> Result<GameStartReport, ()>;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Wraps a game factory implementation in an Arc so it can be cheaply cloned and passed to new threads.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct GameFactory
 {
-    factory: Arc<dyn GameFactoryImpl + Send + Sync>
+    callback: Arc<dyn Fn(&mut App, GameLaunchPack) -> Result<GameStartReport, ()> + Send + Sync + 'static>
 }
 
 impl GameFactory
 {
     /// Create a new game factory.
-    pub fn new<F: GameFactoryImpl + Send + Sync + Debug + 'static>(factory_impl: F) -> GameFactory
+    pub fn new<F: GameFactoryImpl + Send + Sync + 'static>(factory_impl: F) -> GameFactory
     {
-        GameFactory { factory: Arc::new(factory_impl) }
+        let callback = move |app: &mut App, launch_pack: GameLaunchPack| -> Result<GameStartReport, ()> {
+            let Some(data) = deser_msg::<F::Launch>(&launch_pack.game_launch_data)
+            else {
+                tracing::error!("could not deserialize {} game factory config {}",
+                    type_name::<F>(), type_name::<F::Launch>());
+                return Err(());
+            };
+            factory_impl.new_game(app, launch_pack.game_id, data)
+        };
+
+        GameFactory { callback: Arc::new(callback) }
     }
 
     /// Create a new game.
@@ -46,7 +64,7 @@ impl GameFactory
         launch_pack: GameLaunchPack
     ) -> Result<GameStartReport, ()>
     {
-        self.factory.new_game(app, launch_pack)
+        (self.callback)(app, launch_pack)
     }
 }
 

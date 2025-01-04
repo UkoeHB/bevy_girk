@@ -31,10 +31,6 @@ impl GameRand
 #[derive(Resource, Default, Deref)]
 pub struct GameTick(pub Tick);
 
-/// The current tick within [GameState::Prep].
-#[derive(Resource, Default, Deref)]
-pub struct PrepTick(pub Tick);
-
 /// The current tick within [GameState::Play].
 #[derive(Resource, Default, Deref)]
 pub struct PlayTick(pub Tick);
@@ -51,7 +47,6 @@ pub enum GameState
 {
     #[default]
     Init,
-    Prep,
     Play,
     GameOver
 }

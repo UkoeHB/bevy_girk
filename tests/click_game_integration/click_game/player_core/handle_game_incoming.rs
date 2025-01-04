@@ -1,5 +1,4 @@
 //local shortcuts
-use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use crate::click_game_integration::click_game::*;
 
@@ -26,19 +25,7 @@ fn handle_game_core_output_init(world: &mut World, message: GameMsg, _tick: Tick
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn handle_game_core_output_prep(world: &mut World, message: GameMsg, _tick: Tick)
-{
-    match message
-    {
-        GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
+        GameMsg::CurrentGameState(state)          => world.syscall(state, handle_current_game_state),
     }
 }
 
@@ -50,7 +37,7 @@ fn handle_game_core_output_play(world: &mut World, message: GameMsg, _tick: Tick
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
+        GameMsg::CurrentGameState(state)          => world.syscall(state, handle_current_game_state),
     }
 }
 
@@ -62,7 +49,7 @@ fn handle_game_core_output_gameover(world: &mut World, message: GameMsg, _tick: 
     match message
     {
         GameMsg::RequestRejected{reason, request} => handle_request_rejected(reason, request),
-        GameMsg::CurrentGameState(state)          => syscall(world, state, handle_current_game_state),
+        GameMsg::CurrentGameState(state)          => world.syscall(state, handle_current_game_state),
     }
 }
 
@@ -73,22 +60,18 @@ fn handle_game_core_output_gameover(world: &mut World, message: GameMsg, _tick: 
 /// Note: this function is meant to be injected to a [`GameMessageHandler`], where it will be invoked by the client
 ///       framework at the start of each tick to handle incoming game messages.
 pub(crate) fn try_handle_game_core_output(
-    world       : &mut World,
-    game_packet : &GamePacket
-) -> Result<(), Option<(Tick, GameFwMsg)>>
+    world   : &mut World,
+    tick    : Tick,
+    message : GameMsg
+)
 {
-    let (ticks, message) = deserialize_game_message(game_packet)?;
-
     // handle based on current client state
-    match syscall(world, (), get_current_client_core_state)
+    match world.syscall((), get_current_client_core_state)
     {
-        ClientCoreState::Init     => handle_game_core_output_init(world, message, ticks),
-        ClientCoreState::Prep     => handle_game_core_output_prep(world, message, ticks),
-        ClientCoreState::Play     => handle_game_core_output_play(world, message, ticks),
-        ClientCoreState::GameOver => handle_game_core_output_gameover(world, message, ticks),
+        ClientCoreState::Init     => handle_game_core_output_init(world, message, tick),
+        ClientCoreState::Play     => handle_game_core_output_play(world, message, tick),
+        ClientCoreState::GameOver => handle_game_core_output_gameover(world, message, tick),
     }
-
-    Ok(())
 }
 
 //-------------------------------------------------------------------------------------------------------------------

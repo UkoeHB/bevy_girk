@@ -1,5 +1,6 @@
 //local shortcuts
 
+use bevy_girk_utils::ser_msg;
 //third-party shortcuts
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
@@ -26,9 +27,9 @@ pub struct GameLaunchPack
 
 impl GameLaunchPack
 {
-    pub fn new(game_id: u64, game_launch_data: Vec<u8>) -> Self
+    pub fn new<T: Serialize>(game_id: u64, data: T) -> Self
     {
-        Self{ game_id, game_launch_data }
+        Self{ game_id, game_launch_data: ser_msg(&data) }
     }
 }
 

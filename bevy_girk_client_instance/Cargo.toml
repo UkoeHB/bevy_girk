@@ -13,6 +13,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 bevy = { workspace = true }
+serde = { workspace = true }
 tracing = { workspace = true }
 wasm-timer = { workspace = true }
 

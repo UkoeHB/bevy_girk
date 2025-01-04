@@ -20,7 +20,7 @@ where
 
     while let Some(input) = player_inputs.try_recv()
     {
-        handler(world, &input);
+        (handler)(world, &input);
     }
 
     world.insert_resource(player_inputs);
@@ -42,26 +42,13 @@ fn handle_player_input_init(_world: &mut World, player_input: &PlayerInput)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_player_input_prep(_world: &mut World, player_input: &PlayerInput)
-{
-    let PlayerInput::Prep(prep_input) = player_input else { return; };
-
-    match prep_input
-    {
-        PlayerInputPrep::None => ()
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 fn handle_player_input_play(world: &mut World, player_input: &PlayerInput)
 {
     let PlayerInput::Play(play_input) = player_input else { return; };
 
     match play_input
     {
-        PlayerInputPlay::ClickButton => syscall(world, GameRequest::ClickButton, send_game_request),
+        PlayerInputPlay::ClickButton => world.syscall(GameRequest::ClickButton, send_game_request),
         PlayerInputPlay::None        => ()
     }
 }
@@ -86,14 +73,6 @@ fn handle_player_input_gameover(_world: &mut World, player_input: &PlayerInput)
 pub(crate) fn handle_player_inputs_init(world: &mut World)
 {
     process_player_inputs(world, | world, player_input | handle_player_input_init(world, player_input));
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Handle player inputs for ClientCoreState::Prep.
-pub(crate) fn handle_player_inputs_prep(world: &mut World)
-{
-    process_player_inputs(world, | world, player_input | handle_player_input_prep(world, player_input));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,6 @@ use crate::click_game_integration::click_game::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::ClientId;
-use bevy_replicon_attributes::*;
 
 //standard shortcuts
 
@@ -16,13 +15,8 @@ use bevy_replicon_attributes::*;
 pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
     mut sender                       : GameMessageSender,
-    attributes                       : ClientAttributes,
 ){
-    sender.send(
-            &attributes,
-            GameMsg::RequestRejected{reason, request},
-            vis!(Client(client_id))
-        );
+    sender.send_to_client(GameMsg::RequestRejected{reason, request}, client_id.get());
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -42,7 +36,7 @@ pub(crate) fn handle_player_click_button(
 
 pub(crate) fn handle_game_state_request(In(client_id): In<ClientId>, world: &mut World)
 {
-    syscall(world, client_id, notify_game_state_single);
+    world.syscall(client_id, notify_game_state_single);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

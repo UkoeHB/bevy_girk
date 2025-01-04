@@ -15,22 +15,22 @@ use std::time::Duration;
 fn make_configs(initial_max_capacity: u16) -> GameHubServerStartupPack
 {
     let game_hub_server_config = GameHubServerConfig{
-            ticks_per_sec                   : None,
-            initial_max_capacity            : initial_max_capacity,
-            running_game_purge_period_ticks : 100u64,
-        };
+        ticks_per_sec                   : None,
+        initial_max_capacity            : initial_max_capacity,
+        running_game_purge_period_ticks : 100u64,
+    };
     let pending_games_cache_config = PendingGamesCacheConfig{
-            expiry_duration: Duration::from_secs(2),
-        };
+        expiry_duration: Duration::from_secs(2),
+    };
     let running_games_cache_config = RunningGamesCacheConfig{
-            expiry_duration: Duration::from_secs(20),
-        };
+        expiry_duration: Duration::from_secs(20),
+    };
 
     GameHubServerStartupPack{
-            game_hub_server_config,
-            pending_games_cache_config,
-            running_games_cache_config,
-        }
+        game_hub_server_config,
+        pending_games_cache_config,
+        running_games_cache_config,
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

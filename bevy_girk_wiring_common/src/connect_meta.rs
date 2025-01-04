@@ -225,7 +225,7 @@ impl ConnectMetaWasmWs
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Metadata required to generate connect tokens for girk clients.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ConnectMetas
 {
     #[serde(skip)]

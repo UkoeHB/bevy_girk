@@ -500,7 +500,7 @@ pub(crate) fn try_request_game_start(
 
 pub(crate) fn attempt_game_start_request(world: &mut World, user_id: u128, lobby_id: u64)
 {
-    match syscall(world, (user_id, lobby_id), try_request_game_start)
+    match world.syscall((user_id, lobby_id), try_request_game_start)
     {
         Ok(true)  => tracing::trace!(user_id, lobby_id, "requested game start for user's pending lobby"),
         Ok(false) => (),
@@ -511,7 +511,7 @@ pub(crate) fn attempt_game_start_request(world: &mut World, user_id: u128, lobby
             // nack the pending lobby to abort it
             // - we force-nack since the game start request failed, meaning no game hub resources are tied to this
             //   specific game start request
-            if !syscall(world, (user_id, Some(lobby_id)), force_nack_pending_lobby)
+            if !world.syscall((user_id, Some(lobby_id)), force_nack_pending_lobby)
             { tracing::error!(user_id, lobby_id, "failed aborting pending lobby"); }
             else
             { tracing::trace!(user_id, lobby_id, "nacked an aborted pending lobby"); }

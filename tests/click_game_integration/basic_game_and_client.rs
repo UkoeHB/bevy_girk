@@ -52,28 +52,28 @@ fn basic_game_and_client()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::SERVER,
-            event: ClientPacket{
-                    send_policy : SendOrdered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                            req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                        }))
-                }
-        });
+        client_id: ClientId::SERVER,
+        event: ClientPacket{
+            send_policy : SendOrdered.into(),
+            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
+                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+            }))
+        }
+    });
 
     // send ping request
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::SERVER,
-            event: ClientPacket{
-                    send_policy : SendUnordered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                            req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
-                                PingRequest{
-                                        timestamp_ns: 0u64
-                                    })
-                        )}))
-                }
-        });
+        client_id: ClientId::SERVER,
+        event: ClientPacket{
+            send_policy : SendUnordered.into(),
+            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
+                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
+                PingRequest{
+                    timestamp_ns: 0u64
+                })
+            )}))
+        }
+    });
 
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
@@ -123,7 +123,6 @@ fn basic_game_and_client()
                 .chain()
                 .after(bevy_replicon::prelude::ClientSet::Receive)
         )
-        .configure_sets(Update, (GameFwSet::End, GirkClientSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
                 GameFwSetPrivate::FwEnd,

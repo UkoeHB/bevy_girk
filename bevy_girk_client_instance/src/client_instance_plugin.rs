@@ -1,19 +1,20 @@
 //local shortcuts
-use crate::{ClientFactoryImpl, ClientFactoryPlugin, ClientInstanceReport, LocalGamePlugin};
+use crate::{ClientFactory, ClientFactoryImpl, ClientFactoryPlugin, ClientInstanceReport, LocalGamePlugin};
 use bevy_girk_game_instance::GameFactory;
 
 //third-party shortcuts
 use bevy::prelude::*;
 
 //standard shortcuts
-use std::{fmt::Debug, sync::{Arc, Mutex}};
+use std::fmt::Debug;
+use std::sync::{Arc, Mutex};
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up a [`ClientFactory`] and [`LocalGameManager`] in the app.
 pub struct ClientInstancePlugin
 {
-    factory: Arc<Mutex<Option<Box<dyn ClientFactoryImpl>>>>,
+    factory: Arc<Mutex<Option<ClientFactory>>>,
     local_factory: Arc<Mutex<Option<GameFactory>>>,
 
 }
@@ -28,7 +29,7 @@ impl ClientInstancePlugin
         F: ClientFactoryImpl + Send + Sync + Debug + 'static
     {
         Self{
-            factory: Arc::new(Mutex::new(Some(Box::new(client_factory)))),
+            factory: Arc::new(Mutex::new(Some(ClientFactory::new(client_factory)))),
             local_factory: Arc::new(Mutex::new(local_game_factory)),
         }
     }

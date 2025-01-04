@@ -2,7 +2,6 @@
 use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 
@@ -36,29 +35,25 @@ impl GameLaunchPackSourceImpl for DummyGameLaunchPackSource
             Some(true)  =>
             {
                 // collect user ids
-                let clients: Vec<DummyClientInit> =
-                    start_request
-                        .lobby_data
-                        .members
-                        .iter()
-                        .map(
-                            |(id, _)|
-                            DummyClientInit{
-                                env     : bevy_simplenet::env_type(),
-                                user_id : *id
-                            })
-                        .collect();
+                let clients: Vec<DummyClientInit> = start_request
+                    .lobby_data
+                    .members
+                    .iter()
+                    .map(
+                        |(id, _)|
+                        DummyClientInit{
+                            env     : bevy_simplenet::env_type(),
+                            user_id : *id
+                        })
+                    .collect();
 
                 // add launch pack
                 let config = self.game_config.clone();
                 self.queue.push_back(
-                        GameLaunchPackReport::Pack(
-                                GameLaunchPack{
-                                        game_id          : start_request.game_id(),
-                                        game_launch_data : ser_msg(&DummyLaunchPack{ config, clients })
-                                    }
-                            )
+                    GameLaunchPackReport::Pack(
+                        GameLaunchPack::new(start_request.game_id(), DummyLaunchPack{ config, clients })
                     )
+                )
             }
             Some(false) => self.queue.push_back(GameLaunchPackReport::Failure(start_request.game_id())),
             None        => (),

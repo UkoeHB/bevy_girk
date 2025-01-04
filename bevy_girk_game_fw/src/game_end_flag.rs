@@ -2,6 +2,7 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_utils::ser_msg;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
@@ -19,14 +20,15 @@ pub struct GameOverReport
 {
     /// Data needed for a client to reassemble a game over report.
     #[serde_as(as = "Bytes")]
-    pub serialized_game_over_data: Vec<u8>
+    pub data: Vec<u8>
 }
 
 impl GameOverReport
 {
-    pub fn new(report: Vec<u8>) -> GameOverReport
+    pub fn new<T: Serialize>(report: &T) -> GameOverReport
     {
-        GameOverReport{ serialized_game_over_data: report }
+        let report = ser_msg(report);
+        GameOverReport{ data: report }
     }
 }
 

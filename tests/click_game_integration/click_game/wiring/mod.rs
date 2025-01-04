@@ -6,8 +6,8 @@ mod game_factory;
 mod game_launch_pack_source;
 
 //API exports
-pub use crate::click_game_integration::click_game::wiring::click_lobby_checker::*;
-pub use crate::click_game_integration::click_game::wiring::client_factory::*;
-pub use crate::click_game_integration::click_game::wiring::game_app_setup::*;
-pub use crate::click_game_integration::click_game::wiring::game_factory::*;
-pub use crate::click_game_integration::click_game::wiring::game_launch_pack_source::*;
+pub use click_lobby_checker::*;
+pub use client_factory::*;
+pub use game_app_setup::*;
+pub use game_factory::*;
+pub use game_launch_pack_source::*;

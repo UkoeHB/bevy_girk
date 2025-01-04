@@ -23,7 +23,7 @@ fn command_set_max_capacity(In(new_max_capacity): In<GameHubCapacity>, world: &m
     // update capacity tracker immediately (and send updated capacity to host server)
     // - We do this because the host-hub channel is LIFO. We want all messages sent by the hub after this point
     //   to arrive after the host receives a hub capacity update.
-    syscall(world, (), update_capacity);
+    world.syscall((), update_capacity);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -77,11 +77,11 @@ pub(crate) fn handle_commands(world: &mut World)
     {
         match command
         {
-            GameHubCommand::SetMaxCapacity(capacity) => syscall(world, capacity, command_set_max_capacity),
+            GameHubCommand::SetMaxCapacity(capacity) => world.syscall(capacity, command_set_max_capacity),
             GameHubCommand::ShutDown                 =>
             {
-                syscall(world, GameHubCapacity(0u16), command_set_max_capacity);
-                syscall(world, (), command_shut_down);
+                world.syscall(GameHubCapacity(0u16), command_set_max_capacity);
+                world.syscall((), command_shut_down);
             },
         }
     }

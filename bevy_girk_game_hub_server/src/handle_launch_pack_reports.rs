@@ -60,8 +60,8 @@ pub(crate) fn handle_launch_pack_reports(world: &mut World)
     {
         match launch_pack_report
         {
-            GameLaunchPackReport::Pack(launch_pack) => syscall(world, launch_pack, handle_report_pack),
-            GameLaunchPackReport::Failure(game_id)  => syscall(world, game_id, handle_report_failure),
+            GameLaunchPackReport::Pack(launch_pack) => world.syscall(launch_pack, handle_report_pack),
+            GameLaunchPackReport::Failure(game_id)  => world.syscall(game_id, handle_report_failure),
         }
     }
 }

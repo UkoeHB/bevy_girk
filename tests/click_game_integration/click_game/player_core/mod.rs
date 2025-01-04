@@ -13,13 +13,13 @@ mod player_inputs;
 mod setup;
 
 //API exports
-pub use crate::click_game_integration::click_game::player_core::core_plugin::*;
-pub(crate) use crate::click_game_integration::click_game::player_core::core_systems::*;
-pub use crate::click_game_integration::click_game::player_core::core_types::*;
-pub(crate) use crate::click_game_integration::click_game::player_core::handle_game_incoming::*;
-pub(crate) use crate::click_game_integration::click_game::player_core::handle_game_incoming_impl::*;
-pub(crate) use crate::click_game_integration::click_game::player_core::handle_player_inputs::*;
-pub use crate::click_game_integration::click_game::player_core::player_context::*;
-pub use crate::click_game_integration::click_game::player_core::player_initializer::*;
-pub use crate::click_game_integration::click_game::player_core::player_inputs::*;
-pub(crate) use crate::click_game_integration::click_game::player_core::setup::*;
+pub use core_plugin::*;
+pub(crate) use core_systems::*;
+pub use core_types::*;
+pub(crate) use handle_game_incoming::*;
+pub(crate) use handle_game_incoming_impl::*;
+pub(crate) use handle_player_inputs::*;
+pub use player_context::*;
+pub use player_initializer::*;
+pub use player_inputs::*;
+pub(crate) use setup::*;

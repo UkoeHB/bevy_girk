@@ -30,7 +30,7 @@ fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 
 fn check_game_over_report(expected_scores: &HashMap<ClientId, PlayerScore>, game_over_report: GameOverReport)
 {
-    let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.serialized_game_over_data).unwrap();
+    let game_over_report = deser_msg::<ClickGameOverReport>(&game_over_report.data).unwrap();
     assert_eq!(expected_scores.len(), game_over_report.player_reports.len());
 
     for ClickPlayerReport{ client_id, score } in game_over_report.player_reports.iter()

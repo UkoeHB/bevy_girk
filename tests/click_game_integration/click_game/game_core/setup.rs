@@ -17,7 +17,6 @@ fn setup_misc_resources(world: &mut World, game_context: &ClickGameContext)
 {
     world.insert_resource::<GameRand>(GameRand::new(game_context.seed()));
     world.insert_resource::<GameTick>(GameTick::default());
-    world.insert_resource::<PrepTick>(PrepTick::default());
     world.insert_resource::<PlayTick>(PlayTick::default());
     world.insert_resource::<GameOverTick>(GameOverTick::default());
 }
@@ -61,17 +60,10 @@ pub(crate) fn setup_game_state(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Initializes the game input handler.
-pub(crate) fn setup_game_input_handler(world: &mut World)
+/// Initializes the game framework requirements.
+pub(crate) fn setup_game_fw_reqs(world: &mut World)
 {
-    world.insert_resource::<ClientRequestHandler>(ClientRequestHandler::new(try_handle_game_core_input));
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Initializes the game message buffer.
-pub(crate) fn setup_game_message_buffer(world: &mut World)
-{
+    world.insert_resource(ClientRequestHandler::new(try_handle_game_core_input));
     world.insert_resource(GameMessageType::new::<GameMsg>());
 }
 

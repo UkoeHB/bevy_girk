@@ -17,9 +17,9 @@ fn handle_client_fw_request(world: &mut World, client_id: ClientId, request: Cli
     // Note: We log the framework request in [`deserialize_client_request()`].
     match request
     {
-        ClientFwRequest::SetInitProgress(prog) => syscall(world, (client_id, prog), handle_set_client_init_progress),
-        ClientFwRequest::GetPing(req)          => syscall(world, (client_id, req),  handle_ping_request),
-        ClientFwRequest::GetGameFwState        => syscall(world, client_id,         handle_game_fw_state_request),
+        ClientFwRequest::SetInitProgress(prog) => world.syscall((client_id, prog), handle_set_client_init_progress),
+        ClientFwRequest::GetPing(req)          => world.syscall((client_id, req),  handle_ping_request),
+        ClientFwRequest::GetGameFwState        => world.syscall(client_id,         handle_game_fw_state_request),
     }
 }
 

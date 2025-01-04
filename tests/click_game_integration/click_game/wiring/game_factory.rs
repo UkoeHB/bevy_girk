@@ -3,7 +3,6 @@ use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -22,10 +21,9 @@ struct GameStartupHelper
 {
     client_set     : GameFwClients,
     click_init     : ClickGameInitializer,
+    start_infos    : Vec<GameStartInfo>,
     clients        : Vec<(u128, ClientId)>,
-    memory_clients : Vec<u16>,
-    native_count   : usize,
-    wasm_count     : usize,
+    client_counts  : ServerClientCounts,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -33,39 +31,49 @@ struct GameStartupHelper
 
 /// Prepare information to use when setting up the game app.
 fn prepare_game_startup(
-    client_init_data     : Vec<ClickClientInitDataForGame>,
-    game_duration_config : GameDurationConfig
+    game_id         : u64,
+    config          : &GameFwConfig,
+    init_data       : Vec<ClickClientInitDataForGame>,
+    duration_config : GameDurationConfig
 ) -> Result<GameStartupHelper, ()>
 {
     // prepare each client
-    let mut client_set     = HashSet::<ClientId>::with_capacity(client_init_data.len());
-    let mut players        = HashMap::<ClientId, PlayerState>::with_capacity(client_init_data.len());
-    let mut watchers       = HashSet::<ClientId>::with_capacity(client_init_data.len());
-    let mut clients        = Vec::<(u128, ClientId)>::with_capacity(client_init_data.len());
-    let mut memory_clients = Vec::<u16>::with_capacity(client_init_data.len());
-    let mut native_count   = 0;
-    let mut wasm_count     = 0;
+    let mut client_set     = HashSet::<ClientId>::with_capacity(init_data.len());
+    let mut players        = HashMap::<ClientId, PlayerState>::with_capacity(init_data.len());
+    let mut watchers       = HashSet::<ClientId>::with_capacity(init_data.len());
+    let mut clients        = Vec::<(u128, ClientId)>::with_capacity(init_data.len());
+    let mut start_infos    = Vec::with_capacity(init_data.len());
+    let mut client_counts  = ServerClientCounts::default();
 
-    for client_init in client_init_data
+    for client_init in init_data
     {
+        let client_id = client_init.client_id;
+
         // handle client type
-        let client_id = match client_init.init
+        let initializer = match client_init.init
         {
-            ClickClientInit::Player{ client_id, player_name } =>
+            ClickClientInit::Player{ player_name } =>
             {
-                players.insert(client_id, 
-                        PlayerState{
-                                id        : PlayerId { id: client_id },
-                                name      : PlayerName{ name: player_name },
-                                score     : Default::default(),
-                                replicate : Default::default(),
-                            });
-                client_id
+                players.insert(
+                    client_id,
+                    PlayerState{
+                        id        : PlayerId { id: client_id },
+                        name      : PlayerName{ name: player_name },
+                        score     : Default::default(),
+                        replicate : Default::default(),
+                    }
+                );
+                ClickClientInitializer::Player(ClickPlayerInitializer{
+                    player_context: ClickPlayerContext::new(
+                        client_id,
+                        duration_config,
+                    )
+                })
             },
-            ClickClientInit::Watcher{ client_id } =>
+            ClickClientInit::Watcher =>
             {
                 watchers.insert(client_id);
-                client_id
+                ClickClientInitializer::Watcher
             }
         };
 
@@ -73,135 +81,29 @@ fn prepare_game_startup(
         client_set.insert(client_id);
 
         // count client type
-        match client_init.connection
-        {
-            ConnectionType::Memory => memory_clients.push(
-                u16::try_from(client_id).expect("large client ids not supported for in-memory connections")
-            ),
-            ConnectionType::Native => native_count += 1,
-            ConnectionType::Wasm => wasm_count += 1,
-        }
+        client_counts.add(client_init.connection, client_id);
 
         // save user_id/client_id mapping
         clients.push((client_init.user_id, client_id));
+
+        // Prep start info for the client.
+        let client_fw_config = ClientFwConfig::new(config.ticks_per_sec(), game_id, client_id);
+        let start_pack = ClickClientStartPack{ client_fw_config, initializer };
+        let start_info = GameStartInfo::new(game_id, client_init.user_id, client_id.get(), start_pack);
+        start_infos.push(start_info)
     }
     debug_assert_eq!(client_set.len(), clients.len());
 
     // finalize
-    let game_context = ClickGameContext::new(gen_rand128(), game_duration_config);
+    let game_context = ClickGameContext::new(gen_rand128(), duration_config);
 
     Ok(GameStartupHelper{
         client_set : GameFwClients::new(client_set),
         click_init : ClickGameInitializer{ game_context, players, watchers },
+        start_infos,
         clients,
-        memory_clients,
-        native_count,
-        wasm_count,
+        client_counts,
     })
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn try_get_player_initializer(
-    game_initializer : &ClickGameInitializer,
-    client_id        : ClientId,
-) -> Option<ClickPlayerInitializer>
-{
-    if !game_initializer.players.contains_key(&client_id) { return None; };
-    Some(ClickPlayerInitializer{
-            player_context:
-                ClickPlayerContext::new(
-                        client_id,
-                        *game_initializer.game_context.duration_config(),
-                    )
-        })
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn try_get_watcher_initializer(
-    game_initializer : &ClickGameInitializer,
-    client_id        : ClientId,
-) -> Option<()>
-{
-    if !game_initializer.watchers.contains(&client_id) { return None; };
-    Some(())
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn click_client_initializer(
-    game_initializer : &ClickGameInitializer,
-    client_id        : ClientId,
-) -> Result<ClickClientInitializer, ()>
-{
-    // try to make player config
-    if let Some(player_init) = try_get_player_initializer(game_initializer, client_id)
-    { return Ok(ClickClientInitializer::Player(player_init)); }
-
-    // try to make watcher config
-    if let Some(()) = try_get_watcher_initializer(game_initializer, client_id)
-    { return Ok(ClickClientInitializer::Watcher); }
-
-    tracing::error!(?client_id, "client is not a participant in the game");
-    Err(())
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn prepare_client_start_pack(
-    game_initializer : &ClickGameInitializer,
-    game_id          : u64,
-    client_id        : ClientId,
-    ticks_per_sec    : u32,
-) -> Result<ClickClientStartPack, ()>
-{
-    // set up client framework
-    let client_fw_config = ClientFwConfig::new(ticks_per_sec, game_id, client_id);
-
-    // set up client config
-    let click_client_initializer = click_client_initializer(game_initializer, client_id)?;
-
-    Ok(ClickClientStartPack{ client_fw_config, click_client_initializer })
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Get game start infos for participants to use when setting up their game clients.
-fn get_game_start_infos(
-    app          : &App,
-    game_id      : u64,
-    user_clients : &Vec<(u128, ClientId)>,
-) -> Result<Vec<GameStartInfo>, ()>
-{
-    // extract data
-    let game_initializer = app.world().resource::<ClickGameInitializer>();
-    let ticks_per_sec = app.world().resource::<GameFwConfig>().ticks_per_sec();
-
-    // make start infos for each client
-    let mut start_infos = Vec::<GameStartInfo>::with_capacity(user_clients.len());
-
-    for (user_id, client_id) in user_clients.iter()
-    {
-        // get game start package for client
-        let client_start_pack = prepare_client_start_pack(&*game_initializer, game_id, *client_id, ticks_per_sec)?;
-
-        start_infos.push(
-                GameStartInfo{
-                    game_id,
-                    user_id: *user_id,
-                    client_id: client_id.get(),
-                    serialized_start_data: ser_msg(&client_start_pack),
-                }
-            );
-    }
-
-    Ok(start_infos)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -223,15 +125,10 @@ pub struct ClickGameFactoryConfig
 pub enum ClickClientInit
 {
     Player{
-        /// the client's in-game id
-        client_id: ClientId,
         /// the client's player name
         player_name: String,
     },
-    Watcher{
-        /// the client's in-game id
-        client_id: ClientId,
-    }
+    Watcher
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -242,11 +139,11 @@ pub struct ClickClientInitDataForGame
 {
     /// Indicates the type of connection the client wants to have with the server.
     pub connection: ConnectionType,
-
     /// The client's server-side user id.
     pub user_id: u128,
-
-    /// Client init data for use in initializing a game.
+    /// The client's in-game id.
+    pub client_id: ClientId,
+    /// Client-type-specific init data for use in initializing a game.
     pub init: ClickClientInit,
 }
 
@@ -282,7 +179,7 @@ pub struct ClickClientStartPack
     /// Client framework config.
     pub client_fw_config: ClientFwConfig,
     /// Client initializer.
-    pub click_client_initializer: ClickClientInitializer,
+    pub initializer: ClickClientInitializer,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -292,21 +189,20 @@ pub struct ClickGameFactory;
 
 impl GameFactoryImpl for ClickGameFactory
 {
+    type Launch = ClickLaunchPackData;
+
     /// Make a new game.
     fn new_game(
         &self,
         app: &mut App,
-        launch_pack: GameLaunchPack
+        game_id: u64,
+        data: ClickLaunchPackData
     ) -> Result<GameStartReport, ()>
     {
-        // extract game factory config
-        let Some(data) = deser_msg::<ClickLaunchPackData>(&launch_pack.game_launch_data)
-        else { tracing::error!("could not deserialize click game factory config"); return Err(()); };
-
         // initialize clients and game config
         let config = data.config;
         let clients = data.clients;
-        let startup = prepare_game_startup(clients, config.game_duration_config)?;
+        let startup = prepare_game_startup(game_id, &config.game_fw_config, clients, config.game_duration_config)?;
 
         // girk server config
         let server_config = GirkServerConfig{
@@ -314,20 +210,14 @@ impl GameFactoryImpl for ClickGameFactory
             config             : config.game_fw_config,
             game_server_config : config.server_setup_config,
             resend_time        : std::time::Duration::from_millis(100),
-            memory_clients     : startup.memory_clients,
-            native_count       : startup.native_count,
-            wasm_count         : startup.wasm_count,
+            client_counts      : startup.client_counts,
         };
 
         // prepare game app
-        let (memory_meta, native_meta, wasm_meta) = prepare_girk_game_app(app, server_config);
+        let metas = prepare_girk_game_app(app, server_config);
         prepare_game_app_core(app, startup.click_init);
 
-        // game start info
-        // - must call this AFTER prepping the game app and setting up the renet server
-        let start_infos = get_game_start_infos(&app, launch_pack.game_id, &startup.clients)?;
-
-        Ok(GameStartReport{ memory_meta, native_meta, wasm_meta, start_infos })
+        Ok(GameStartReport{ metas, start_infos: startup.start_infos })
     }
 }
 

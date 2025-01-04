@@ -3,6 +3,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
 
 //standard shortcuts
 

@@ -25,7 +25,7 @@ impl IntoChannelKind for GameRequest
         match self
         {
             Self::GameStateRequest => SendUnordered.into(),
-            Self::ClickButton     => SendOrdered.into(),
+            Self::ClickButton      => SendOrdered.into(),
         }
     }
 }

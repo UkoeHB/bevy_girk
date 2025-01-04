@@ -58,8 +58,6 @@ pub enum ClientSet
 {
     /// runs when the client game is initialized
     Init,
-    /// runs in game state 'prep' (but not when initializing)
-    Prep,
     /// runs in game state 'play' (but not when initializing)
     Play,
     /// runs in game state 'game over' (but not when initializing)
@@ -80,8 +78,7 @@ impl Plugin for ClientCoreStartupPlugin
             .add_systems(OnEnter(ClientInstanceState::Game),
                 (
                     setup_player_state,
-                    setup_game_output_handler,
-                    setup_client_request_buffer,
+                    setup_client_fw_reqs,
                 )
             )
             .add_systems(OnExit(ClientInstanceState::Game), cleanup_at_game_end);
@@ -101,41 +98,37 @@ impl Plugin for ClientCoreTickPlugin
         // Init startup. (runs on startup)
         // - load assets
         // - connect to game and synchronize times
-        app.configure_sets(Update,
-                    ClientSet::Init
-                        .run_if(in_state(ClientFwState::Init))
-                );
-
-        // Prep systems.
-        app.configure_sets(Update,
-                    ClientSet::Prep
-                        .run_if(in_state(ClientFwState::Game))
-                        .run_if(in_state(ClientCoreState::Prep))
-                );
+        app.configure_sets(
+            Update,
+            ClientSet::Init
+                .run_if(in_state(ClientFwState::Init))
+        );
 
         // Play systems.
-        app.configure_sets(Update,
-                    ClientSet::Play
-                        .run_if(in_state(ClientFwState::Game))
-                        .run_if(in_state(ClientCoreState::Play))
-                );
+        app.configure_sets(
+            Update,
+            ClientSet::Play
+                .run_if(in_state(ClientFwState::Game))
+                .run_if(in_state(ClientCoreState::Play))
+        );
 
         // GameOver systems.
-        app.configure_sets(Update,
-                    ClientSet::GameOver
-                        .run_if(in_state(ClientFwState::End))
-                        .run_if(in_state(ClientCoreState::GameOver))
-                );
+        app.configure_sets(
+            Update,
+            ClientSet::GameOver
+                .run_if(in_state(ClientFwState::End))
+                .run_if(in_state(ClientCoreState::GameOver))
+        );
 
         // Admin
-        app.add_systems(Update,
-                    (
-                        handle_player_inputs_init.in_set(ClientSet::Init),
-                        handle_player_inputs_prep.in_set(ClientSet::Prep),
-                        handle_player_inputs_play.in_set(ClientSet::Play),
-                        handle_player_inputs_gameover.in_set(ClientSet::GameOver),
-                    ).chain().in_set(GirkClientSet::Admin)
-                );
+        app.add_systems(
+            Update,
+            (
+                handle_player_inputs_init.in_set(ClientSet::Init),
+                handle_player_inputs_play.in_set(ClientSet::Play),
+                handle_player_inputs_gameover.in_set(ClientSet::GameOver),
+            ).chain().in_set(GirkClientSet::Admin)
+        );
 
         // Misc
         // Systems that should run when the client is fully initialized.

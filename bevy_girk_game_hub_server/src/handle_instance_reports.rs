@@ -85,9 +85,9 @@ pub(crate) fn handle_instance_reports(world: &mut World)
     {
         match instance_report
         {
-            GameInstanceReport::GameStart(id, report) => syscall(world, (id, report), instance_report_game_start),
-            GameInstanceReport::GameOver(id, report)  => syscall(world, (id, report), instance_report_game_over),
-            GameInstanceReport::GameAborted(id)       => syscall(world, id, instance_report_game_aborted),
+            GameInstanceReport::GameStart(id, report) => world.syscall((id, report), instance_report_game_start),
+            GameInstanceReport::GameOver(id, report)  => world.syscall((id, report), instance_report_game_over),
+            GameInstanceReport::GameAborted(id)       => world.syscall(id, instance_report_game_aborted),
         }
     }
 }
