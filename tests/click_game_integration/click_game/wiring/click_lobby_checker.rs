@@ -1,5 +1,6 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
+use bevy_girk_wiring_common::ConnectionType;
 
 //third-party shortcuts
 

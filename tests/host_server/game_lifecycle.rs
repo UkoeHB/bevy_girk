@@ -185,10 +185,10 @@ fn game_lifecycle()
     std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, token: _, start: _ })) = user1.next()
     else { panic!("client did not receive server msg"); };
 
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _, start: _ })) = user2.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, token: _, start: _ })) = user2.next()
     else { panic!("client did not receive server msg"); };
 
 

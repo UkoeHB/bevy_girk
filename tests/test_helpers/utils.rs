@@ -21,15 +21,6 @@ pub fn add_game_over_flag(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub fn append_client(clients: &mut GameFwClients)
-{
-    let mut hashset = (**clients).clone();
-    hashset.insert(ClientId::new(clients.len() as u64));
-    *clients = GameFwClients::new(hashset);
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
 pub fn prepare_player_client_contexts(num_players: usize) -> GameFwClients
 {
     let mut clients = HashSet::default();

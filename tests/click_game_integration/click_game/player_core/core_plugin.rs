@@ -127,7 +127,7 @@ impl Plugin for ClientCoreTickPlugin
                 handle_player_inputs_init.in_set(ClientSet::Init),
                 handle_player_inputs_play.in_set(ClientSet::Play),
                 handle_player_inputs_gameover.in_set(ClientSet::GameOver),
-            ).chain().in_set(GirkClientSet::Admin)
+            ).chain()
         );
 
         // Misc

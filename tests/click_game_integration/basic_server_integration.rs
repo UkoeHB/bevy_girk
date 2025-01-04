@@ -7,6 +7,7 @@ use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
 use bevy_girk_utils::*;
+use bevy_girk_wiring_common::*;
 use crate::click_game_integration::*;
 use crate::host_server::*;
 
@@ -14,7 +15,7 @@ use crate::host_server::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_renet2::renet2::RenetClient;
+use bevy_renet2::prelude::RenetClient;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -94,7 +95,6 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
 
     // config
     let max_init_ticks  = 200;
-    let game_prep_ticks = 0;
 
     // server setup config
     let server_setup_config = GameServerSetupConfig{
@@ -108,7 +108,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
     let game_fw_config = GameFwConfig::new(game_ticks_per_sec, max_init_ticks, 0);
 
     // game duration config
-    let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_num_ticks);
+    let game_duration_config = GameDurationConfig::new(game_num_ticks);
 
     // click game factory config
     let game_factory_config = ClickGameFactoryConfig{
@@ -321,12 +321,12 @@ fn basic_server_integration()
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(15));
 
     // - users 1, 2 receive game start
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: connect1, start: start1 })) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, token: token1, start: start1 })) = user1.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(user1_id, start1.user_id);
     let game_id = id;
 
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, connect: connect2, start: start2 })) = user2.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id, token: token2, start: start2 })) = user2.next()
     else { panic!("client did not receive server msg"); };
     assert_eq!(user2_id, start2.user_id);
     assert_eq!(id, game_id);
@@ -335,10 +335,14 @@ fn basic_server_integration()
     // users 1, 2 make game clients
     // - we only make the cores here, no client skins
     let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
-    let (mut client_app1, _) = client_factory.new_client(connect1, start1).unwrap();
+    let mut client_app1 = App::new();
+    client_factory.add_plugins(&mut client_app1);
+    client_factory.setup_game(client_app1.world_mut(), token1, ClientStartInfo::new(start1).unwrap());
     let player1_id = client_factory.player_id.take().unwrap();
     let player_input_sender1 = client_factory.player_input.take().unwrap();
-    let (mut client_app2, _) = client_factory.new_client(connect2, start2).unwrap();
+    let mut client_app2 = App::new();
+    client_factory.add_plugins(&mut client_app2);
+    client_factory.setup_game(client_app2.world_mut(), token2, ClientStartInfo::new(start2).unwrap());
     let player2_id = client_factory.player_id.take().unwrap();
     let player_input_sender2 = client_factory.player_input.take().unwrap();
 

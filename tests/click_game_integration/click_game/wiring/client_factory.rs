@@ -1,6 +1,10 @@
+use std::any::type_name;
+
 //local shortcuts
 use bevy_girk_client_instance::*;
 use bevy_girk_utils::*;
+use bevy_girk_wiring_client::{prepare_girk_client_app, setup_girk_client_game, ClientConnectPack, GirkClientConfig, GirkClientStartupConfig};
+use bevy_girk_wiring_common::ServerConnectToken;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -91,7 +95,7 @@ impl ClientFactoryImpl for ClickClientFactory
         start_info: ClientStartInfo<ClickClientStartPack>
     )
     {
-        let connnect_pack = match ClientConnectPack::new(self.expected_protocol_id, token) {
+        let connect_pack = match ClientConnectPack::new(self.expected_protocol_id, token) {
             Ok(connect) => connect,
             Err(err) => {
                 tracing::error!("failed obtaining ClientConnectPack for {}: {err:?}", type_name::<Self>());

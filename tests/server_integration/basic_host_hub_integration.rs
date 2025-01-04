@@ -148,7 +148,7 @@ fn basic_host_hub_integration()
 
 
     // get game start report
-    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, connect: _ , start: _})) = user1.next()
+    let Some(HostUserClientEvent::Msg(HostToUserMsg::GameStart{ id: _, token: _ , start: _})) = user1.next()
     else { panic!("client did not receive server msg"); };
 
 

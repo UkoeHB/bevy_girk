@@ -220,11 +220,11 @@ pub(crate) fn try_connect_user_to_game(
     else { tracing::trace!(user_id, "failed connecting user, user is unknown"); return false; };
 
     // get start info
-    let Some((game_id, connect, start)) = ongoing_games_cache.get_user_start_info(user_id, user_info)
+    let Some((game_id, token, start)) = ongoing_games_cache.get_user_start_info(user_id, user_info)
     else { tracing::trace!(user_id, "trying to connect a user, user is not in a game"); return false; };
 
     // send game start info to user
-    user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, connect, start: start.clone() });
+    user_server.send(user_id, HostToUserMsg::GameStart{ id: game_id, token, start: start.clone() });
 
     // update user state
     if let Err(_) = users_cache.update_user_state(user_id, UserState::InGame(game_id))

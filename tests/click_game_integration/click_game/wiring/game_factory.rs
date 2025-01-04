@@ -3,6 +3,8 @@ use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
+use bevy_girk_wiring_common::*;
+use bevy_girk_wiring_server::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -22,7 +24,6 @@ struct GameStartupHelper
     client_set     : GameFwClients,
     click_init     : ClickGameInitializer,
     start_infos    : Vec<GameStartInfo>,
-    clients        : Vec<(u128, ClientId)>,
     client_counts  : ServerClientCounts,
 }
 
@@ -41,7 +42,6 @@ fn prepare_game_startup(
     let mut client_set     = HashSet::<ClientId>::with_capacity(init_data.len());
     let mut players        = HashMap::<ClientId, PlayerState>::with_capacity(init_data.len());
     let mut watchers       = HashSet::<ClientId>::with_capacity(init_data.len());
-    let mut clients        = Vec::<(u128, ClientId)>::with_capacity(init_data.len());
     let mut start_infos    = Vec::with_capacity(init_data.len());
     let mut client_counts  = ServerClientCounts::default();
 
@@ -81,10 +81,7 @@ fn prepare_game_startup(
         client_set.insert(client_id);
 
         // count client type
-        client_counts.add(client_init.connection, client_id);
-
-        // save user_id/client_id mapping
-        clients.push((client_init.user_id, client_id));
+        client_counts.add(client_init.connection, client_id.get());
 
         // Prep start info for the client.
         let client_fw_config = ClientFwConfig::new(config.ticks_per_sec(), game_id, client_id);
@@ -92,7 +89,7 @@ fn prepare_game_startup(
         let start_info = GameStartInfo::new(game_id, client_init.user_id, client_id.get(), start_pack);
         start_infos.push(start_info)
     }
-    debug_assert_eq!(client_set.len(), clients.len());
+    debug_assert_eq!(client_set.len(), start_infos.len());
 
     // finalize
     let game_context = ClickGameContext::new(gen_rand128(), duration_config);
@@ -101,7 +98,6 @@ fn prepare_game_startup(
         client_set : GameFwClients::new(client_set),
         click_init : ClickGameInitializer{ game_context, players, watchers },
         start_infos,
-        clients,
         client_counts,
     })
 }

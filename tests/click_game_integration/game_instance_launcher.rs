@@ -4,13 +4,14 @@ use bevy_girk_client_instance::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_utils::*;
+use bevy_girk_wiring_common::*;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::*;
-use bevy_renet2::renet2::RenetClient;
+use bevy_renet2::prelude::RenetClient;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -78,7 +79,6 @@ fn game_instance_launcher_demo()
     // config
     let ticks_per_sec   = 100;
     let max_init_ticks  = 2000;
-    let game_prep_ticks = 0;
     let game_play_ticks = 10;
 
     // server setup config
@@ -93,7 +93,7 @@ fn game_instance_launcher_demo()
     let game_fw_config = GameFwConfig::new( ticks_per_sec, max_init_ticks, 0 );
 
     // game duration config
-    let game_duration_config = GameDurationConfig::new(game_prep_ticks, game_play_ticks);
+    let game_duration_config = GameDurationConfig::new(game_play_ticks);
 
     // click game config
     let game_factory_config = ClickGameFactoryConfig{
@@ -136,7 +136,7 @@ fn game_instance_launcher_demo()
     else { panic!("failed to start game"); };
 
     // get token meta
-    let token_meta = game_start_report.native_meta.unwrap();
+    let token_meta = game_start_report.metas.native.unwrap();
 
     // current time
     let current_time = SystemTime::now()
@@ -157,7 +157,9 @@ fn game_instance_launcher_demo()
         // make client core
         // - we only make the core here, no client skin
         let mut client_factory = ClickClientFactory::new(get_test_protocol_id());
-        let (client_app, _) = client_factory.new_client(connect_token, start_info).unwrap();
+        let mut client_app = App::new();
+        client_factory.add_plugins(&mut client_app);
+        client_factory.setup_game(client_app.world_mut(), connect_token, ClientStartInfo::new(start_info).unwrap());
         let player_input_sender = client_factory.player_input.take();
 
         client_apps.push(client_app);

@@ -1,6 +1,7 @@
 //local shortcuts
 use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
+use bevy_girk_wiring_common::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
@@ -9,6 +10,8 @@ use bevy_replicon::prelude::ClientId;
 //standard shortcuts
 #[cfg(not(target_family = "wasm"))]
 use rand::thread_rng;
+#[cfg(not(target_family = "wasm"))]
+use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
 //-------------------------------------------------------------------------------------------------------------------

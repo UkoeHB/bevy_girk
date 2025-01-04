@@ -20,7 +20,7 @@ pub enum HostToUserMsg
     LobbyLeave{ id: u64 },
     PendingLobbyAckRequest{ id: u64 },
     PendingLobbyAckFail{ id: u64 },
-    GameStart{ id: u64, connect: ServerConnectToken, start: GameStartInfo },
+    GameStart{ id: u64, token: ServerConnectToken, start: GameStartInfo },
     GameAborted{ id: u64 },
     GameOver{ id: u64, report: GameOverReport },
 }
@@ -35,7 +35,7 @@ pub enum HostToUserResponse
     /// Response to [`UserToHostRequest::MakeLobby`] and [`UserToHostRequest::JoinLobby`].
     LobbyJoin{ lobby: LobbyData },
     /// Response to [`UserToHostRequest::GetConnectToken`];
-    ConnectToken{ id: u64, connect: ServerConnectToken },
+    ConnectToken{ id: u64, token: ServerConnectToken },
 }
 
 //-------------------------------------------------------------------------------------------------------------------

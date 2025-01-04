@@ -4,6 +4,7 @@ use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
+use bevy_girk_wiring_common::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -63,7 +64,6 @@ impl GameFactoryImpl for DummyGameFactory
         app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
         app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
         app.add_event::<GamePacket>();
-        let (_client_fw_comand_sender, client_fw_comand_reader) = new_channel::<ClientFwCommand>();
 
         // make the client ready
         app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
@@ -103,7 +103,6 @@ impl GameFactoryImpl for DummyGameFactory
             .insert_resource(GameMessageType::new::<()>())
             //setup client framework
             .insert_resource(ClientFwConfig::new( pack.config.ticks_per_sec, 0, ClientId::SERVER ))
-            .insert_resource(client_fw_comand_reader)
             .insert_resource(ClientRequestType::new::<()>())
             //setup game core
             .insert_resource(DummyGameDurationConfig{ max_ticks: pack.config.game_duration_ticks })

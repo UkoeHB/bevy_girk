@@ -47,7 +47,6 @@ fn basic_game_and_client()
     app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
     app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
     app.add_event::<GamePacket>();
-    let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFwCommand>();
     let (_player_input_sender, player_input_reader)           = new_channel::<PlayerInput>();
 
     // make the client ready
@@ -78,7 +77,7 @@ fn basic_game_and_client()
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
             num_players,
-            GameDurationConfig::new(0, 2),
+            GameDurationConfig::new(2),
         );
 
     // prepare client initializer
@@ -117,7 +116,7 @@ fn basic_game_and_client()
         .add_plugins(ClientPlugins.build().disable::<GameReplicationPlugin>())
         .configure_sets(PreUpdate,
             (
-                GameFwSetPrivate::FwStart,
+                GameFwSet::Start,
                 ClientFwSet::Start
             )
                 .chain()
@@ -125,18 +124,17 @@ fn basic_game_and_client()
         )
         .configure_sets(PostUpdate,
             (
-                GameFwSetPrivate::FwEnd,
+                GameFwSet::End,
                 ClientFwSet::End,
             )
                 .chain()
                 .before(bevy_replicon::prelude::ClientSet::Send)
         )
-        .add_systems(PreUpdate, forward_client_packets.before(GameFwSetPrivate::FwStart))
-        .add_systems(PostUpdate, forward_game_packets.after(GameFwSetPrivate::FwEnd))
+        .add_systems(PreUpdate, forward_client_packets.before(GameFwSet::Start))
+        .add_systems(PostUpdate, forward_game_packets.after(GameFwSet::End))
         //game framework
         //client framework
-        .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::SERVER ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, ClientId::SERVER ))
         //game
         .insert_resource(game_initializer)
         //client core

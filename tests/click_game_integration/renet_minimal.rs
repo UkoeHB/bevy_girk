@@ -1,11 +1,11 @@
 //local shortcuts
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_wiring_server::setup_local_test_renet_network;
 use bevy_replicon::prelude::*;
-use bevy_renet2::{*, transport::*};
-use renet2::RenetClient;
+use bevy_renet2::prelude::*;
+use bevy_renet2::netcode::*;
 
 //standard shortcuts
 

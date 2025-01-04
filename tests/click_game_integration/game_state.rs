@@ -76,11 +76,11 @@ fn test_game_setup(num_players: usize)
         .insert_resource(prepare_player_client_contexts(num_players))
         //setup game core
         .insert_resource(
-                test_utils::prepare_game_initializer(
-                        num_players,
-                        GameDurationConfig::new(0, 0),
-                    )
+            test_utils::prepare_game_initializer(
+                num_players,
+                GameDurationConfig::new(0),
             )
+        )
         //add game framework
         .add_plugins(GameFwPlugin)
         //add game

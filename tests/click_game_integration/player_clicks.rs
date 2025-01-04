@@ -55,7 +55,6 @@ fn player_clicks()
     app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
     app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
     app.add_event::<GamePacket>();
-    let (_client_fw_command_sender, client_fw_command_reader) = new_channel::<ClientFwCommand>();
     let (player_input_sender, player_input_reader)            = new_channel::<PlayerInput>();
 
     // make the client ready
@@ -72,7 +71,7 @@ fn player_clicks()
     // prepare game initializer
     let game_initializer = test_utils::prepare_game_initializer(
         num_players,
-        GameDurationConfig::new(2, 3),
+        GameDurationConfig::new(3),
     );
 
     // prepare client initializer
@@ -106,23 +105,21 @@ fn player_clicks()
         .add_plugins(ClientPlugins.build().disable::<GameReplicationPlugin>())
         .configure_sets(PreUpdate,
             (
-                GameFwSetPrivate::FwStart,
+                GameFwSet::Start,
                 ClientFwSet::Start
             ).chain()
         )
-        .configure_sets(Update, (GameFwSet::End, GirkClientSet::Admin).chain())
         .configure_sets(PostUpdate,
             (
-                GameFwSetPrivate::FwEnd,
+                GameFwSet::End,
                 ClientFwSet::End,
             ).chain()
         )
-        .add_systems(PreUpdate, forward_client_packets.before(GameFwSetPrivate::FwStart))
-        .add_systems(PostUpdate, forward_game_packets.after(GameFwSetPrivate::FwEnd))
+        .add_systems(PreUpdate, forward_client_packets.before(GameFwSet::Start))
+        .add_systems(PostUpdate, forward_game_packets.after(GameFwSet::End))
         //game framework
         //client framework
-        .insert_resource(client_fw_command_reader)
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, ClientId::new(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, ClientId::new(0u64) ))
         //game
         .insert_resource(game_initializer)
         //client core
@@ -131,7 +128,6 @@ fn player_clicks()
         // TEST: player clicks
         .insert_resource(PanicOnDrop::default())
         .insert_resource(player_input_sender)
-        .add_systems(OnEnter(ClientCoreState::Prep), send_player_click)  //this should fail
         .add_systems(OnEnter(ClientCoreState::Play), send_player_click)  //this should succeed
         .add_systems(OnEnter(ClientCoreState::GameOver), check_player_score)
         .run();

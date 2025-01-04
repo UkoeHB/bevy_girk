@@ -8,7 +8,6 @@ mod game_state;
 mod game_ticks;
 mod integration_reconnects;
 mod player_clicks;
-mod raw_localhost_network;
 mod renet_minimal;
 mod test_utils;
 

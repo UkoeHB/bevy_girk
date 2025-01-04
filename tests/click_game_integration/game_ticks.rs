@@ -16,13 +16,11 @@ use bevy_replicon_attributes::*;
 
 fn test_game_tick_state(
     test_ctx   : Res<TestContext>,
-    prep_tick : Res<PrepTick>,
     game_tick : Res<PlayTick>,
     mut flag   : ResMut<PanicOnDrop>,
 ){
     // expect the elapsed ticks match expected values
-    if (***prep_tick != test_ctx.num_prep_ticks) ||
-        (***game_tick != test_ctx.num_game_ticks)
+    if ***game_tick != test_ctx.num_game_ticks
     {
         panic!("game game tick state invalid: incorrect number of ticks elapsed");
     }
@@ -36,11 +34,10 @@ fn test_game_tick_state(
 #[derive(Resource)]
 struct TestContext
 {
-    num_prep_ticks: u32,
     num_game_ticks: u32
 }
 
-fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
+fn test_game_ticks(num_players: usize, num_game_ticks: u32)
 {
     let ticks_per_sec = 1;
 
@@ -59,7 +56,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         })
         .add_event::<bevy_replicon::prelude::ServerEvent>()
         //setup app
-        .set_runner(make_test_runner(num_prep_ticks + num_game_ticks + 3))
+        .set_runner(make_test_runner(num_game_ticks + 3))
         .add_plugins(AddMockMessageChannelsPlugin)
         //setup game framework
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
@@ -68,7 +65,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         .insert_resource(
                 test_utils::prepare_game_initializer(
                         num_players,
-                        GameDurationConfig::new(num_prep_ticks, num_game_ticks),
+                        GameDurationConfig::new(num_game_ticks),
                     )
             )
         //add game framework
@@ -79,7 +76,7 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
         .configure_sets(Update, (GameFwSet::End,).chain())
         //testing
         .insert_resource(PanicOnDrop::default())
-        .insert_resource( TestContext{ num_prep_ticks, num_game_ticks } )
+        .insert_resource( TestContext{ num_game_ticks } )
         .add_systems(OnEnter(GameState::GameOver), test_game_tick_state)
         .run();
 }
@@ -90,11 +87,11 @@ fn test_game_ticks(num_players: usize, num_prep_ticks: u32, num_game_ticks: u32)
 #[test]
 fn game_ticks()
 {
-    test_game_ticks(1, 0, 0);
-    test_game_ticks(1, 1, 0);
-    test_game_ticks(1, 0, 1);
-    test_game_ticks(1, 2, 2);
-    test_game_ticks(2, 2, 2);
+    test_game_ticks(1, 0);
+    test_game_ticks(1, 0);
+    test_game_ticks(1, 1);
+    test_game_ticks(1, 2);
+    test_game_ticks(2, 2);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

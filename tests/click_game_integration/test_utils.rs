@@ -3,6 +3,7 @@ use crate::click_game_integration::*;
 
 //third-party shortcuts
 use bevy::utils::AHasher;
+use bevy_girk_wiring_common::ConnectionType;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts
@@ -23,28 +24,29 @@ pub fn get_test_protocol_id() -> u64
 pub fn make_player_init_for_game(user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
     let init = ClickClientInit::Player{
-            client_id,
-            player_name : String::from("player") + stringify!(?client_id),
-        };
+        player_name : String::from("player") + stringify!(?client_id),
+    };
 
-        ClickClientInitDataForGame{
-            env: bevy_simplenet::env_type(),
-            user_id,
-            init,
-        }
+    ClickClientInitDataForGame{
+        client_id,
+        connection: ConnectionType::inferred(),
+        user_id,
+        init,
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 pub fn make_watcher_init_for_game(user_id: u128, client_id: ClientId) -> ClickClientInitDataForGame
 {
-    let init = ClickClientInit::Watcher{ client_id };
+    let init = ClickClientInit::Watcher;
 
-        ClickClientInitDataForGame{
-            env: bevy_simplenet::env_type(),
-            user_id,
-            init,
-        }
+    ClickClientInitDataForGame{
+        client_id,
+        connection: ConnectionType::inferred(),
+        user_id,
+        init,
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

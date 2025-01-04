@@ -4,9 +4,9 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
-use renet2::transport::{
+use renet2_netcode::{
     ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerSetupConfig,
+    ServerSetupConfig, ServerSocket
 };
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
@@ -31,23 +31,25 @@ fn create_test_client_native(
 ) -> (RenetClient, NetcodeClientTransport)
 {
     // make client
+    let client_socket = NativeSocket::new(
+        UdpSocket::bind(client_addr).expect("renet client address should be bindable")
+    ).unwrap();
     let client = RenetClient::new(
-            ConnectionConfig{
-                    server_channels_config,
-                    client_channels_config,
-                    ..default()
-                }
-        );
+        ConnectionConfig::from_channels(
+            server_channels_config,
+            client_channels_config,
+        ),
+        client_socket.is_reliable(),
+    );
 
     // make transport
     let current_time = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
-    let client_socket = UdpSocket::bind(client_addr).expect("renet client address should be bindable");
     let client_transport = NetcodeClientTransport::new(
         current_time,
         authentication,
-        NativeSocket::new(client_socket).unwrap()
+        client_socket
     ).unwrap();
 
     (client, client_transport)

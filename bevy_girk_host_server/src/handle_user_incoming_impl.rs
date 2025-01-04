@@ -203,13 +203,13 @@ pub(crate) fn user_launch_lobby_game(
 //-------------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn user_get_connect_token(
-    In((token, lobby_id)) : In<(bevy_simplenet::RequestToken, u64)>,
+    In((req_token, lobby_id)) : In<(bevy_simplenet::RequestToken, u64)>,
     users_cache           : Res<UsersCache>,
     ongoing_games_cache   : Res<OngoingGamesCache>,
     user_server           : Res<HostUserServer>,
 ){
     // get the user's environment
-    let user_id = token.client_id();
+    let user_id = req_token.client_id();
     let Some(user_info) = users_cache.get_user_info(user_id)
     else { tracing::trace!(user_id, lobby_id, "failed getting connect token, user is unknown"); return; };
 
@@ -222,11 +222,11 @@ pub(crate) fn user_get_connect_token(
     { tracing::trace!(user_id, lobby_id, users_game_id, "failed getting connect token for invalid game"); return; };
 
     // get a connect token for the user for the game
-    let Some((game_id, connect)) = ongoing_games_cache.get_user_connect_token(user_id, user_info)
+    let Some((game_id, token)) = ongoing_games_cache.get_user_connect_token(user_id, user_info)
     else { tracing::error!(user_id, "user is missing in ongoing games cache on get connect token"); return; };
 
     // send game connect info to user
-    user_server.respond(token, HostToUserResponse::ConnectToken{ id: game_id, connect });
+    user_server.respond(req_token, HostToUserResponse::ConnectToken{ id: game_id, token });
 }
 
 //-------------------------------------------------------------------------------------------------------------------
