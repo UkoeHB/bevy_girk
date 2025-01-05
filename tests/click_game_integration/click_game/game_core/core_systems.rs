@@ -65,7 +65,7 @@ pub(crate) fn get_current_game_state(current_game_state: Res<State<GameState>>) 
 /// Notify a single client of the current game state.
 pub(crate) fn notify_game_state_single(
     In(client_id)     : In<ClientId>,
-    mut sender        : GameMessageSender,
+    mut sender        : GameSender,
     current_game_state : Res<State<GameState>>,
 ){
     sender.send_to_client(GameMsg::CurrentGameState(**current_game_state), client_id.get());
@@ -75,7 +75,7 @@ pub(crate) fn notify_game_state_single(
 
 /// Notify all clients of the current game state.
 pub(crate) fn notify_game_state_all(
-    mut sender        : GameMessageSender,
+    mut sender        : GameSender,
     current_game_state : Res<State<GameState>>,
 ){
     sender.send_to_all(GameMsg::CurrentGameState(**current_game_state));

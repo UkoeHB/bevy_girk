@@ -38,13 +38,13 @@ impl ClientRequestType
 ///
 /// Can be read by `ClientRequestHandler` on the server.
 #[derive(SystemParam)]
-pub struct ClientRequestSender<'w>
+pub struct ClientSender<'w>
 {
     req_type: Res<'w, ClientRequestType>,
     writer: EventWriter<'w, ClientPacket>,
 }
 
-impl<'w> ClientRequestSender<'w>
+impl<'w> ClientSender<'w>
 {
     /// Sends a client framework request.
     pub fn fw_request(&mut self, request: ClientFwRequest)

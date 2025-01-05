@@ -58,16 +58,16 @@ Dependency injection ties your game-specific logic to the `bevy_girk` servers an
     - **`GameStartInfo`** (data object): Per-client custom data, used for client setup by `ClientFactory`. The start data field in this type should deserialize to game-specific initialization details for a client app.
 - **`GameOverReport`** (data object): A report that is submitted by custom game logic to the game app's `GameEndFlag` resource. It will be extracted by systems inserted by `game_instance_setup()`. For multiplayer games, the report will ultimately be forward to the user client in a `HostToUserMsg::GameOver` message. The game over data field in this type should deserialize to a game-specific game over report.
 - **`ClientRequestHandler`** (trait object): Bevy resource inserted into game apps and used to handle incoming client requests.
-- **`GameMessageType`**: Bevy resource inserted into game apps and used to validate the type of game messages submitted to `GameMessageSender`.
-    - *Note*: We use type id consistency checks in the `GameMessageSender` instead of making it generic so the game framework doesn't need to have generic functions and types everywhere.
+- **`GameMessageType`**: Bevy resource inserted into game apps and used to validate the type of game messages submitted to `GameSender`.
+    - *Note*: We use type id consistency checks in the `GameSender` instead of making it generic so the game framework doesn't need to have generic functions and types everywhere.
 
 
 ### Client App
 
 - **`ClientFactory`** (trait object): Consumes `ServerConnectToken`s and `GameStartInfo`s to set up client apps.
 - **`GameMessageHandler`** (trait object): Bevy resource inserted into client apps and used to handle incoming game messages.
-- **`ClientRequestType`**: Bevy resource inserted into client apps and used to validate the type of game messages submitted to `ClientRequestSender`.
-    - *Note*: We use type id consistency checks in the `ClientRequestSender` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
+- **`ClientRequestType`**: Bevy resource inserted into client apps and used to validate the type of game messages submitted to `ClientSender`.
+    - *Note*: We use type id consistency checks in the `ClientSender` instead of making it generic so the client framework doesn't need to have generic functions and types everywhere.
 
 
 
@@ -108,7 +108,7 @@ The game app is a single-threaded authoritative server where game logic is execu
 Visibility of entities and game messages is controlled by [bevy_replicon_attributes](https://github.com/UkoeHB/bevy_replicon_attributes).
 - Game entities *will not replicate* if you do not give them a `VisibilityCondition` component. Use `vis!(Global)` if you want all clients to see an entity. See the `bevy_replicon_attributes` crate for more details.
 - Use `bevy_replicon_attributes::ClientAttributes` to add/remove client attributes (to control which visibility conditions each client satisfies).
-- Use `GameMessageSender` to send game messages filtered by visibility conditions.
+- Use `GameSender` to send game messages filtered by visibility conditions.
 
 **App Startup**
 
@@ -132,7 +132,7 @@ The game framework exposes a small API to support your game logic.
     - `GameFwState::End` -> `bevy::app::AppExit` occurs when `GameFwConfig::max_end_ticks()` have elapsed after entering `GameFwState::End`. Not exiting immediately allows time to propagate the game end state change to clients, and to allow custom app termination in game logic (i.e. by setting the max end ticks to infinite).
 - **`GameEndFlag`**: Bevy resource used to signal that a game is over. Insert a `GameOverReport` to this resource with `GameEndFlag::set()` to enter `GameFwState::End`. The report will be automatically extracted if your game is managed by a `GameInstance`.
 - **`ClientReadiness`**: Bevy resource that tracks the readiness of clients (i.e. how close they are to being ready to play). Note that client readiness logic is automatically handled by `bevy_girk` systems, so you should not need to use `ClientReadiness::set()`. Client readiness is reset when a client disconnects.
-- **`GameMessageSender`**: Bevy system parameter that allows you to send game messages to clients. Uses `GameMessageType` to validate game message types when `debug_assertions` are enabled.
+- **`GameSender`**: Bevy system parameter that allows you to send game messages to clients. Uses `GameMessageType` to validate game message types when `debug_assertions` are enabled.
     - *Note*: Messages submitted to this buffer are ultimately treated as `bevy_replicon` events, which means they will synchronize with replication messages (component insertions/removals and spawns and despawns, but not component updates).
 
 **Client Connections**
@@ -169,7 +169,7 @@ The client framework exposes a small API to support your client logic.
     - `ClientFwState::Syncing` is set when the client has connected to the `renet` server and is waiting for `bevy_replicon`'s first replication message. No server messages will be consumed in this state `bevy_replicon` forces server messages to synchronize with replication state; received messages will be buffered until `ClientFwState::Init`. This state always runs for at least one tick during an initialization cycle, and in its first tick `renet`'s `client_just_connected()` run condition will be true.
     - `ClientFwState::Init` is set when the client has synchronized with the server's replication state. The client may not be fully synchronized, however, if there are unreceived server messages required to fully initialize. This state always runs for at least one tick during an initialization cycle.
     - `ClientFwState::Init` -> `ClientFwState::Game` occurs when the client is in `ClientInitState::Done` and the client receives a `GameFwState::Game` message from the game framework (the `GameFwState` will be requested, sent by the server, and processed automatically by the client when `ClientInitState::Done` is entered).
-- **`ClientRequestSender`**: Bevy system parameter used to send client requests to the game. Uses `ClientRequestType` to validate client request types when `debug_assertions` are enabled.
+- **`ClientSender`**: Bevy system parameter used to send client requests to the game. Uses `ClientRequestType` to validate client request types when `debug_assertions` are enabled.
     - *Note*: This uses `bevy_replicon` events under the hood, which means client requests properly synchronize with client connection cycles. Client requests will be dropped between a disconnect and entering `ClientFwState::Syncing`.
 - **`PingTracker`**: Bevy resource used to estimate the current game framework tick. (TODO: this is very rudimentary, it needs significant work to be production-grade)
 
@@ -184,7 +184,7 @@ When a disconnect is detected, there are a number of details to keep in mind.
     - *Client initialization types*: Usually multiplayer games are divided into an initial loading phase and then a game phase. The game phase can contain multiple reconnect cycles. You can track your game's state to distinguish between startup loading and reconnecting (which may require different loading screens and systems).
 - `ClientInitState::InProgress` will be set on disconnect, which means the `ClientFwLoadingSet` will run.
 - `bevy_replicon` replicated client state will be preserved across a reconnect if you use `bevy_replicon_repair` to register components for replication (e.g. with `app.replicate_repair::<GameInitProgress>()`). If you don't use `bevy_replicon_repair` then you need to manually repair your client state (e.g. by despawning and cleaning up all old replicated entities when entering `ClientFwState::Syncing`, although note that this may cause a visual glitch for the duration of this state).
-- Client requests submitted to the `ClientRequestSender` will fail to send while in `ClientFwState::Connecting`. This ensures a clean start when you enter `ClientFwState::Syncing`. Note that a disconnect event always occurs at an ambiguous point in time. In practice your client messages will fail to send from that ambiguous disconnect point until you enter `ClientFwState::Syncing` for the reconnect cycle, and then will succeed until another disconnect occurs (which will trigger another reconnect cycle to repair the client).
+- Client requests submitted to the `ClientSender` will fail to send while in `ClientFwState::Connecting`. This ensures a clean start when you enter `ClientFwState::Syncing`. Note that a disconnect event always occurs at an ambiguous point in time. In practice your client messages will fail to send from that ambiguous disconnect point until you enter `ClientFwState::Syncing` for the reconnect cycle, and then will succeed until another disconnect occurs (which will trigger another reconnect cycle to repair the client).
 - Old server messages from the previous connection session will be discarded. New server messages will synchronize with the first replication message post-reconnect, using `bevy_replicon`'s normal message/replication synchronization mechanism. This means you won't process any server messages until you enter `ClientFwState::Init` (messages received in `ClientFwState::Syncing` are buffered).
 
 

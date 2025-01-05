@@ -14,7 +14,7 @@ use bevy_replicon::prelude::ClientId;
 
 pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
-    mut sender                       : GameMessageSender,
+    mut sender                       : GameSender,
 ){
     sender.send_to_client(GameMsg::RequestRejected{reason, request}, client_id.get());
 }

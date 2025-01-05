@@ -4,6 +4,7 @@ use crate::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_girk_utils::apply_state_transitions;
+use bevy_replicon::prelude::Replicated;
 use iyes_progress::prelude::ProgressPlugin;
 
 //standard shortcuts
@@ -81,6 +82,9 @@ impl Plugin for ClientFwStartupPlugin
             .enable_state_scoped_entities::<ClientInstanceState>()
             .add_sub_state::<ClientInitState>()
             .add_sub_state::<ClientFwState>()
+            .register_required_components_with::<Replicated, StateScoped<ClientInstanceState>>(
+                || StateScoped(ClientInstanceState::Game)
+            )
             .add_systems(OnEnter(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
             .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
             .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_fw_state);
@@ -152,7 +156,6 @@ impl Plugin for ClientFwTickPlugin
         // FWSTART
         app.add_systems(PreUpdate,
                 (
-                    prep_replicated_entities,
                     // - We want connection-related state changes to be applied here since game state changes will be ignored if
                     //   initializing.
                     // todo: states dependency needs to be moved to OnEnter/OnExit since this is global

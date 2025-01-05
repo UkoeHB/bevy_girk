@@ -20,7 +20,7 @@ INTERFACE: for game framework manager
 INTERFACE: for game core
 - Game logic should be defined within the `GameFwSet` system sets.
 - `Res<GameEndFlag>` must be set with a game over report to terminate the game
-- `GameMessageSender` allows game messages to be sent to clients
+- `GameSender` allows game messages to be sent to clients
 - `Res<GameFwClients>` provides the game's client list
 - `Res<GameFwConfig>` provides setup information about the game
 - `State<GameFwState>` tracks what state the game framework is in

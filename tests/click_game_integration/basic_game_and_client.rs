@@ -34,7 +34,7 @@ fn setup_test(mut next: ResMut<NextState<ClientInstanceState>>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn request_ping(mut sender: ClientRequestSender)
+fn request_ping(mut sender: ClientSender)
 {
     sender.fw_request(ClientFwRequest::GetPing(PingRequest{
         timestamp_ns: 0u64

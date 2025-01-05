@@ -66,7 +66,8 @@ impl ClientRequestHandler
         }
     }
 
-    pub fn try_call(&self,
+    pub fn try_call(
+        &self,
         world         : &mut World,
         client_id     : ClientId,
         client_packet : &ClientPacket

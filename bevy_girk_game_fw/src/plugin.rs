@@ -3,6 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_utils::apply_state_transitions;
 
 //standard shortcuts
 
@@ -88,7 +89,7 @@ impl Plugin for GameFwTickPlugin
                 update_game_fw_state,
                 // todo: states dependency needs to be moved to OnEnter/OnExit since this is global
                 // - GameFwState
-                |w: &mut World| { let _ = w.try_run_schedule(StateTransition); },
+                apply_state_transitions,
             ).chain().in_set(GameFwSet::Start)
         );
 

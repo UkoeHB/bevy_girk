@@ -4,24 +4,10 @@ use bevy_girk_game_fw::ClientFwRequest;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::Replicated;
 use iyes_progress::prelude::ProgressTracker;
 
 //standard shortcuts
 
-
-//-------------------------------------------------------------------------------------------------------------------
-
-/// Make sure all replicated entities are scoped properly.
-pub(crate) fn prep_replicated_entities(
-    mut c: Commands,
-    replicated: Query<Entity, (With<Replicated>, Without<StateScoped<ClientInstanceState>>)>
-)
-{
-    for entity in replicated.iter() {
-        c.entity(entity).insert(StateScoped(ClientInstanceState::Game));
-    }
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -44,7 +30,7 @@ pub(crate) fn update_initialization_cache(
 /// Sends client initialization progress report to the game.
 pub(crate) fn send_initialization_progress_report(
     cache      : Res<InitProgressCache>,
-    mut sender : ClientRequestSender
+    mut sender : ClientSender
 ){
     // don't send if no intialization progress has been made since last frame
     if !cache.progress_changed_last_update() { return; }
@@ -56,7 +42,7 @@ pub(crate) fn send_initialization_progress_report(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Requests the current game framework state.
-pub(crate) fn request_game_fw_state(mut sender: ClientRequestSender)
+pub(crate) fn request_game_fw_state(mut sender: ClientSender)
 {
     sender.fw_request(ClientFwRequest::GetGameFwState);
 }

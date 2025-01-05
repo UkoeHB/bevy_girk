@@ -38,7 +38,7 @@ impl GameMessageType
 ///
 /// Can be read by `GameMessageHandler` on the client.
 #[derive(SystemParam)]
-pub struct GameMessageSender<'w>
+pub struct GameSender<'w>
 {
     message_id  : Res<'w, GameMessageType>,
     tick        : Res<'w, GameFwTick>,
@@ -46,7 +46,7 @@ pub struct GameMessageSender<'w>
     attributes  : ClientAttributes<'w>,
 }
 
-impl<'w> GameMessageSender<'w>
+impl<'w> GameSender<'w>
 {
     /// Sends a game framework message to clients that match the visibility condition.
     pub fn fw_send(&mut self, message: GameFwMsg, condition: VisibilityCondition)

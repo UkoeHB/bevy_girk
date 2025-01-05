@@ -20,7 +20,7 @@ INTERFACE: for client framework manager
 INTERFACE: for users of the framework (framework owners and client dependents)
 - Game logic should be defined within the `ClientFwSet` system sets.
 - `Res<PingTracker>` provides game-synchronization information
-- `ClientRequestSender` collects requests to be sent to the game
+- `ClientSender` collects requests to be sent to the game
 - `Res<ClientFwConfig>` provides miscellaneous information about the client
 - `State<ClientFwState>` tracks what state the client is in
 - `Res<InitProgressCache>` may be used to track the progress of initialization

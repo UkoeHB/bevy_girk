@@ -21,14 +21,14 @@ pub(crate) fn get_current_client_core_state(current_client_core_state: Res<State
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Request the current game state.
-pub(crate) fn request_game_state(mut sender: ClientRequestSender)
+pub(crate) fn request_game_state(mut sender: ClientSender)
 {
     sender.request(GameRequest::GameStateRequest);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-pub(crate) fn send_game_request(In(msg): In<GameRequest>, mut sender: ClientRequestSender)
+pub(crate) fn send_game_request(In(msg): In<GameRequest>, mut sender: ClientSender)
 {
     sender.request(msg);
 }

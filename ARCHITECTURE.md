@@ -88,7 +88,7 @@ WORK IN PROGRESS
             - ClientFwSet
             - ClientFwLoadingSet
             - ClientFwState
-            - ClientRequestSender
+            - ClientSender
 
 
 - management
