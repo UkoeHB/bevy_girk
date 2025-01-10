@@ -73,41 +73,41 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
         // manage the process
         let report_sender_clone = report_sender.clone();
         let (_process_handle, stdout_handle) = manage_child_process(
-                &self.spawner,
-                game_id,
-                child_process,
-                command_receiver,
-                move |report: GameInstanceReport| -> Option<bool>
+            &self.spawner,
+            game_id,
+            child_process,
+            command_receiver,
+            move |report: GameInstanceReport| -> Option<bool>
+            {
+                match &report
                 {
-                    match &report
+                    GameInstanceReport::GameStart(_, _) =>
                     {
-                        GameInstanceReport::GameStart(_, _) =>
-                        {
-                            tracing::trace!(game_id, "game instance process report: game start");
-                            let _ = report_sender.send(report);
-                        }
-                        GameInstanceReport::GameOver(_, _) =>
-                        {
-                            tracing::trace!(game_id, "game instance process report: game over");
-                            let _ = report_sender.send(report);
-                            return Some(true);
-                        }
-                        GameInstanceReport::GameAborted(_) =>
-                        {
-                            tracing::trace!(game_id, "game instance process report: game aborted");
-                            let _ = report_sender.send(report);
-                            return Some(false);
-                        }
+                        tracing::trace!(game_id, "game instance process report: game start");
+                        let _ = report_sender.send(report);
                     }
-
-                    None
-                },
-                move ||
-                {
-                    tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
-                    let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
+                    GameInstanceReport::GameOver(_, _) =>
+                    {
+                        tracing::trace!(game_id, "game instance process report: game over");
+                        let _ = report_sender.send(report);
+                        return Some(true);
+                    }
+                    GameInstanceReport::GameAborted(_) =>
+                    {
+                        tracing::trace!(game_id, "game instance process report: game aborted");
+                        let _ = report_sender.send(report);
+                        return Some(false);
+                    }
                 }
-            );
+
+                None
+            },
+            move ||
+            {
+                tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
+                let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
+            }
+        );
 
         // return game instance
         // - we monitor the stdout reader instead of the process status because we want to wait for the game over report
@@ -140,21 +140,21 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
 
     // run the app
     run_app_in_child_process(
-            game_id,
-            app,
-            command_sender.clone(),
-            report_receiver,
-            move ||
-            {
-                let _ = command_sender.send(GameInstanceCommand::Abort);
-                tracing::error!("child process input failed unexpectedly, aborting game");
-            },
-            move ||
-            {
-                let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                tracing::error!("critical error in child process, game aborted");
-            }
-        );
+        game_id,
+        app,
+        command_sender.clone(),
+        report_receiver,
+        move ||
+        {
+            let _ = command_sender.send(GameInstanceCommand::Abort);
+            tracing::error!("child process input failed unexpectedly, aborting game");
+        },
+        move ||
+        {
+            let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+            tracing::error!("critical error in child process, game aborted");
+        }
+    );
 
     tracing::info!(game_id, "game instance process finished");
 }

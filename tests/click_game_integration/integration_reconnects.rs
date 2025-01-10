@@ -150,11 +150,11 @@ fn make_test_game_hub_server(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn game_is_initialized(game_init_progress: Query<(&GameInitProgress, &StateScoped<ClientInstanceState>)>) -> bool
+fn game_is_initialized(game_init_progress: Query<(&GameInitProgress, &StateScoped<ClientAppState>)>) -> bool
 {
     let (progress, scoped) = game_init_progress.single();
     tracing::debug!(?progress, "game init progress");
-    assert_eq!(scoped.0, ClientInstanceState::Game);
+    assert_eq!(scoped.0, ClientAppState::Game);
     Readiness::new(**progress).is_ready()
 }
 
@@ -476,14 +476,14 @@ fn integration_reconnect_gameclient_reconnect()
 
 
     // disconnect game client 1 from renet server
-    assert_eq!(*client_app1.world().resource::<State<ClientInstanceState>>().get(), ClientInstanceState::Game);
+    assert_eq!(*client_app1.world().resource::<State<ClientAppState>>().get(), ClientAppState::Game);
     client_app1.world_mut().resource_mut::<RenetClient>().disconnect();
     client_app1.update();
     host_server.update(); hub_server.update(); std::thread::sleep(Duration::from_millis(45));
     client_app1.update(); std::thread::sleep(Duration::from_millis(45));
     assert!(client_app1.world().get_resource::<RenetClient>().is_none());
     assert!(client_app1.world().get_resource::<State<ClientInitState>>().is_none());
-    assert_eq!(*client_app1.world().resource::<State<ClientInstanceState>>().get(), ClientInstanceState::Client);
+    assert_eq!(*client_app1.world().resource::<State<ClientAppState>>().get(), ClientAppState::Client);
     
     // request new connect token for client 1
     let Some(ClientInstanceReport::RequestConnectToken(req_id)) = client_app1.world_mut().resource_mut::<Events<ClientInstanceReport>>().drain().next() else {

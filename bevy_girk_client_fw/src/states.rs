@@ -10,7 +10,7 @@ use bevy::prelude::*;
 
 /// Over-arching client states differentiating between the outer client shell and the inner game state.
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
-pub enum ClientInstanceState
+pub enum ClientAppState
 {
     /// The client is displaying its outer shell, where users can set up and start games.
     #[default]
@@ -23,9 +23,9 @@ pub enum ClientInstanceState
 
 /// Client intialization state.
 ///
-/// These states only run in [`ClientInstanceState::Game`].
+/// These states only run in [`ClientAppState::Game`].
 #[derive(SubStates, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
-#[source(ClientInstanceState = ClientInstanceState::Game)]
+#[source(ClientAppState = ClientAppState::Game)]
 pub enum ClientInitState
 {
     /// Client fw state when the client fw is initializing or reinitializing.
@@ -39,7 +39,7 @@ pub enum ClientInitState
 
 /// Client framework state.
 ///
-/// These states only run in [`ClientInstanceState::Game`].
+/// These states only run in [`ClientAppState::Game`].
 ///
 /// The state transitions for `Connecting`, `Syncing`, and `Init` are controlled by users of the client framework.
 /// This is handled automatically if you use [`prepare_girk_client_app()`].
@@ -48,10 +48,10 @@ pub enum ClientInitState
 ///
 /// For the sake of clarity, our documentation here reflects the behavior added by [`prepare_girk_client_app()`].
 #[derive(SubStates, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
-#[source(ClientInstanceState = ClientInstanceState::Game)]
+#[source(ClientAppState = ClientAppState::Game)]
 pub enum ClientFwState
 {
-    /// Runs when [`ClientInstanceState::Game`] has just been entered and before the client is fully set up to
+    /// Runs when [`ClientAppState::Game`] has just been entered and before the client is fully set up to
     /// run a game. This state is especially useful for setting up local-player games where you need to wait for
     /// the game app to emit setup information (which may occur after a small delay if running the game in a child
     /// process).
@@ -121,7 +121,7 @@ pub enum ClientFwState
     /// - Client requests sent while in this state will succeed unless the client disconnects or the game shuts down.
     /// - Game messages will be consumed in this tick. Note that no messages will appear if the game shuts down.
     ///
-    /// To fully exit the game, you should set [`ClientInstanceState::Client`] (e.g. with an "Exit" button).
+    /// To fully exit the game, you should set [`ClientAppState::Client`] (e.g. with an "Exit" button).
     End
 }
 

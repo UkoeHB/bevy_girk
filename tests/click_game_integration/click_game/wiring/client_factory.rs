@@ -1,6 +1,6 @@
 use std::any::type_name;
 
-use bevy_girk_client_fw::ClientInstanceState;
+use bevy_girk_client_fw::ClientAppState;
 //local shortcuts
 use bevy_girk_client_instance::*;
 use bevy_girk_utils::*;
@@ -124,7 +124,7 @@ impl ClientFactoryImpl for ClickClientFactory
         }
 
         // Hack for testing.
-        world.resource_mut::<NextState<ClientInstanceState>>().set(ClientInstanceState::Game);
+        world.resource_mut::<NextState<ClientAppState>>().set(ClientAppState::Game);
     }
 }
 

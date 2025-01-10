@@ -8,9 +8,9 @@ use bevy::prelude::*;
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Report emitted by a client instance when leaving [`ClientInstanceState::Game`].
+/// Report emitted by a client instance when leaving [`ClientAppState::Game`].
 ///
-/// The event can be read in `OnExit(ClientInstanceState::Game)`.
+/// The event can be read in `OnExit(ClientAppState::Game)`.
 #[derive(Event, Debug, Copy, Clone)]
 pub enum ClientInstanceReport
 {

@@ -99,16 +99,16 @@ impl Lobby
     pub fn new(lobby_id: u64, owner_id: u128, password: String, serialized_custom_data: Vec<u8>) -> Lobby
     {
         Lobby{
-                data: LobbyData { id: lobby_id, owner_id, serialized_custom_data, ..Default::default() },
-                password,
-            }
+            data: LobbyData { id: lobby_id, owner_id, serialized_custom_data, ..Default::default() },
+            password,
+        }
     }
 
     /// Add a member to the lobby.
-    pub fn add_member(&mut self, new_member_id: u128, member_color: LobbyMemberData) -> bool
+    pub fn add_member(&mut self, new_member_id: u128, member: LobbyMemberData) -> bool
     {
         // add based on member type
-        self.data.members.insert(new_member_id, member_color).is_none()
+        self.data.members.insert(new_member_id, member).is_none()
     }
 
     /// Remove a member from the lobby.
@@ -134,9 +134,9 @@ impl Lobby
         self.data.members.contains_key(&member_id)
     }
 
-    /// Get member color.
+    /// Get member data.
     /// - Returns `None` if member doesn't exist.
-    pub fn member_color(&self, member_id: u128) -> Option<LobbyMemberData>
+    pub fn member(&self, member_id: u128) -> Option<LobbyMemberData>
     {
         self.data.members.get(&member_id).copied()
     }

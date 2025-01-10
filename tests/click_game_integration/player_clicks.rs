@@ -33,9 +33,9 @@ fn check_player_score(players: Query<&PlayerScore, With<PlayerId>>, mut flag: Re
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn setup_test(mut next: ResMut<NextState<ClientInstanceState>>)
+fn setup_test(mut next: ResMut<NextState<ClientAppState>>)
 {
-    next.set(ClientInstanceState::Game);
+    next.set(ClientAppState::Game);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

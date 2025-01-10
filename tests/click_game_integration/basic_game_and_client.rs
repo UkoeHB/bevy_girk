@@ -26,9 +26,9 @@ fn check_client_ping_tracker(ping_tracker: Res<PingTracker>, mut flag: ResMut<Pa
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn setup_test(mut next: ResMut<NextState<ClientInstanceState>>)
+fn setup_test(mut next: ResMut<NextState<ClientAppState>>)
 {
-    next.set(ClientInstanceState::Game);
+    next.set(ClientAppState::Game);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

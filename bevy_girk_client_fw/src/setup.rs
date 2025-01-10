@@ -19,7 +19,7 @@ pub(crate) fn setup_client_fw_state(world: &mut World)
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// Cleans up client framework state when transitioning away from [`ClientInstanceState::Game`].
+/// Cleans up client framework state when transitioning away from [`ClientAppState::Game`].
 pub(crate) fn cleanup_client_fw_state(world: &mut World)
 {
     world.remove_resource::<ClientFwConfig>();

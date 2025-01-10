@@ -78,16 +78,16 @@ impl Plugin for ClientFwStartupPlugin
 {
     fn build(&self, app: &mut App)
     {
-        app.init_state::<ClientInstanceState>()
-            .enable_state_scoped_entities::<ClientInstanceState>()
+        app.init_state::<ClientAppState>()
+            .enable_state_scoped_entities::<ClientAppState>()
             .add_sub_state::<ClientInitState>()
             .add_sub_state::<ClientFwState>()
-            .register_required_components_with::<Replicated, StateScoped<ClientInstanceState>>(
-                || StateScoped(ClientInstanceState::Game)
+            .register_required_components_with::<Replicated, StateScoped<ClientAppState>>(
+                || StateScoped(ClientAppState::Game)
             )
             .add_systems(OnEnter(ClientFwState::Setup), (build_precheck, setup_client_fw_state).chain())
             .add_systems(OnEnter(ClientFwState::Connecting), startup_postcheck)
-            .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_fw_state);
+            .add_systems(OnExit(ClientAppState::Game), cleanup_client_fw_state);
     }
 }
 
@@ -107,7 +107,7 @@ pub enum ClientFwSet
     /// - `Update`
     /// - `PostUpdate`: Runs before [`Self::End`].
     ///
-    /// Only runs in [`ClientInstanceState::Game`].
+    /// Only runs in [`ClientAppState::Game`].
     /// Client implementations should put game-related logic in this set.
     Update,
     /// In schedule `PostUpdate`.
@@ -133,15 +133,15 @@ impl Plugin for ClientFwTickPlugin
 
         app.configure_sets(PreUpdate,
                 ClientFwSet::Start
-                    .run_if(in_state(ClientInstanceState::Game))
+                    .run_if(in_state(ClientAppState::Game))
             )
-            .configure_sets(FixedUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)))
-            .configure_sets(PreUpdate, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)).after(ClientFwSet::Start))
-            .configure_sets(Update, ClientFwSet::Update.run_if(in_state(ClientInstanceState::Game)))
+            .configure_sets(FixedUpdate, ClientFwSet::Update.run_if(in_state(ClientAppState::Game)))
+            .configure_sets(PreUpdate, ClientFwSet::Update.run_if(in_state(ClientAppState::Game)).after(ClientFwSet::Start))
+            .configure_sets(Update, ClientFwSet::Update.run_if(in_state(ClientAppState::Game)))
             .configure_sets(
                 PostUpdate,
                 ClientFwSet::Update
-                    .run_if(in_state(ClientInstanceState::Game))
+                    .run_if(in_state(ClientAppState::Game))
                     .before(iyes_progress::CheckProgressSet)
                     .before(ClientFwSet::End)
             );
@@ -150,7 +150,7 @@ impl Plugin for ClientFwTickPlugin
         app.configure_sets(PostUpdate,
                 ClientFwSet::End
                     .after(iyes_progress::CheckProgressSet)
-                    .run_if(in_state(ClientInstanceState::Game))
+                    .run_if(in_state(ClientAppState::Game))
             );
 
         // FWSTART

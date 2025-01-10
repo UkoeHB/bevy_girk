@@ -32,24 +32,15 @@ fn handle_command_abort(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn handle_command(world: &mut World, command: GameInstanceCommand)
-{
-    match command
-    {
-        GameInstanceCommand::Abort => world.syscall((), handle_command_abort),
-    }
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 pub(crate) fn handle_command_incoming(world: &mut World)
 {
     // handle game instance commands
     while let Some(command) = world.resource_mut::<GameRunnerState>().command_receiver.try_recv()
     {
-        // handle the command
-        handle_command(world, command);
+        match command
+        {
+            GameInstanceCommand::Abort => world.syscall((), handle_command_abort),
+        }
     }
 }
 

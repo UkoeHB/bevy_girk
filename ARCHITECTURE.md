@@ -128,7 +128,6 @@ WORK IN PROGRESS
             - ClientFactory
             - ServerConnectToken
             - GameStartInfo
-            - ClientInstanceConfig
             - IoSender\<ClientInstanceReport\>
             - IoReceiver\<ClientInstanceCommand\>
 

@@ -93,17 +93,18 @@ pub fn make_host_server(
 
     // add server systems
     app.add_systems(Main,
-            (
-                increment_tick_counter,
-                handle_user_incoming,
-                handle_game_hub_incoming,
-                clean_pending_lobbies,  //no purge period since cache should be relatively small
-                clean_ongoing_games.run_if(
-                        on_tick_counter(host_server_config.ongoing_game_purge_period_ticks)
-                    ),
-                clean_game_hub_dc_buffer,  //no purge period since cache should be relatively small
-            ).chain()
-        );
+        (
+            increment_tick_counter,
+            handle_user_incoming,
+            handle_game_hub_incoming,
+            clean_pending_lobbies,  //no purge period since cache should be relatively small
+            clean_ongoing_games.run_if(
+                on_tick_counter(host_server_config.ongoing_game_purge_period_ticks)
+            ),
+            clean_game_hub_dc_buffer,  //no purge period since cache should be relatively small
+        )
+            .chain()
+    );
 
     app
 }

@@ -1,6 +1,6 @@
 //local shortcuts
 use crate::{ClientFactory, ClientInstanceCommand};
-use bevy_girk_client_fw::ClientInstanceState;
+use bevy_girk_client_fw::ClientAppState;
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::{GameFactory, GameInstance, GameInstanceCommand, GameInstanceLauncherImpl, GameInstanceLauncherLocal, GameInstanceReport, GameLaunchPack};
 use bevy_girk_utils::{new_io_channel, IoReceiver};
@@ -40,10 +40,10 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
     {
         GameInstanceReport::GameStart(game_id, mut start_report) =>
         {
-            if *w.resource::<State<ClientInstanceState>>().get() != ClientInstanceState::Game
+            if *w.resource::<State<ClientAppState>>().get() != ClientAppState::Game
             {
                 tracing::warn!("ignoring game start report for local game {}; client is not in \
-                    ClientInstanceState::Game", game_id);
+                    ClientAppState::Game", game_id);
                 return Some(game_id);
             }
 
@@ -158,6 +158,8 @@ impl LocalGameReport
 /// Resource that constructs and monitors ongoing local-player games.
 ///
 /// Inserted to the app via [`ClientInstancePlugin`].
+///
+/// Local games are aborted when exiting [`ClientAppState::Game`].
 #[derive(Resource)]
 pub struct LocalGameManager
 {
@@ -200,8 +202,8 @@ impl LocalGameManager
 
     /// Takes the result report for the last local-player game that finished.
     ///
-    /// Note that the report may appear while in state [`ClientInstanceState::Game`]. It is recommended
-    /// to look for reports in [`OnEnter(ClientInstanceState::Client`)].
+    /// Note that the report may appear while in state [`ClientAppState::Game`]. It is recommended
+    /// to look for reports in [`OnEnter(ClientAppState::Client`)].
     pub fn take_report(&mut self) -> Option<LocalGameReport>
     {
         self.last_game.take()
@@ -296,10 +298,10 @@ impl Plugin for LocalGamePlugin
 
         app
             .insert_resource(LocalGameManager::new(local_factory))
-            .add_systems(First, monitor_local_game_reports.run_if(in_state(ClientInstanceState::Game)))
+            .add_systems(First, monitor_local_game_reports.run_if(in_state(ClientAppState::Game)))
             // TODO: This assumes local-player games cannot be paused and resumed. Consider making it more
             // sophisticated.
-            .add_systems(OnExit(ClientInstanceState::Game), try_shut_down_local_game);
+            .add_systems(OnExit(ClientAppState::Game), try_shut_down_local_game);
     }
 }
 

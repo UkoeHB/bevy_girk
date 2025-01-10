@@ -2,7 +2,7 @@
 use crate::{setup_renet_client, ClientConnectPack, ClientEventHandlingPlugin, ReceiveServerEventsSet};
 use bevy_girk_client_fw::{
     ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet, ClientFwState,
-    ClientInitState, ClientInstanceState
+    ClientInitState, ClientAppState
 };
 use bevy_girk_client_instance::ClientInstanceCommand;
 use bevy_girk_game_fw::GameInitProgress;
@@ -145,10 +145,9 @@ fn log_just_disconnected()
 
 fn cleanup_client_resources(w: &mut World)
 {
-    if let Some(mut transport) = w.get_resource_mut::<NetcodeClientTransport>() {
+    if let Some(mut transport) = w.remove_resource::<NetcodeClientTransport>() {
         transport.disconnect();
     }
-    w.remove_resource::<NetcodeClientTransport>();
     w.remove_resource::<RenetClient>();
 }
 
@@ -255,7 +254,7 @@ pub fn prepare_client_app_replication(
         //    client for this tick; we do this before ClientFwSet because server messages can control the current tick's
         //    game state (and in general determine the contents of the current tick - e.g. replicated state is applied
         //    before user logic)
-        //# OnExit(ClientInstanceState::Game)
+        //# OnExit(ClientAppState::Game)
         //<-- cleanup client resources
         .configure_sets(PreUpdate,
             (
@@ -309,15 +308,15 @@ pub fn prepare_client_app_replication(
                 .chain()
                 .after(ReceiveServerEventsSet)
                 .before(ClientFwSet::Start)
-                .run_if(in_state(ClientInstanceState::Game)),
+                .run_if(in_state(ClientAppState::Game)),
         )
-        .add_systems(OnExit(ClientInstanceState::Game), cleanup_client_resources)
+        .add_systems(OnExit(ClientAppState::Game), cleanup_client_resources)
 
         //# UPDATE #
         //<-- ClientFwSet::Update {girk}: user logic
         //<-- ClientFwLoadingSet (in state ClientInitState::InProgress) {girk}: should contain all user
         //    loading systems for setting up a game (systems with `.track_progress()`), but NOT app-setup systems
-        //    which need to run on startup in ClientInstanceState::Client
+        //    which need to run on startup in ClientAppState::Client
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .add_systems(Update,
             (
@@ -340,7 +339,7 @@ pub fn prepare_client_app_replication(
                     .track_progress::<ClientInitState>()
             )
                 .in_set(ClientFwLoadingSet)
-                .run_if(in_state(ClientInstanceState::Game))
+                .run_if(in_state(ClientAppState::Game))
         )
         .configure_sets(Update, ClientFwSet::Update.before(iyes_progress::prelude::AssetsTrackProgress))
 
@@ -379,9 +378,9 @@ pub fn prepare_client_app_network(client_app: &mut App)
                 // add ordering constraint
                 .before(bevy_renet2::prelude::RenetReceive)
                 // ignore for first full tick after entering the game
-                .run_if(not(just_entered_state(ClientInstanceState::Game)))
+                .run_if(not(just_entered_state(ClientAppState::Game)))
                 // only try to set up the client while in game
-                .run_if(in_state(ClientInstanceState::Game))
+                .run_if(in_state(ClientAppState::Game))
                 // poll for connect packs while disconnected
                 .run_if(client_disconnected)
                 // check for connect pack

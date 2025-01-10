@@ -16,7 +16,6 @@ pub struct ClientInstancePlugin
 {
     factory: Arc<Mutex<Option<ClientFactory>>>,
     local_factory: Arc<Mutex<Option<GameFactory>>>,
-
 }
 
 impl ClientInstancePlugin
