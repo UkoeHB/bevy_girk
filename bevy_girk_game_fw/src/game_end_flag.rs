@@ -2,7 +2,7 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_girk_utils::ser_msg;
+use bevy_girk_utils::{deser_msg, ser_msg};
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 
@@ -20,7 +20,7 @@ pub struct GameOverReport
 {
     /// Data needed for a client to reassemble a game over report.
     #[serde_as(as = "Bytes")]
-    pub data: Vec<u8>
+    data: Vec<u8>
 }
 
 impl GameOverReport
@@ -29,6 +29,11 @@ impl GameOverReport
     {
         let report = ser_msg(report);
         GameOverReport{ data: report }
+    }
+
+    pub fn get<T: for<'de> Deserialize<'de>>(&self) -> Option<T>
+    {
+        deser_msg(&self.data)
     }
 }
 
