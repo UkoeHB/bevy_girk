@@ -198,8 +198,6 @@ The user client app is a GUI that communicates with the host server and launches
     - Most host server interactions are related to lobby management (making/joining/leaving/launching/searching lobbies). For the entire API see `HostToUserMsg`, `HostToUserResponse`, `UserToHostMsg`, `UserToHostRequest`.
 - Add the `ClientMonitorPlugin` to your app.
     - **`ClientMonitor`**: Bevy resource inserted by `ClientMonitorPlugin` that keeps track of the currently-running client app if there is one. It receives `ClientInstanceReport`s from the client and can send new `ServerConnectToken`s into the client.
-- Add the `ClientStarterPlugin` to your app.
-    - **`ClientStarter`**: Bevy resource inserted by `ClientStarterPlugin` that makes it easy to restart a client app that has shut down.
 
 **Launching Local Single-Player Game Clients**
 
@@ -213,7 +211,7 @@ The user client app is a GUI that communicates with the host server and launches
 Hosted gamed should use the `ClientStarter` to support reconnects that need to re-use `GameStartInfo`.
 
 1. Receive a `HostToUserMsg::GameStart` from the host server. This includes `ServerConnectToken` and `GameStartInfo`.
-1. Set the client starter: `ClientStarter::set()`.
+1. TODO: Use `ClientInstanceCommand` and custom client starter /// Set the client starter: `ClientStarter::set()`.
     - Use `launch_multiplayer_client()` in the starter callback to launch the game. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
         - Internally this launches your client app binary. On native it uses `ClientInstanceLauncherProcess`. TODO: WASM
 1. Launch the client with `ClientStarter::start()`.
@@ -224,7 +222,7 @@ The user client helps reconnect users to hosted games. There are three primary k
 
 - **Complete restart**: A hosted game is running and the client app and user client are both closed.
     1. When the user client reopens and connects to the host server, the host server will automatically send a `HostToUserMsg::GameStart` containing `ServerConnectToken` and `GameStartInfo`.
-    1. Call `ClientStarter::set()` with `launch_multiplayer_client()` in the callback. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
+    1. TODO: Use `ClientInstanceCommand` /// Call `ClientStarter::set()` with `launch_multiplayer_client()` in the callback. Move the `GameStartInfo` into the callback and clone it there (the callback is `FnMut`).
     1. Launch the client with `ClientStarter::start()`.
 - **Client app restart**: A hosted game is running and the client app is closed but the user client is open and connected.
     1. Expose a 'Reconnect' button to users, which will display when `ClientStarter` has been set (i.e. it was set by a game start but not cleared by a game over, implying a hosted game is still running). On press, send `UserToHostRequest::GetConnectToken` to the host server.

@@ -136,14 +136,6 @@ WORK IN PROGRESS
                     - requests ServerConnectTokens from the instance owner on disconnect via ClientInstanceReport
                     - receives ServerConnectToken via ClientInstanceCommand, inserts to app as ClientConnectPack resource, then the systems from prepare_girk_client_app() will use it to set up a new renet client
 
-    - user client utils
-        - launchers: practical methods for launching clients (automatic native/WASM support {WASM is WIP})
-            - launch_local_player_client()
-            - launch_multiplayer_client()
-        - UserClientUtilsPlugin
-            - ClientMonitor
-            - ClientStarter
-
 
 - binaries
     - backend (unified single-hub)

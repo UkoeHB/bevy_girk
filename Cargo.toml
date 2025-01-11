@@ -18,7 +18,6 @@ members  = [
     "bevy_girk_game_hub_server",
     "bevy_girk_game_instance",
     "bevy_girk_host_server",
-    "bevy_girk_user_client_utils",
     "bevy_girk_utils",
     "bevy_girk_wiring_client",
     "bevy_girk_wiring_common",

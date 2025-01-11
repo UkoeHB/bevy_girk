@@ -1,12 +1,12 @@
 //local shortcuts
-use crate::{ClientFactory, ClientInstanceCommand};
+use crate::ClientFactory;
 use bevy_girk_client_fw::ClientAppState;
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::{GameFactory, GameInstance, GameInstanceCommand, GameInstanceLauncherImpl, GameInstanceLauncherLocal, GameInstanceReport, GameLaunchPack};
 use bevy_girk_utils::{new_io_channel, IoReceiver};
 
 //third-party shortcuts
-use bevy::{ecs::world::Command, prelude::*};
+use bevy::prelude::*;
 use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 //standard shortcuts
@@ -89,7 +89,6 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
                 LocalGameReport::Aborted{ game_id }
             );
             w.resource_mut::<LocalGameManager>().discard_current_game();
-            ClientInstanceCommand::Abort.apply(w);
 
             None
         }
@@ -106,8 +105,7 @@ fn monitor_local_game_reports(w: &mut World)
     {
         if let Some(bad_game) = handle_game_instance_report(w, report) {
             if !w.resource_mut::<LocalGameManager>().try_abort_game(bad_game) { continue }
-            tracing::warn!("local-player game server aborted, force-closing game client");
-            ClientInstanceCommand::Abort.apply(w);
+            tracing::warn!("local-player game server aborted");
         }
     }
 }
@@ -160,6 +158,9 @@ impl LocalGameReport
 /// Inserted to the app via [`ClientInstancePlugin`].
 ///
 /// Local games are aborted when exiting [`ClientAppState::Game`].
+///
+/// Does not automatically abort the client when the game is aborted. Users should abort when receiving
+/// [`LocalGameReport::Aborted`].
 #[derive(Resource)]
 pub struct LocalGameManager
 {
