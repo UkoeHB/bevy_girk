@@ -15,13 +15,17 @@ use iyes_progress::prelude::ProgressPlugin;
 
 fn add_progress_plugin(app: &mut App)
 {
-    let progress_plugin = ProgressPlugin::<ClientInitState>::new()
+    let load_progress_plugin = ProgressPlugin::<ClientAppState>::new()
+        .with_state_transition(ClientAppState::Loading, ClientAppState::Client)
+        .with_asset_tracking();
+    let init_progress_plugin = ProgressPlugin::<ClientInitState>::new()
         .with_state_transition(ClientInitState::InProgress, ClientInitState::Done)
         // we check progress in PostUpdate so initialization progress can be collected and networked immediately
         .check_progress_in(PostUpdate)
         .with_asset_tracking();
 
-    app.add_plugins(progress_plugin);
+    app.add_plugins(load_progress_plugin);
+    app.add_plugins(init_progress_plugin);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

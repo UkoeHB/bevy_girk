@@ -69,12 +69,13 @@ impl Plugin for ClientCoreStartupPlugin
     fn build(&self, app: &mut App)
     {
         app.init_state::<ClientCoreState>()
-            .add_systems(OnExit(ClientAppState::Client), build_precheck)
             .add_systems(OnEnter(ClientAppState::Game),
                 (
+                    build_precheck,
                     setup_player_state,
                     setup_client_fw_reqs,
                 )
+                    .chain()
             )
             .add_systems(OnExit(ClientAppState::Game), cleanup_at_game_end);
     }

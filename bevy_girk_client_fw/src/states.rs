@@ -12,8 +12,13 @@ use bevy::prelude::*;
 #[derive(States, Debug, Default, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum ClientAppState
 {
-    /// The client is displaying its outer shell, where users can set up and start games.
+    /// The client is loading on startup.
+    ///
+    /// The transition from `Self::Loading` to `Self::Client` is handled by `iyes_progress`. It will occur
+    /// immediately on startup if you don't track progress with any systems.
     #[default]
+    Loading,
+    /// The client is displaying its outer shell, where users can set up and start games.
     Client,
     /// The client is displaying the game client, where users can play the game.
     Game

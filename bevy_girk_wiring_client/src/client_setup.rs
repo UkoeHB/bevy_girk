@@ -316,7 +316,7 @@ pub fn prepare_client_app_replication(
         //<-- ClientFwSet::Update {girk}: user logic
         //<-- ClientFwLoadingSet (in state ClientInitState::InProgress) {girk}: should contain all user
         //    loading systems for setting up a game (systems with `.track_progress()`), but NOT app-setup systems
-        //    which need to run on startup in ClientAppState::Client
+        //    which need to run on startup in ClientAppState::Loading
         //<-- AssetsTrackProgress {iyes progress}: tracks progress of assets during initialization
         .add_systems(Update,
             (
