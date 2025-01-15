@@ -1,10 +1,4 @@
-//local shortcuts
-
-//third-party shortcuts
 use serde::{Deserialize, Serialize};
-
-//standard shortcuts
-
 
 //-------------------------------------------------------------------------------------------------------------------
 
