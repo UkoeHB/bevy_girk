@@ -55,22 +55,17 @@ fn startup_postcheck(world: &World)
 ///
 /// The run condition returns true when in state [`ClientFwState::Setup`], [`ClientFwState::Connecting`],
 /// [`ClientFwState::Syncing`], or [`ClientFwState::Init`].
-pub fn client_is_initializing() -> impl Condition<()>
+pub fn client_is_initializing(current_state: Option<Res<State<ClientFwState>>>) -> bool
 {
-    IntoSystem::into_system(
-        |current_state: Option<Res<State<ClientFwState>>>| -> bool
-        {
-            let Some(current_state) = current_state else { return false };
-            match **current_state
-            {
-                ClientFwState::Setup |
-                ClientFwState::Connecting |
-                ClientFwState::Syncing |
-                ClientFwState::Init => true,
-                _ => false,
-            }
-        }
-    )
+    let Some(current_state) = current_state else { return false };
+    match **current_state
+    {
+        ClientFwState::Setup |
+        ClientFwState::Connecting |
+        ClientFwState::Syncing |
+        ClientFwState::Init => true,
+        _ => false,
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -178,7 +173,7 @@ impl Plugin for ClientFwTickPlugin
                 (
                     // capture ClientInitState changes
                     apply_state_transitions,
-                    update_initialization_cache.run_if(client_is_initializing()),
+                    update_initialization_cache.run_if(client_is_initializing),
                     send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()
                     .in_set(ClientFwSet::End)
