@@ -80,7 +80,9 @@ impl Plugin for ClientFwStartupPlugin
         app.init_state::<ClientAppState>()
             .enable_state_scoped_entities::<ClientAppState>()
             .add_sub_state::<ClientInitState>()
+            .enable_state_scoped_entities::<ClientInitState>()
             .add_sub_state::<ClientFwState>()
+            .enable_state_scoped_entities::<ClientFwState>()
             .register_required_components_with::<Replicated, StateScoped<ClientAppState>>(
                 || StateScoped(ClientAppState::Game)
             )

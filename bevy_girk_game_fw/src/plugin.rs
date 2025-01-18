@@ -39,6 +39,7 @@ impl Plugin for GameFwStartupPlugin
     fn build(&self, app: &mut App)
     {
         app.init_state::<GameFwState>()
+            .enable_state_scoped_entities::<GameFwState>()
             .add_systems(PreStartup,
                 (
                     build_precheck,
