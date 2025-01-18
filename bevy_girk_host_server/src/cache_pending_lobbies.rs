@@ -165,31 +165,42 @@ impl PendingLobbiesCache
     /// Drain expired pending lobbies.
     /// - if lobby reached ack timeout and insufficient acks
     /// - if lobby has acks but reached the end of the game-start buffer
-    pub fn drain_expired(&mut self) -> impl Iterator<Item = Lobby> + '_
+    pub fn drain_expired(&mut self) -> impl IntoIterator<Item = Lobby> + '_
     {
         let current_timestamp = self.timer.elapsed();
         let ack_timeout       = self.config.ack_timeout;
         let max_lifetime      = ack_timeout + self.config.start_buffer;
 
-        self.pending_lobbies.extract_if(
-                move |lobby_id, (pending_lobby, birth_time)| -> bool
+        //todo: use .extract_if once stabilized
+        let mut extracted = Vec::default();
+        self.pending_lobbies.retain(
+            |lobby_id, (pending_lobby, birth_time)| -> bool
+            {
+                // remove: if lobby has exceeded max lifetime
+                if birth_time.saturating_add(max_lifetime) < current_timestamp
                 {
-                    // remove: if lobby has exceeded max lifetime
-                    if birth_time.saturating_add(max_lifetime) < current_timestamp
-                    { tracing::trace!(lobby_id, "removing expired pending lobby (max lifetime)"); return true; }
-
-                    // keep: if lobby is still waiting for acks
-                    if birth_time.saturating_add(ack_timeout) >= current_timestamp { return false; }
-
-                    // remove: if lobby has insufficient acks
-                    // - when the lifetime is between ack timeout and max lifetime, it should have full acks
-                    if !pending_lobby.is_fully_acked()
-                    { tracing::trace!(lobby_id, "removing expired pending lobby (ack timeout)"); return true; }
-
-                    // keep: lobby is fully acked and waiting for a game to start
-                    false
+                    tracing::trace!(lobby_id, "removing expired pending lobby (max lifetime)");
+                    extracted.push(std::mem::take(&mut pending_lobby.lobby));
+                    return false;
                 }
-            ).map(|(_, (pending_lobby, _))| -> Lobby { pending_lobby.lobby })
+
+                // keep: if lobby is still waiting for acks
+                if birth_time.saturating_add(ack_timeout) >= current_timestamp { return true; }
+
+                // remove: if lobby has insufficient acks
+                // - when the lifetime is between ack timeout and max lifetime, it should have full acks
+                if !pending_lobby.is_fully_acked()
+                {
+                    tracing::trace!(lobby_id, "removing expired pending lobby (ack timeout)");
+                    extracted.push(std::mem::take(&mut pending_lobby.lobby));
+                    return false;
+                }
+
+                // keep: lobby is fully acked and waiting for a game to start
+                true
+            }
+        );
+        extracted
     }
 }
 

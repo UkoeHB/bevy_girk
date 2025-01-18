@@ -61,7 +61,7 @@ fn game_hub_dc_buffer_expired()
     assert!(buffer.has_game_hub(0u128));
 
     // drain expired hub
-    let expired: Vec<u128> = buffer.drain_expired().collect();
+    let expired: Vec<u128> = buffer.drain_expired().into_iter().collect();
     assert_eq!(expired.len(), 1);
     assert_eq!(*expired.get(0).unwrap(), 0u128);
     assert!(!buffer.has_game_hub(0u128));
@@ -86,7 +86,7 @@ fn game_hub_dc_buffer_unexpired()
     assert!(buffer.has_game_hub(0u128));
 
     // drain expired hubs (none have expired)
-    let expired: Vec<u128> = buffer.drain_expired().collect();
+    let expired: Vec<u128> = buffer.drain_expired().into_iter().collect();
     assert_eq!(expired.len(), 0);
     assert!(buffer.has_game_hub(0u128));
 }

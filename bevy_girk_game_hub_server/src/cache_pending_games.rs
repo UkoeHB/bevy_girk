@@ -82,7 +82,7 @@ impl PendingGamesCache
 
     /// drain expired pending games
     /// - iterates over all pending games (may be inefficient)
-    pub fn drain_expired(&mut self) -> impl Iterator<Item = GameStartRequest> + '_
+    pub fn drain_expired(&mut self) -> impl IntoIterator<Item = GameStartRequest> + '_
     {
         // min birth time = current time - expiry duration
         let elapsed         = self.timer.elapsed();
@@ -90,17 +90,21 @@ impl PendingGamesCache
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain pending games that have not expired
-        self.pending.extract_if(
-                move | game_id, (_, birth_time) |
-                {
-                    // retain: game is not expired
-                    if *birth_time >= min_birth_time { return false; }
+        //todo: use .extract_if once stabilized
+        let mut extracted = Vec::default();
+        self.pending.retain(
+            | game_id, (game_start_request, birth_time) |
+            {
+                // retain: game is not expired
+                if *birth_time >= min_birth_time { return true; }
 
-                    // remove: erase the dead game
-                    tracing::trace!(game_id, "removing expired pending game");
-                    true
-                }
-            ).map(|(_, (game_start_request, _))| -> GameStartRequest { game_start_request })
+                // remove: erase the dead game
+                tracing::trace!(game_id, "removing expired pending game");
+                extracted.push(std::mem::take(game_start_request));
+                false
+            }
+        );
+        extracted
     }
 
     /// drain all pending games

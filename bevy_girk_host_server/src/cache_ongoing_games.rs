@@ -51,7 +51,7 @@ fn prep_connect_token_wasm_ws(connect_meta: &ConnectMetaWasmWs, client_id: u64) 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct OngoingGame
 {
     /// This game's id.
@@ -241,22 +241,24 @@ impl OngoingGamesCache
 
     /// Drain expired games.
     /// - Iterates over all ongoing games (may be inefficient).
-    pub fn drain_expired(&mut self) -> impl Iterator<Item = OngoingGame> + '_
+    pub fn drain_expired(&mut self) -> impl IntoIterator<Item = OngoingGame> + '_
     {
         // min birth time = current time - expiry duration
         let elapsed         = self.timer.elapsed();
         let expiry_duration = self.config.expiry_duration;
-        let min_birth_time  = elapsed.saturating_sub(expiry_duration);
+        let lowest_allowed_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // ref the users so we can remove the ones in dead games
         let users_ref = &mut self.users;
 
         // retain games that have not expired
-        self.games.extract_if(
-                move | _, (ongoing_game, birth_time) |
+        //todo: use .extract_if once stabilized
+        let mut extracted = Vec::default();
+        self.games.retain(
+                | _, (ongoing_game, birth_time) |
                 {
                     // retain: game was born after min birth time
-                    if *birth_time >= min_birth_time { return false; }
+                    if *birth_time >= lowest_allowed_birth_time { return true; }
 
                     // remove: erase the dead game's users
                     for start_info in ongoing_game.start_infos.iter()
@@ -266,9 +268,11 @@ impl OngoingGamesCache
 
                     // remove: erase the dead game
                     tracing::trace!(ongoing_game.game_id, "removing expired game");
-                    true
+                    extracted.push(std::mem::take(ongoing_game));
+                    false
                 }
-            ).map(|(_, (ongoing_game, _))| -> OngoingGame { ongoing_game })
+            );
+        extracted
     }
 }
 

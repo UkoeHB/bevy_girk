@@ -83,7 +83,7 @@ impl GameHubDisconnectBuffer
 
     /// Drain expired buffered hubs.
     /// - iterates over all buffered hubs (may be inefficient)
-    pub fn drain_expired(&mut self) -> impl Iterator<Item = u128> + '_
+    pub fn drain_expired(&mut self) -> impl IntoIterator<Item = u128> + '_
     {
         // min birth time = current time - expiry duration
         let elapsed         = self.timer.elapsed();
@@ -91,17 +91,21 @@ impl GameHubDisconnectBuffer
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain buffered hubs that have not expired
-        self.buffer.extract_if(
-                move | game_hub_id, birth_time |
-                {
-                    // retain: hub is not expired
-                    if *birth_time >= min_birth_time { return false; }
+        //todo: use .extract_if once stabilized
+        let mut extracted = Vec::default();
+        self.buffer.retain(
+            | game_hub_id, birth_time |
+            {
+                // retain: hub is not expired
+                if *birth_time >= min_birth_time { return true; }
 
-                    // remove: erase the dead hub
-                    tracing::trace!(game_hub_id, "removing expired buffered game hub");
-                    true
-                }
-            ).map(|(game_hub_id, _)| -> u128 { game_hub_id })
+                // remove: erase the dead hub
+                tracing::trace!(game_hub_id, "removing expired buffered game hub");
+                extracted.push(*game_hub_id);
+                false
+            }
+        );
+        extracted
     }
 
     /// Drain all buffered hubs.

@@ -1,8 +1,5 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-//features
-#![feature(hash_extract_if)]  //todo: nightly/unstable, will change to extract_if
-
 //module tree
 mod cache_game_hubs;
 mod cache_lobbies;

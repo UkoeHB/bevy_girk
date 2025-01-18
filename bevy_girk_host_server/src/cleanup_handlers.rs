@@ -65,7 +65,7 @@ pub(crate) fn clean_ongoing_games(
 /// Unregister disconnected game hubs that have expired in the dc buffer.
 pub(crate) fn clean_game_hub_dc_buffer(world: &mut World)
 {
-    let disconnected_hubs: Vec<u128> = world.resource_mut::<GameHubDisconnectBuffer>().drain_expired().collect();
+    let disconnected_hubs: Vec<u128> = world.resource_mut::<GameHubDisconnectBuffer>().drain_expired().into_iter().collect();
     for disconnected_hub_id in disconnected_hubs
     {
         tracing::trace!(disconnected_hub_id, "unregistering expired disconnected game hub");

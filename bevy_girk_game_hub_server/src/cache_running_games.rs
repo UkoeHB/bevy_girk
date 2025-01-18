@@ -35,7 +35,8 @@ pub struct RunningGamesCache
     /// timer
     timer: Instant,
     /// [ game id : (game instance, game start request birth time) ]
-    games: HashMap<u64, (GameInstance, GameStartRequest, Duration)>,
+    //todo: get rid of Option once extract_if is stabilized
+    games: HashMap<u64, (Option<GameInstance>, GameStartRequest, Duration)>,
 }
 
 impl RunningGamesCache
@@ -74,7 +75,7 @@ impl RunningGamesCache
         let game_instance = self.game_launcher.launch(launch_pack, self.instance_report_sender.clone());
 
         // insert the game
-        if let Some(_) = self.games.insert(game_id, (game_instance, start_request, self.timer.elapsed()))
+        if let Some(_) = self.games.insert(game_id, (Some(game_instance), start_request, self.timer.elapsed()))
         { tracing::error!("game instance insertion error"); }
 
         Ok(())
@@ -84,7 +85,7 @@ impl RunningGamesCache
     /// - returns `None` if the game instance doesn't exist
     pub fn extract_instance(&mut self, game_id: u64) -> Option<GameInstance>
     {
-        self.games.remove(&game_id).map(|(instance, _, _)| instance)
+        self.games.remove(&game_id).map(|(instance, _, _)| instance).flatten()
     }
 
     /// Tries to access the game start request for a game instance.
@@ -115,7 +116,7 @@ impl RunningGamesCache
     /// Drains expired and terminated running games.
     /// - Iterates over all running games (may be inefficient).
     /// - The caller is expected to check the game instance's status to decide how to handle it.
-    pub fn drain_invalid(&mut self) -> impl Iterator<Item = GameInstance> + '_
+    pub fn drain_invalid(&mut self) -> impl IntoIterator<Item = GameInstance> + '_
     {
         // min birth time = current time - expiry duration
         let elapsed         = self.timer.elapsed();
@@ -123,24 +124,30 @@ impl RunningGamesCache
         let min_birth_time  = elapsed.saturating_sub(expiry_duration);
 
         // retain games that have expired or terminated
-        self.games.extract_if(
-                move | game_id, (running_game, _, birth_time) |
-                {
-                    // retain: still running and not expired
-                    if running_game.try_get().is_none() && (*birth_time >= min_birth_time)
-                    { return false; }
+        //todo: use .extract_if once stabilized
+        let mut extracted = Vec::default();
+        self.games.retain(
+            | game_id, (running_game, _, birth_time) |
+            {
+                let Some(running) = running_game else { return false };
 
-                    // remove: game has a result or is expired
-                    tracing::trace!(game_id, "removing dead/expired running game");
-                    true
-                }
-            ).map(|(_, (game_instance, _, _))| -> GameInstance { game_instance })
+                // retain: still running and not expired
+                if running.try_get().is_none() && (*birth_time >= min_birth_time)
+                { return true; }
+
+                // remove: game has a result or is expired
+                tracing::trace!(game_id, "removing dead/expired running game");
+                extracted.push(running_game.take().unwrap());
+                false
+            }
+        );
+        extracted
     }
 
     /// Drains all running games.
     pub fn drain_all(&mut self) -> impl Iterator<Item = GameInstance> + '_
     {
-        self.games.drain().map(|(_, (game_instance, _, _))| -> GameInstance { game_instance })
+        self.games.drain().map(|(_, (game_instance, _, _))| game_instance).flatten()
     }
 }
 
