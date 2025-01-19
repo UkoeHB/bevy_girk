@@ -27,7 +27,7 @@ members  = [
 
 [workspace.dependencies]
 bevy                     = { version = "0.15", default-features = false }
-bevy_cobweb              = { version = "0.14" }
+bevy_cobweb              = { version = "0.16" }
 bevy_replicon            = { version = "0.29", default-features = false }
 bevy_replicon_attributes = { version = "0.8" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
