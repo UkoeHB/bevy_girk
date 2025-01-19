@@ -15,7 +15,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 process = ["dep:tokio", "dep:enfync", "dep:serde_json"]
 
 [dependencies]
-bevy = { workspace = true }
+bevy = { workspace = true, features = ["bevy_state"] }
 bevy_replicon = { workspace = true }
 bincode = { workspace = true }
 bytes = { workspace = true }
