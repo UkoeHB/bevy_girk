@@ -176,7 +176,7 @@ impl Plugin for ClientFwTickPlugin
                     // capture ClientInitState changes
                     apply_state_transitions,
                     update_initialization_cache.run_if(client_is_initializing),
-                    send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
+                    try_send_initialization_progress_report.run_if(in_state(ClientFwState::Init)),
                 ).chain()
                     .in_set(ClientFwSet::End)
             );

@@ -22,9 +22,9 @@ impl Default for InitProgressCache
     {
         // values must be different at the start so progress_changed_last_update() will be true on construction
         InitProgressCache{
-                prev_progress : Progress{ done: 1, total: 0 },
-                progress      : Progress::default()
-            }
+            prev_progress : Progress{ done: 1, total: 0 },
+            progress      : Progress::default()
+        }
     }
 }
 

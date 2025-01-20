@@ -28,7 +28,7 @@ pub(crate) fn update_initialization_cache(
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sends client initialization progress report to the game.
-pub(crate) fn send_initialization_progress_report(
+pub(crate) fn try_send_initialization_progress_report(
     cache      : Res<InitProgressCache>,
     mut sender : ClientSender
 ){

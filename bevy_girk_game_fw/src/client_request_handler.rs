@@ -14,7 +14,7 @@ use std::fmt::Debug;
 
 /// Deserializes bytes from a [`ClientPacket`] into a client request.
 fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
-    client_id     : ClientId,
+    client_id     : u64,
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>
 {
@@ -59,7 +59,7 @@ impl ClientRequestHandler
     {
         Self{
             handler: Box::new(move |world, id, packet| {
-                let client_req = deserialize_client_request(id, packet)?;
+                let client_req = deserialize_client_request(id.get(), packet)?;
                 (handler)(world, id, client_req);
                 Ok(())
             })
