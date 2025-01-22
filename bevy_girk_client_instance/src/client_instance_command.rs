@@ -54,9 +54,8 @@ impl Command for ClientInstanceCommand
 
                 // Launch game app.
                 // - The client will be set up automatically once a GameStartReport is detected.
+                // - We do not enter ClientAppState::Game until the game start report is available.
                 w.resource_mut::<LocalGameManager>().launch(launch_pack);
-
-                set_and_apply_state(w, ClientAppState::Game);
             }
             Self::RequestConnectToken => {
                 if *w.resource::<State<ClientAppState>>().get() != ClientAppState::Game {

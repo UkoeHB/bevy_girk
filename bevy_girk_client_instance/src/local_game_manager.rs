@@ -3,7 +3,7 @@ use crate::ClientFactory;
 use bevy_girk_client_fw::ClientAppState;
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::{GameFactory, GameInstance, GameInstanceCommand, GameInstanceLauncherImpl, GameInstanceLauncherLocal, GameInstanceReport, GameLaunchPack};
-use bevy_girk_utils::{new_io_channel, IoReceiver};
+use bevy_girk_utils::{new_io_channel, set_and_apply_state, IoReceiver};
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -40,13 +40,6 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
     {
         GameInstanceReport::GameStart(game_id, mut start_report) =>
         {
-            if *w.resource::<State<ClientAppState>>().get() != ClientAppState::Game
-            {
-                tracing::warn!("ignoring game start report for local game {}; client is not in \
-                    ClientAppState::Game", game_id);
-                return Some(game_id);
-            }
-
             let Some(start_info) = start_report.start_infos.pop() else {
                 tracing::error!("ignoring game start report for local game {}; report is missing start info",
                     game_id);
@@ -68,6 +61,7 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
             w.resource_scope(|w: &mut World, mut factory: Mut<ClientFactory>| {
                 factory.setup_game(w, token, start_info);
             });
+            set_and_apply_state(w, ClientAppState::Game);
 
             None
         }
@@ -104,8 +98,9 @@ fn monitor_local_game_reports(w: &mut World)
     for report in reports
     {
         if let Some(bad_game) = handle_game_instance_report(w, report) {
-            if !w.resource_mut::<LocalGameManager>().try_abort_game(bad_game) { continue }
-            tracing::warn!("local-player game server aborted");
+            if w.resource_mut::<LocalGameManager>().try_abort_game(bad_game) {
+                tracing::warn!("local-player game server aborted");
+            }
         }
     }
 }
