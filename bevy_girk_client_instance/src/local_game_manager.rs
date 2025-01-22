@@ -294,7 +294,7 @@ impl Plugin for LocalGamePlugin
 
         app
             .insert_resource(LocalGameManager::new(local_factory))
-            .add_systems(First, monitor_local_game_reports.run_if(in_state(ClientAppState::Game)))
+            .add_systems(First, monitor_local_game_reports)
             // TODO: This assumes local-player games cannot be paused and resumed. Consider making it more
             // sophisticated.
             .add_systems(OnExit(ClientAppState::Game), try_shut_down_local_game);
