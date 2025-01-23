@@ -25,8 +25,6 @@ pub(crate) fn cleanup_client_fw_state(world: &mut World)
     world.remove_resource::<ClientFwConfig>();
     world.remove_resource::<InitProgressCache>();
     world.remove_resource::<PingTracker>();
-    world.remove_resource::<ClientRequestType>();
-    world.remove_resource::<GameMessageHandler>();
 }
 
 //-------------------------------------------------------------------------------------------------------------------

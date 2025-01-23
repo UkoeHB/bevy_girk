@@ -28,21 +28,19 @@ fn handle_game_fw_message(world: &mut World, tick: Tick, msg: GameFwMsg)
 /// Handles messages sent to the client from the game.
 pub(crate) fn handle_game_incoming(world: &mut World)
 {
-    let mut packets = world.remove_resource::<Events<GamePacket>>().unwrap();
-    let handler = world.remove_resource::<GameMessageHandler>().unwrap();
-
-    for packet in packets.drain()
-    {
-        match handler.try_call(world, &packet)
-        {
-            Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
-            Err(None)                     => tracing::trace!(?packet, "failed to handle game packet"),
-            Ok(())                        => (),
-        }
-    }
-
-    world.insert_resource(handler);
-    world.insert_resource(packets);
+    world.resource_scope(|world, mut packets: Mut<Events<GamePacket>>| {
+        world.resource_scope(|world, handler: Mut<GameMessageHandler>| {
+            for packet in packets.drain()
+            {
+                match handler.try_call(world, &packet)
+                {
+                    Err(Some((tick, fw_message))) => handle_game_fw_message(world, tick, fw_message),
+                    Err(None)                     => tracing::trace!(?packet, "failed to handle game packet"),
+                    Ok(())                        => (),
+                }
+            }
+        });
+    });
 }
 
 //-------------------------------------------------------------------------------------------------------------------
