@@ -22,23 +22,23 @@ pub struct GameInstanceCli
 
 /// Launch a game instance in a new process on the current machine.
 #[derive(Debug)]
-pub struct GameInstanceLauncherProcess<S: enfync::Handle + Debug + Send + Sync + 'static>
+pub struct GameInstanceLauncherProcess
 {
     /// Path to the game app binary.
     path: String,
     /// Spawner for internal async tasks.
-    spawner: S,
+    spawner: enfync::builtin::native::TokioHandle,
 }
 
-impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherProcess<S>
+impl GameInstanceLauncherProcess
 {
-    pub fn new(path: String, spawner: S) -> Self
+    pub fn new(path: String, spawner: enfync::builtin::native::TokioHandle) -> Self
     {
         Self{ path, spawner }
     }
 }
 
-impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl for GameInstanceLauncherProcess<S>
+impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
 {
     fn launch(
         &self,
@@ -59,53 +59,60 @@ impl<S: enfync::Handle + Debug + Send + Sync + 'static> GameInstanceLauncherImpl
             return GameInstance::new(game_id, command_sender, command_receiver, enfync::PendingResult::make_ready(false));
         };
 
-        let Ok(child_process) = tokio::process::Command::new(&self.path)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .args(["-G", &launch_pack_ser])
-            .spawn()
-        else
-        {
-            tracing::warn!(game_id, "failed spawning game instance process");
-            return GameInstance::new(game_id, command_sender, command_receiver, enfync::PendingResult::make_ready(false));
-        };
-
-        // manage the process
-        let report_sender_clone = report_sender.clone();
-        let (_process_handle, stdout_handle) = manage_child_process(
-            &self.spawner,
-            game_id,
-            child_process,
-            command_receiver,
-            move |report: GameInstanceReport| -> Option<bool>
-            {
-                match &report
+        let spawner = self.spawner.clone();
+        let (_process_handle, stdout_handle) = self.spawner.0.block_on(
+            async move {
+                let Ok(child_process) = tokio::process::Command::new(&self.path)
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .args(["-G", &launch_pack_ser])
+                    .spawn()
+                else
                 {
-                    GameInstanceReport::GameStart(_, _) =>
-                    {
-                        tracing::trace!(game_id, "game instance process report: game start");
-                        let _ = report_sender.send(report);
-                    }
-                    GameInstanceReport::GameOver(_, _) =>
-                    {
-                        tracing::trace!(game_id, "game instance process report: game over");
-                        let _ = report_sender.send(report);
-                        return Some(true);
-                    }
-                    GameInstanceReport::GameAborted(_) =>
-                    {
-                        tracing::trace!(game_id, "game instance process report: game aborted");
-                        let _ = report_sender.send(report);
-                        return Some(false);
-                    }
-                }
+                    tracing::warn!(game_id, "failed spawning game instance process");
+                    return (enfync::PendingResult::make_ready(false), enfync::PendingResult::make_ready(false));
+                };
 
-                None
-            },
-            move ||
-            {
-                tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
-                let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
+                // manage the process
+                let report_sender_clone = report_sender.clone();
+                let (process_handle, stdout_handle) = manage_child_process(
+                    spawner,
+                    game_id,
+                    child_process,
+                    command_receiver,
+                    move |report: GameInstanceReport| -> Option<bool>
+                    {
+                        match &report
+                        {
+                            GameInstanceReport::GameStart(_, _) =>
+                            {
+                                tracing::trace!(game_id, "game instance process report: game start");
+                                let _ = report_sender.send(report);
+                            }
+                            GameInstanceReport::GameOver(_, _) =>
+                            {
+                                tracing::trace!(game_id, "game instance process report: game over");
+                                let _ = report_sender.send(report);
+                                return Some(true);
+                            }
+                            GameInstanceReport::GameAborted(_) =>
+                            {
+                                tracing::trace!(game_id, "game instance process report: game aborted");
+                                let _ = report_sender.send(report);
+                                return Some(false);
+                            }
+                        }
+
+                        None
+                    },
+                    move ||
+                    {
+                        tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
+                        let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
+                    }
+                );
+
+                (process_handle, stdout_handle)
             }
         );
 

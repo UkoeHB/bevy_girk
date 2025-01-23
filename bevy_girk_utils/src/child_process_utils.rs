@@ -3,6 +3,7 @@ use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use enfync::Handle;
 use serde::{Serialize, Deserialize};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
@@ -46,8 +47,11 @@ fn monitor_for_outputs<O: Serialize + Send + Sync + 'static>(mut output_receiver
 /// Returns handles to the two tasks.
 ///
 /// This is designed for compatibility with [`run_app_in_child_process()`].
+///
+/// The `child_process` must be created inside a tokio task, so this function will likely be called inside
+/// a tokio task.
 pub fn manage_child_process<I, O>(
-    spawner             : &impl enfync::Handle,
+    spawner             : enfync::builtin::native::TokioHandle,
     id                  : u64,
     mut child_process   : tokio::process::Child,
     mut stdin_receiver  : IoReceiver<I>,
