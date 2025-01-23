@@ -18,7 +18,11 @@ pub fn apply_state_transitions(w: &mut World)
 pub fn set_and_apply_state<S: FreelyMutableState>(world: &mut World, state: S)
 {
     world.resource_mut::<NextState<S>>().set(state);
-    world.try_run_schedule(StateTransition).expect("when setting a state we should have States plugin");
+    if let Err(err) = world.try_run_schedule(StateTransition) {
+        tracing::error!("failed running schedule StateTransition (err={err:?}) after setting state {}; state \
+            transitions cannot be executed recursively, or maybe you're missing the States plugin",
+            std::any::type_name::<S>());
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
