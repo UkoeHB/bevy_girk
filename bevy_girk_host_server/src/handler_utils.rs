@@ -148,8 +148,18 @@ pub(crate) fn send_game_over_messages_and_update_states(
         let user_id = user_info.user_id;
 
         // check that user is in a game
-        let Some(UserState::InGame(in_game_id)) = users_cache.get_user_state(user_info.user_id)
-        else { tracing::warn!(user_id, game_id, "received game over report but user is not in a game"); continue; };
+        let in_game_id = match users_cache.get_user_state(user_info.user_id)
+        {
+            Some(UserState::InGame(in_game_id)) => in_game_id,
+            Some(_) => {
+                tracing::warn!(user_id, game_id, "received game over report but user is not in a game");
+                continue;
+            }
+            None => {
+                tracing::warn!(user_id, game_id, "received game over report but user is not connected");
+                continue;
+            }
+        };
 
         // check that user is in the game associated with this game over report
         if in_game_id != game_id
