@@ -221,7 +221,7 @@ pub fn prepare_game_app_network(
 {
     // set up renet server
     // - we use a unique auth key so clients can only interact with the server created here
-    let auth_key = {
+    let auth_key: [u8; 32] = {
         // We assume this is only used for local-player on web.
         #[cfg(target_family = "wasm")]
         {
@@ -229,11 +229,18 @@ pub fn prepare_game_app_network(
             if client_counts.native_count > 0 || wasm_count > 0
             {
                 panic!("aborting game app networking construction; target family is WASM where only in-memory \
-                    transports are permitted, but found other transport requests (memory: {}, native: {}, wasm: {})",
+                    transports are permitted, but found other transport requests (memory: {:?}, native: {:?}, wasm: {:?})",
                     client_counts.memory_clients, client_counts.native_count, wasm_count);
             }
 
-            wasm_timer::SystemTime::now().duration_since(wasm_timer::UNIX_EPOCH).unwrap_or_default().as_nanos()
+            let time: [u8; 16] = wasm_timer::SystemTime::now()
+                .duration_since(wasm_timer::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+                .to_le_bytes();
+            let mut key: [u8; 32] = Default::default();
+            key[..16].clone_from_slice(&time);
+            key
         }
 
         #[cfg(not(target_family = "wasm"))]

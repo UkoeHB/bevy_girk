@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_renet2::prelude::{ChannelConfig, ConnectionConfig, RenetClient};
 use bevy_renet2::netcode::{
-    ClientAuthentication, ClientSocket, NativeSocket, NetcodeClientTransport
+    ClientAuthentication, ClientSocket, NetcodeClientTransport
 };
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
@@ -19,6 +19,7 @@ use crate::ClientConnectPack;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+#[cfg(not(target_family = "wasm"))]
 fn create_native_client(
     server_channels_config : Vec<ChannelConfig>,
     client_channels_config : Vec<ChannelConfig>,
@@ -28,7 +29,7 @@ fn create_native_client(
 {
     // make client
     let udp_socket = UdpSocket::bind(client_addr).expect("renet client address should be bindable");
-    let client_socket = NativeSocket::new(udp_socket).unwrap();
+    let client_socket = bevy_renet2::netcode::NativeSocket::new(udp_socket).unwrap();
     let client = RenetClient::new(
         ConnectionConfig::from_channels(server_channels_config, client_channels_config),
         client_socket.is_reliable()
@@ -62,11 +63,7 @@ fn create_wasm_wt_client(
     // make client
     let client_socket = bevy_renet2::netcode::WebTransportClient::new(config);
     let client = RenetClient::new(
-        ConnectionConfig{
-            server_channels_config,
-            client_channels_config,
-            ..default()
-        },
+        ConnectionConfig::from_channels(server_channels_config, client_channels_config),
         client_socket.is_reliable()
     );
 
@@ -96,13 +93,10 @@ fn create_wasm_ws_client(
 ) -> (RenetClient, NetcodeClientTransport)
 {
     // make client
-    let client_socket = bevy_renet2::netcode::WebSocketClient::new(config);
+    let client_socket = bevy_renet2::netcode::WebSocketClient::new(config)
+        .expect("websocket client should construct");
     let client = RenetClient::new(
-        ConnectionConfig{
-            server_channels_config,
-            client_channels_config,
-            ..default()
-        },
+        ConnectionConfig::from_channels(server_channels_config, client_channels_config),
         client_socket.is_reliable()
     );
 
@@ -148,6 +142,7 @@ fn create_memory_client(
 
 /// Sets up a renet client with default transport using the provided authentication and client address.
 /// - Assumes there is a `bevy_replicon::RepliconChannels` resource already loaded in the app.
+#[cfg(not(target_family = "wasm"))]
 fn setup_native_renet_client(
     In((
         authentication,
@@ -289,9 +284,17 @@ pub fn setup_renet_client(world: &mut World) -> Result<(), ()>
         {
             world.syscall((authentication, client), setup_memory_renet_client);
         }
-        ClientConnectPack::Native(authentication, client_address) =>
+        ClientConnectPack::Native(_authentication, _client_address) =>
         {
-            world.syscall((authentication, client_address), setup_native_renet_client);
+            #[cfg(target_family = "wasm")]
+            {
+                tracing::error!("failed setting up renet client with native connect pack; native connections not allowed in \
+                    WASM environments");
+                return Err(());
+            }
+
+            #[cfg(not(target_family = "wasm"))]
+            world.syscall((_authentication, _client_address), setup_native_renet_client);
         }
         #[cfg(target_family = "wasm")]
         ClientConnectPack::WasmWt(authentication, config) =>

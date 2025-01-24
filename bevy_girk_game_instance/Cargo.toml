@@ -33,5 +33,6 @@ bevy_girk_utils = { path = "../bevy_girk_utils" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-wasmtimer = { version = "0.2" }  # Provides tokio::sleep
+gloo-timers = { version = "0.3", features = ["futures"] }
+wasm-bindgen-futures = { version = "0.4" }
 wasm-timer = { workspace = true }  # Provides SystemTime, UNIX_EPOCH

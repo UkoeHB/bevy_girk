@@ -1,16 +1,12 @@
-//local shortcuts
 use crate::{
-    GameFactory, GameFwConfig, game_instance_setup, GameInstanceCommand, GameInstanceReport, GameLaunchPack
+    GameInstance, GameFactory, game_instance_setup, GameInstanceCommand, GameInstanceLauncherImpl,
+    GameInstanceReport, GameLaunchPack
 };
+use bevy_girk_game_fw::GameFwConfig;
+use bevy_girk_utils::{tps_to_duration, new_io_channel, IoSender};
 
-//third-party shortcuts
-use enfync::{AdoptOrDefault, Handle};
-use bevy_girk_utils::tps_to_duration;
-use wasmtimer::tokio::sleep;
+use bevy::prelude::*;
 use wasm_timer::Instant;
-
-//standard shortcuts
-
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -18,7 +14,6 @@ use wasm_timer::Instant;
 ///
 /// We drive the app manually instead of using the automatic runner in order to release the thread for use by
 /// the instance owner (e.g. a client game when doing local-player on web).
-#[derive(Debug)]
 pub struct GameInstanceLauncherLocal
 {
     game_factory: GameFactory,
@@ -49,7 +44,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
         // launch game thread
         let game_id = launch_pack.game_id;
         let game_factory = self.game_factory.clone();
-        let instance_handle = enfync::builtin::wasm::WasmHandle.spawn(
+        wasm_bindgen_futures::spawn_local(
             async move
             {
                 // Make game app.
@@ -60,11 +55,11 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                     command_receiver_clone,
                 ) else {
                     let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                    return false;
+                    return;
                 };
 
                 // Run the loop manually until the app exits.
-                let tick_duration = tps_to_duration(world.resource::<GameFwConfig>().ticks_per_sec());
+                let tick_duration = tps_to_duration(app.world().resource::<GameFwConfig>().ticks_per_sec());
 
                 loop
                 {
@@ -73,13 +68,15 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                     app.update();
 
                     // Check if the app shut down.
-                    match app.world().resource::<Events<AppExit>>().get_reader().read().next().copied() {
+                    let events = app.world().resource::<Events<AppExit>>();
+                    let mut reader = events.get_reader();
+                    match reader.read(events).next().cloned() {
                         None => (),
                         Some(AppExit::Success) => break,
                         Some(AppExit::Error(code)) => {
-                            tracing::warn!("local game instance {game_id} closed with error code {code}");
+                            tracing::warn!("local game instance {game_id} closed with error code {code:?}");
                             let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                            return false;
+                            return;
                         },
                     }
 
@@ -89,18 +86,20 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                     // - Note that this behavior mimics bevy's ScheduleRunnerPlugin loop, which will *not* try
                     //   to 'catch up' if ticks take longer than the target duration. If fixed-update
                     //   behavior is desired then the FixedUpdate schedule should be used.
+                    // - Instant::saturating_duration_since is not implemented for wasm_time::Instant. We
+                    //   assume WASM instants are always monotonically increasing.
                     let end = Instant::now();
                     let duration_to_next_update = tick_duration.saturating_sub(
-                        end.saturating_duration_since(start)
+                        end.duration_since(start)
                     );
-                    sleep(duration_to_next_update).await;
+                    gloo_timers::future::TimeoutFuture::new(duration_to_next_update.as_millis() as u32).await;
                 }
-
-                true
             }
         );
 
-        GameInstance::new(game_id, command_sender, command_receiver, instance_handle)
+        // Use a fake pending result since enfync requires Send on tasks but TimeoutFuture is non-Send. We assume
+        // this launcher is only used for local WASM games where the pending result will be ignored.
+        GameInstance::new(game_id, command_sender, command_receiver, enfync::PendingResult::make_ready(true))
     }
 }
 
