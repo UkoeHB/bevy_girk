@@ -92,6 +92,9 @@ fn add_native_socket(
             auth_key: auth_key.clone(),
         };
 
+        tracing::info!("native renet2 socket; local addr = {}, public addr = {}",
+            socket.addr().unwrap(), addrs[0]);
+
         socket_addresses.push(addrs);
         sockets.push(BoxedSocket::new(socket));
 
@@ -138,6 +141,9 @@ fn add_wasm_wt_socket(
             cert_hashes: vec![cert_hash],
         };
 
+        tracing::info!("wasm webtransport renet2 socket; local addr = {}, public addr = {}",
+            socket.addr().unwrap(), addrs[0]);
+
         socket_addresses.push(addrs);
         sockets.push(BoxedSocket::new(socket));
 
@@ -183,6 +189,9 @@ fn add_wasm_ws_socket(
             auth_key: auth_key.clone(),
             url: socket.url(),
         };
+
+        tracing::info!("wasm websockets renet2 socket; local addr = {}, public addr = {}",
+            socket.addr().unwrap(), addrs[0]);
 
         socket_addresses.push(addrs);
         sockets.push(BoxedSocket::new(socket));
