@@ -101,6 +101,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
             expire_secs  : 10u64,
             timeout_secs : 1i32,  //very short for this test
             server_ip    : Ipv6Addr::LOCALHOST.into(),
+            proxy_ip     : None,
         };
 
     // game framework config

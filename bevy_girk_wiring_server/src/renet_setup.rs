@@ -79,7 +79,11 @@ fn add_native_socket(
         let wildcard_addr = SocketAddr::new(config.server_ip, 0);
         let server_socket = std::net::UdpSocket::bind(wildcard_addr).expect("renet server address should be bindable");
         let socket = renet2_netcode::NativeSocket::new(server_socket).unwrap();
-        let addrs = vec![socket.addr().unwrap()];
+        let addrs = if let Some(proxy) = config.proxy_ip {
+            vec![SocketAddr::new(proxy.clone(), socket.addr().unwrap().port())]
+        } else {
+            vec![socket.addr().unwrap()]
+        };
 
         let meta = ConnectMetaNative {
             server_config: config.clone(),
@@ -120,7 +124,11 @@ fn add_wasm_wt_socket(
         let (wt_config, cert_hash) = renet2_netcode::WebTransportServerConfig::new_selfsigned(wildcard_addr, count);
         let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
         let socket = renet2_netcode::WebTransportServer::new(wt_config, handle.0).unwrap();
-        let addrs = vec![socket.addr().unwrap()];
+        let addrs = if let Some(proxy) = config.proxy_ip {
+            vec![SocketAddr::new(proxy.clone(), socket.addr().unwrap().port())]
+        } else {
+            vec![socket.addr().unwrap()]
+        };
 
         let meta = ConnectMetaWasmWt {
             server_config: config.clone(),
@@ -162,7 +170,11 @@ fn add_wasm_ws_socket(
         let ws_config = renet2_netcode::WebSocketServerConfig::new(wildcard_addr, count);
         let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
         let socket = renet2_netcode::WebSocketServer::new(ws_config, handle.0).unwrap();
-        let addrs = vec![socket.addr().unwrap()];
+        let addrs = if let Some(proxy) = config.proxy_ip {
+            vec![SocketAddr::new(proxy.clone(), socket.addr().unwrap().port())]
+        } else {
+            vec![socket.addr().unwrap()]
+        };
 
         let meta = ConnectMetaWasmWs {
             server_config: config.clone(),

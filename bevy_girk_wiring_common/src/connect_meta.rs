@@ -24,6 +24,10 @@ pub struct GameServerSetupConfig
     ///
     /// The server port will be auto-selected.
     pub server_ip: IpAddr,
+    /// Proxy IP address to send to clients in connect tokens instead of the `server_ip`.
+    ///
+    /// Proxy IP addresses will be associated with the local ports assigned to each socket.
+    pub proxy_ip: Option<IpAddr>,
 }
 
 impl GameServerSetupConfig
@@ -38,6 +42,7 @@ impl GameServerSetupConfig
             expire_secs: 10u64,
             timeout_secs: 5i32,
             server_ip: Ipv4Addr::LOCALHOST.into(),
+            proxy_ip: None,
         }
     }
 }
