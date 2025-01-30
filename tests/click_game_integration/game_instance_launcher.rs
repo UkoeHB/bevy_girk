@@ -86,7 +86,7 @@ fn game_instance_launcher_demo()
             protocol_id  : get_test_protocol_id(),
             expire_secs  : 10u64,
             timeout_secs : 5i32,
-            server_ip    : Ipv6Addr::LOCALHOST,
+            server_ip    : Ipv6Addr::LOCALHOST.into(),
         };
 
     // game framework config

@@ -6,7 +6,7 @@ use renet2_netcode::{in_memory_server_addr, ConnectToken, MemorySocketClient, Se
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
-use std::{net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4}, time::Duration};
+use std::{net::{Ipv4Addr, IpAddr, SocketAddr, SocketAddrV4}, time::Duration};
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ pub struct GameServerSetupConfig
     /// The server's IP address. Used for both native and WASM server sockets.
     ///
     /// The server port will be auto-selected.
-    pub server_ip: Ipv6Addr,
+    pub server_ip: IpAddr,
 }
 
 impl GameServerSetupConfig
@@ -37,7 +37,7 @@ impl GameServerSetupConfig
             protocol_id: 0u64,
             expire_secs: 10u64,
             timeout_secs: 5i32,
-            server_ip: Ipv6Addr::LOCALHOST,
+            server_ip: Ipv4Addr::LOCALHOST.into(),
         }
     }
 }
