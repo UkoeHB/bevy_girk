@@ -45,7 +45,8 @@ wasm_transport_ws = [
     "bevy_replicon_renet2/ws_server_transport",
     "renet2_netcode/ws_server_transport",
     "dep:enfync",
-    "enfync/builtin"  #todo: this brings in tokio dependency
+    "enfync/builtin",  #todo: this brings in tokio dependency
+    "dep:url",
 ]
 
 [dependencies]
@@ -65,6 +66,7 @@ bevy_girk_utils = { path = "../bevy_girk_utils" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 
 enfync = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 rand = { version = "0.8" }

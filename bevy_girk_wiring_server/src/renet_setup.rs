@@ -22,6 +22,25 @@ use crate::ServerClientCounts;
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+/// Makes a websocket url: `{ws, wss}://[ip:port]/ws`.
+#[cfg(feature = "wasm_transport_ws")]
+fn make_websocket_url(with_tls: bool, address: SocketAddr) -> Result<url::Url, ()>
+{
+    let mut url = url::Url::parse("https://example.net").map_err(|_| ())?;
+    let scheme = match with_tls {
+        true => "wss",
+        false => "ws",
+    };
+    url.set_scheme(scheme)?;
+    url.set_ip_host(address.ip())?;
+    url.set_port(Some(address.port()))?;
+    url.set_path("/ws");
+    Ok(url)
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 fn add_memory_socket(
     config: &GameServerSetupConfig,
     memory_clients: Vec<u16>,
@@ -181,13 +200,14 @@ fn add_wasm_ws_socket(
         } else {
             vec![socket.addr().unwrap()]
         };
+        let url = make_websocket_url(socket.is_encrypted(), addrs[0]).unwrap();
 
         let meta = ConnectMetaWasmWs {
             server_config: config.clone(),
             server_addresses: addrs.clone(),
             socket_id: sockets.len() as u8,  // DO THIS BEFORE PUSHING SOCKET
             auth_key: auth_key.clone(),
-            url: socket.url(),
+            url,
         };
 
         tracing::info!("wasm websockets renet2 socket; local addr = {}, public addr = {}",
