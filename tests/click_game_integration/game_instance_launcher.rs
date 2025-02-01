@@ -88,6 +88,7 @@ fn game_instance_launcher_demo()
             timeout_secs : 5i32,
             server_ip    : Ipv6Addr::LOCALHOST.into(),
             proxy_ip     : None,
+            wss_certs    : None,
         };
 
     // game framework config

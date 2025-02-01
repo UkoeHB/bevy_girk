@@ -44,6 +44,8 @@ wasm_transport_ws = [
     "transport",
     "bevy_replicon_renet2/ws_server_transport",
     "renet2_netcode/ws_server_transport",
+    "renet2_netcode/ws-rustls",
+    "bevy_girk_wiring_common/wasm_transport_ws",
     "dep:enfync",
     "enfync/builtin",  #todo: this brings in tokio dependency
     "dep:url",

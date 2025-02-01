@@ -13,6 +13,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 memory_transport = ["renet2_netcode/memory_transport"]
+wasm_transport_ws = ["dep:rustls", "dep:rustls-pki-types", "renet2_netcode/ws_server_transport"]
 
 [dependencies]
 bevy = { workspace = true }
@@ -23,6 +24,9 @@ serde = { workspace = true }
 serde_with = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
+
+rustls = { workspace = true, optional = true }
+rustls-pki-types = { workspace = true, optional = true }
 
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }

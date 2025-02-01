@@ -6,7 +6,7 @@ use renet2_netcode::{in_memory_server_addr, ConnectToken, MemorySocketClient, Se
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
-use std::{net::{Ipv4Addr, IpAddr, SocketAddr, SocketAddrV4}, time::Duration};
+use std::{net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4}, path::PathBuf, time::Duration};
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -28,6 +28,11 @@ pub struct GameServerSetupConfig
     ///
     /// Proxy IP addresses will be associated with the local ports assigned to each socket.
     pub proxy_ip: Option<IpAddr>,
+    /// Location of certificate files to use for websocket servers.
+    ///
+    /// Format: (cert chain, private key).
+    /// Files must be DER encoded. The privkey must be PKCS#8.
+    pub wss_certs: Option<(Vec<PathBuf>, PathBuf)>,
 }
 
 impl GameServerSetupConfig
@@ -43,7 +48,56 @@ impl GameServerSetupConfig
             timeout_secs: 5i32,
             server_ip: Ipv4Addr::LOCALHOST.into(),
             proxy_ip: None,
+            wss_certs: None,
         }
+    }
+
+    #[cfg(feature = "wasm_transport_ws")]
+    pub fn get_ws_acceptor(&self) -> renet2_netcode::WebSocketAcceptor
+    {
+        let Some(config) = Self::get_rustls_server_config(&self.wss_certs) else {
+            return renet2_netcode::WebSocketAcceptor::Plain;
+        };
+        renet2_netcode::WebSocketAcceptor::Rustls(config.into())
+    }
+
+    #[cfg(feature = "wasm_transport_ws")]
+    pub fn get_rustls_server_config(wss_certs: &Option<(Vec<PathBuf>, PathBuf)>) -> Option<std::sync::Arc<rustls::ServerConfig>>
+    {
+        let Some((cert_chain, privkey)) = wss_certs else { return None };
+
+        let certs = cert_chain
+            .iter()
+            .filter_map(|path| {
+                let data = match std::fs::read(path) {
+                    Ok(data) => data,
+                    Err(err) => {
+                    tracing::error!("failed reading {path:?} for websocket certs: {err:?}");
+                        return None;
+                    }
+                };
+                Some(rustls_pki_types::CertificateDer::from(data))
+            })
+            .collect();
+        let data = match std::fs::read(privkey) {
+            Ok(data) => data,
+            Err(err) => {
+                tracing::error!("failed reading {privkey:?} for websocket certs privkey: {err:?}");
+                return None;
+            }
+        };
+        let privkey = rustls_pki_types::PrivateKeyDer::Pkcs8(data.into());
+        let config = match rustls::ServerConfig::builder()
+            .with_no_client_auth()
+            .with_single_cert(certs, privkey)
+        {
+            Ok(config) => config,
+            Err(err) => {
+                tracing::error!("failed building rustls serverconfig with websocket certs: {err:?}");
+                return None;
+            }
+        };
+        Some(std::sync::Arc::new(config))
     }
 }
 

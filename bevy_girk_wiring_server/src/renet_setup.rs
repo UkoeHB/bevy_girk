@@ -191,8 +191,13 @@ fn add_wasm_ws_socket(
     #[cfg(feature = "wasm_transport_ws")]
     {
         use enfync::AdoptOrDefault;
+        let acceptor = config.get_ws_acceptor();
         let wildcard_addr = SocketAddr::new(config.server_ip, 0);
-        let ws_config = renet2_netcode::WebSocketServerConfig::new(wildcard_addr, count);
+        let ws_config = renet2_netcode::WebSocketServerConfig{
+            acceptor,
+            listen: wildcard_addr,
+            max_clients: count
+        };
         let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
         let socket = renet2_netcode::WebSocketServer::new(ws_config, handle.0).unwrap();
         let addrs = if let Some(proxy) = config.proxy_ip {

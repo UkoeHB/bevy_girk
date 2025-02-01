@@ -48,6 +48,8 @@ serde              = { version = "1.0" }
 serde_json         = { version = "1.0" }
 serde_with         = { version = "3.0" }
 tokio              = { version = "1.34", default-features = false }
+rustls             = { version = "0.23" }
+rustls-pki-types   = { version = "1.7" }
 tracing            = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
 url                = { version = "2.4" }
