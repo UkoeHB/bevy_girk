@@ -31,7 +31,8 @@ bevy_cobweb              = { version = "0.16" }
 bevy_replicon            = { version = "0.29", default-features = false }
 bevy_replicon_attributes = { version = "0.8" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
-bevy_simplenet           = { version = "0.14", default-features = false }
+#bevy_simplenet           = { version = "0.14", default-features = false }
+bevy_simplenet           = { git = "https://github.com/UkoeHB/bevy_simplenet", rev = "4abc765", default-features = false }
 #iyes_progress            = { version = "0.13", features = [ "assets" ] }
 iyes_progress            = { git = "https://github.com/UkoeHB/iyes_progress", rev = "343879e", features = [ "assets" ] }
 
@@ -43,7 +44,8 @@ renet2_netcode = { version = "0.1.1", default-features = false }
 bincode            = { version = "1.3" }
 bytes              = { version = "1.1" }
 enfync             = { version = "0.1", default-features = false }
-ezsockets          = { version = "0.6", default-features = false }
+#ezsockets          = { version = "0.6", default-features = false }
+ezsockets = { git = "https://github.com/UkoeHB/ezsockets", rev = "147f751", default-features = false }
 serde              = { version = "1.0" }
 serde_json         = { version = "1.0" }
 serde_with         = { version = "3.0" }
