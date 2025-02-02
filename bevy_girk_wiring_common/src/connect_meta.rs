@@ -31,8 +31,8 @@ pub struct GameServerSetupConfig
     /// Location of certificate files to use for websocket servers.
     ///
     /// Format: (cert chain, private key).
-    /// Files must be DER encoded. The privkey must be PKCS#8.
-    pub wss_certs: Option<(Vec<PathBuf>, PathBuf)>,
+    /// Files must be PEM encoded.
+    pub wss_certs: Option<(PathBuf, PathBuf)>,
 }
 
 impl GameServerSetupConfig
@@ -61,32 +61,36 @@ impl GameServerSetupConfig
         renet2_netcode::WebSocketAcceptor::Rustls(config.into())
     }
 
+    /// Assumes files are PEM encoded.
     #[cfg(feature = "wasm_transport_ws")]
-    pub fn get_rustls_server_config(wss_certs: &Option<(Vec<PathBuf>, PathBuf)>) -> Option<std::sync::Arc<rustls::ServerConfig>>
+    pub fn get_rustls_server_config(wss_certs: &Option<(PathBuf, PathBuf)>) -> Option<std::sync::Arc<rustls::ServerConfig>>
     {
+        use rustls_pki_types::pem::PemObject;
+
         let Some((cert_chain, privkey)) = wss_certs else { return None };
 
-        let certs = cert_chain
-            .iter()
-            .filter_map(|path| {
-                let data = match std::fs::read(path) {
-                    Ok(data) => data,
+        let certs = match rustls_pki_types::CertificateDer::pem_file_iter(cert_chain) {
+            Ok(file_iter) => file_iter.filter_map(|i| {
+                match i {
+                    Ok(cert) => Some(cert),
                     Err(err) => {
-                    tracing::error!("failed reading {path:?} for websocket certs: {err:?}");
-                        return None;
+                        tracing::error!("failure while reading {cert_chain:?} for websocket certs: {err:?}");
+                        None
                     }
-                };
-                Some(rustls_pki_types::CertificateDer::from(data))
-            })
-            .collect();
-        let data = match std::fs::read(privkey) {
-            Ok(data) => data,
+                }
+            }).collect(),
+            Err(err) => {
+                tracing::error!("failed reading {cert_chain:?} for websocket certs: {err:?}");
+                return None;
+            }
+        };
+        let privkey = match rustls_pki_types::PrivatePkcs8KeyDer::from_pem_file(privkey) {
+            Ok(privkey) => rustls_pki_types::PrivateKeyDer::Pkcs8(privkey),
             Err(err) => {
                 tracing::error!("failed reading {privkey:?} for websocket certs privkey: {err:?}");
                 return None;
             }
         };
-        let privkey = rustls_pki_types::PrivateKeyDer::Pkcs8(data.into());
         let config = match rustls::ServerConfig::builder()
             .with_no_client_auth()
             .with_single_cert(certs, privkey)
