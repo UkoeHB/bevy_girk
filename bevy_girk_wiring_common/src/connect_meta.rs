@@ -84,8 +84,8 @@ impl GameServerSetupConfig
                 return None;
             }
         };
-        let privkey = match rustls_pki_types::PrivatePkcs8KeyDer::from_pem_file(privkey) {
-            Ok(privkey) => rustls_pki_types::PrivateKeyDer::Pkcs8(privkey),
+        let privkey = match rustls_pki_types::PrivateKeyDer::from_pem_file(privkey) {
+            Ok(privkey) => privkey,
             Err(err) => {
                 tracing::error!("failed reading {privkey:?} for websocket certs privkey: {err:?}");
                 return None;
