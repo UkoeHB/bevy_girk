@@ -91,6 +91,9 @@ impl GameServerSetupConfig
                 return None;
             }
         };
+        if rustls::crypto::CryptoProvider::get_default().is_none() {
+            let _ = rustls::crypto::ring::default_provider().install_default();
+        }
         let config = match rustls::ServerConfig::builder()
             .with_no_client_auth()
             .with_single_cert(certs, privkey)
