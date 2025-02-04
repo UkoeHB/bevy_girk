@@ -108,7 +108,7 @@ fn game_lifecycle()
     let closure_frame =
         ezsockets::CloseFrame{
             code   : ezsockets::CloseCode::Normal,
-            reason : String::from("test")
+            reason : "test".into()
         };
     host_hub_server.disconnect_client(connected_hub_id, Some(closure_frame));
 
