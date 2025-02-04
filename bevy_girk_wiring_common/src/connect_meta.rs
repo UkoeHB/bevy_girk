@@ -33,6 +33,8 @@ pub struct GameServerSetupConfig
     /// Format: (cert chain, private key).
     /// Files must be PEM encoded.
     pub wss_certs: Option<(PathBuf, PathBuf)>,
+    /// Domain name to use instead of the proxy_ip for websocket servers.
+    pub ws_domain: Option<String>,
 }
 
 impl GameServerSetupConfig
@@ -49,6 +51,7 @@ impl GameServerSetupConfig
             server_ip: Ipv4Addr::LOCALHOST.into(),
             proxy_ip: None,
             wss_certs: None,
+            ws_domain: None,
         }
     }
 

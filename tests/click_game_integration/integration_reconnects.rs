@@ -103,6 +103,7 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
             server_ip    : Ipv6Addr::LOCALHOST.into(),
             proxy_ip     : None,
             wss_certs    : None,
+            ws_domain    : None,
         };
 
     // game framework config

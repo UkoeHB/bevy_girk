@@ -80,6 +80,7 @@ fn game_instance_factory_demo()
             server_ip    : Ipv6Addr::LOCALHOST.into(),
             proxy_ip     : None,
             wss_certs    : None,
+            ws_domain    : None,
         };
 
     // game framework config
