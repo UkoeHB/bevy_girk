@@ -14,7 +14,7 @@ use renet2_netcode::{
 };
 
 //standard shortcuts
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use wasm_timer::{SystemTime, UNIX_EPOCH};
 
 use crate::ServerClientCounts;
@@ -24,7 +24,12 @@ use crate::ServerClientCounts;
 
 /// Makes a websocket url: `{ws, wss}://[{ip, domain}:port]/ws`.
 #[cfg(feature = "wasm_transport_ws")]
-fn make_websocket_url(with_tls: bool, address: SocketAddr, maybe_domain: Option<String>) -> Result<url::Url, url::ParseError>
+fn make_websocket_url(
+    with_tls: bool,
+    ip: IpAddr,
+    port: u16,
+    maybe_domain: Option<String>
+) -> Result<url::Url, url::ParseError>
 {
     let mut url = url::Url::parse("https://example.net")?;
     let scheme = match with_tls {
@@ -34,9 +39,9 @@ fn make_websocket_url(with_tls: bool, address: SocketAddr, maybe_domain: Option<
     url.set_scheme(scheme).map_err(|_| url::ParseError::EmptyHost)?;
     match maybe_domain {
         Some(domain) => url.set_host(Some(domain.as_str()))?,
-        None => url.set_ip_host(address.ip()).map_err(|_| url::ParseError::InvalidIpv4Address)?
+        None => url.set_ip_host(ip).map_err(|_| url::ParseError::InvalidIpv4Address)?
     }
-    url.set_port(Some(address.port())).map_err(|_| url::ParseError::InvalidPort)?;
+    url.set_port(Some(port)).map_err(|_| url::ParseError::InvalidPort)?;
     url.set_path("/ws");
     Ok(url)
 }
@@ -211,7 +216,12 @@ fn add_wasm_ws_socket(
         } else {
             vec![socket.addr().unwrap()]
         };
-        let url = make_websocket_url(socket.is_encrypted(), addrs[0], config.ws_domain.clone()).unwrap();
+        let url = make_websocket_url(
+            socket.is_encrypted(),
+            addrs[0].ip(),
+            socket.addr().unwrap().port(),
+            config.ws_domain.clone()
+        ).unwrap();
 
         let meta = ConnectMetaWasmWs {
             server_config: config.clone(),
