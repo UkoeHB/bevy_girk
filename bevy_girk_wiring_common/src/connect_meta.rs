@@ -28,13 +28,13 @@ pub struct GameServerSetupConfig
     ///
     /// Proxy IP addresses will be associated with the local ports assigned to each socket.
     pub proxy_ip: Option<IpAddr>,
+    /// Domain name to use instead of the proxy_ip for websocket servers.
+    pub ws_domain: Option<String>,
     /// Location of certificate files to use for websocket servers.
     ///
     /// Format: (cert chain, private key).
     /// Files must be PEM encoded.
     pub wss_certs: Option<(PathBuf, PathBuf)>,
-    /// Domain name to use instead of the proxy_ip for websocket servers.
-    pub ws_domain: Option<String>,
 }
 
 impl GameServerSetupConfig

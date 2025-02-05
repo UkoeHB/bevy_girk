@@ -203,7 +203,10 @@ fn add_wasm_ws_socket(
         };
         let handle = enfync::builtin::native::TokioHandle::adopt_or_default();  //todo: don't depend on tokio...
         let socket = renet2_netcode::WebSocketServer::new(ws_config, handle.0).unwrap();
-        let addrs = if let Some(proxy) = config.proxy_ip {
+        let addrs = if config.ws_domain.is_some() {
+            // Dummy address when using a domain name.
+            vec![SocketAddr::from(([0, 0, 0, 0], 0))]
+        } else if let Some(proxy) = config.proxy_ip {
             vec![SocketAddr::new(proxy.clone(), socket.addr().unwrap().port())]
         } else {
             vec![socket.addr().unwrap()]
