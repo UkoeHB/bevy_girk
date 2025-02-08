@@ -48,14 +48,17 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
             async move
             {
                 // Make game app.
-                let Ok(mut app) = game_instance_setup(
+                let mut app = match game_instance_setup(
                     game_factory,
                     launch_pack,
                     report_sender_clone,
                     command_receiver_clone,
-                ) else {
-                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
-                    return;
+                ) {
+                    Ok(app) => app,
+                    Err(err) => {
+                        let _ = report_sender.send(GameInstanceReport::GameAborted(game_id, err));
+                        return;
+                    }
                 };
 
                 // Run the loop manually until the app exits.

@@ -95,7 +95,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                                 let _ = report_sender.send(report);
                                 return Some(true);
                             }
-                            GameInstanceReport::GameAborted(_) =>
+                            GameInstanceReport::GameAborted(_, _) =>
                             {
                                 tracing::trace!(game_id, "game instance process report: game aborted");
                                 let _ = report_sender.send(report);
@@ -108,7 +108,7 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherProcess
                     move ||
                     {
                         tracing::trace!(game_id, "game instance process report: game aborted (killed by critical error)");
-                        let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id));
+                        let _ = report_sender_clone.send(GameInstanceReport::GameAborted(game_id, "killed by critical error".into()));
                     }
                 );
 
@@ -158,7 +158,7 @@ pub fn inprocess_game_launcher(args: GameInstanceCli, game_factory: GameFactory)
         },
         move ||
         {
-            let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+            let _ = report_sender.send(GameInstanceReport::GameAborted(game_id, "child process critical error".into()));
             tracing::error!("critical error in child process, game aborted");
         }
     );

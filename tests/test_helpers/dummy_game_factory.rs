@@ -54,7 +54,7 @@ impl GameFactoryImpl for DummyGameFactory
 {
     type Launch = DummyLaunchPack;
 
-    fn new_game(&self, app: &mut App, _game_id: u64, pack: DummyLaunchPack) -> Result<GameStartReport, ()>
+    fn new_game(&self, app: &mut App, _game_id: u64, pack: DummyLaunchPack) -> Result<GameStartReport, String>
     {
         // get player ids
         let player_ids: Vec<u128> = pack.clients.iter().map(|m| m.user_id).collect();

@@ -159,7 +159,7 @@ fn abort_game()
     assert!(instance.try_get().unwrap());
 
     // - game aborted report
-    let Some(GameInstanceReport::GameAborted(id)) = report_receiver.try_recv()
+    let Some(GameInstanceReport::GameAborted(id, _)) = report_receiver.try_recv()
     else { panic!("did not receive game instance report"); };
     assert_eq!(id, game_id);
 }

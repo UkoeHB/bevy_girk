@@ -59,7 +59,7 @@ fn instance_report_game_over(
 //-------------------------------------------------------------------------------------------------------------------
 
 fn instance_report_game_aborted(
-    In(game_id)             : In<u64>,
+    In((game_id, reason))             : In<(u64, String)>,
     mut running_games_cache : ResMut<RunningGamesCache>,
     host_client             : Res<HostHubClient>,
 ){
@@ -68,7 +68,7 @@ fn instance_report_game_aborted(
     if let None = running_games_cache.extract_instance(game_id)
     { tracing::trace!(game_id, "aborted game instance not in running games"); return; }
     else
-    { tracing::trace!(game_id, "removed aborted game instance from running games"); }
+    { tracing::trace!(game_id, "removed aborted game instance from running games; abort reason={reason:?}"); }
 
     // notify host server
     // - only notify if the aborted game was removed; we assume the host server was already notified if the game isn't
@@ -87,7 +87,7 @@ pub(crate) fn handle_instance_reports(world: &mut World)
         {
             GameInstanceReport::GameStart(id, report) => world.syscall((id, report), instance_report_game_start),
             GameInstanceReport::GameOver(id, report)  => world.syscall((id, report), instance_report_game_over),
-            GameInstanceReport::GameAborted(id)       => world.syscall(id, instance_report_game_aborted),
+            GameInstanceReport::GameAborted(id, reason)       => world.syscall((id, reason), instance_report_game_aborted),
         }
     }
 }

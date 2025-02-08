@@ -47,21 +47,24 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                         move ||
                         {
                             let report_sender_clone2 = report_sender_clone.clone();
-                            let Ok(mut app) = game_instance_setup(
+                            let mut app = match game_instance_setup(
                                 game_factory,
                                 launch_pack,
                                 report_sender_clone,
                                 command_receiver_clone,
-                            ) else {
-                                let _ = report_sender_clone2.send(GameInstanceReport::GameAborted(game_id));
-                                return false;
+                            ) {
+                                Ok(app) => app,
+                                Err(err) => {
+                                    let _ = report_sender_clone2.send(GameInstanceReport::GameAborted(game_id, err));
+                                    return false;
+                                }
                             };
                             app.run();
                             true
                         }
                     ))
                 else {
-                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                    let _ = report_sender.send(GameInstanceReport::GameAborted(game_id, "unexpected panic in local game instance".into()));
                     return false;
                 };
                 result

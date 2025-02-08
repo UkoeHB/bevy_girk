@@ -36,7 +36,7 @@ fn prepare_game_startup(
     config          : &GameFwConfig,
     init_data       : Vec<ClickClientInitDataForGame>,
     duration_config : GameDurationConfig
-) -> Result<GameStartupHelper, ()>
+) -> Result<GameStartupHelper, String>
 {
     // prepare each client
     let mut client_set     = HashSet::<ClientId>::with_capacity(init_data.len());
@@ -193,7 +193,7 @@ impl GameFactoryImpl for ClickGameFactory
         app: &mut App,
         game_id: u64,
         data: ClickLaunchPackData
-    ) -> Result<GameStartReport, ()>
+    ) -> Result<GameStartReport, String>
     {
         // initialize clients and game config
         let config = data.config;

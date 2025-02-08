@@ -71,7 +71,8 @@ pub enum GameInstanceReport
 {
     GameStart(u64, GameStartReport),
     GameOver(u64, GameOverReport),
-    GameAborted(u64),
+    /// Includes (game id, reason for aborting).
+    GameAborted(u64, String),
 }
 
 impl GameInstanceReport
@@ -82,7 +83,7 @@ impl GameInstanceReport
         {
             GameInstanceReport::GameStart(id, _) => *id,
             GameInstanceReport::GameOver(id, _)  => *id,
-            GameInstanceReport::GameAborted(id)  => *id,
+            GameInstanceReport::GameAborted(id, _)  => *id,
         }
     }
 }

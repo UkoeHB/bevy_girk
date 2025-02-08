@@ -25,7 +25,7 @@ pub trait GameFactoryImpl: Debug
         app: &mut App,
         game_id: u64,
         data: Self::Launch
-    ) -> Result<GameStartReport, ()>;
+    ) -> Result<GameStartReport, String>;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ pub trait GameFactoryImpl: Debug
 #[derive(Clone)]
 pub struct GameFactory
 {
-    callback: Arc<dyn Fn(&mut App, GameLaunchPack) -> Result<GameStartReport, ()> + Send + Sync + 'static>
+    callback: Arc<dyn Fn(&mut App, GameLaunchPack) -> Result<GameStartReport, String> + Send + Sync + 'static>
 }
 
 impl GameFactory
@@ -42,12 +42,11 @@ impl GameFactory
     /// Create a new game factory.
     pub fn new<F: GameFactoryImpl + Send + Sync + 'static>(factory_impl: F) -> GameFactory
     {
-        let callback = move |app: &mut App, launch_pack: GameLaunchPack| -> Result<GameStartReport, ()> {
+        let callback = move |app: &mut App, launch_pack: GameLaunchPack| -> Result<GameStartReport, String> {
             let Some(data) = deser_msg::<F::Launch>(&launch_pack.game_launch_data)
             else {
-                tracing::error!("could not deserialize {} game factory config {}",
-                    type_name::<F>(), type_name::<F::Launch>());
-                return Err(());
+                return Err(format!("could not deserialize {} game factory config {}",
+                    type_name::<F>(), type_name::<F::Launch>()));
             };
             factory_impl.new_game(app, launch_pack.game_id, data)
         };
@@ -62,7 +61,7 @@ impl GameFactory
         &self,
         app: &mut App,
         launch_pack: GameLaunchPack
-    ) -> Result<GameStartReport, ()>
+    ) -> Result<GameStartReport, String>
     {
         (self.callback)(app, launch_pack)
     }

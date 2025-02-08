@@ -17,7 +17,10 @@ fn handle_command_abort(
     mut app_exit : EventWriter<AppExit>,
 ){
     // send game aborted report
-    if let Err(_) = runner_state.report_sender.send(GameInstanceReport::GameAborted(runner_state.game_id))
+    if let Err(_) = runner_state.report_sender.send(GameInstanceReport::GameAborted(
+        runner_state.game_id,
+        "GameInstanceCommand::Abort from user".into())
+    )
     {
         tracing::error!(runner_state.game_id, "failed sending game abort message");
         app_exit.send(AppExit::from_code(65));

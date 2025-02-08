@@ -78,9 +78,9 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
             // NOTE: Do not discard the game yet, it may still need to communicate with the client.
             None
         }
-        GameInstanceReport::GameAborted(game_id) =>
+        GameInstanceReport::GameAborted(game_id, reason) =>
         {
-            tracing::warn!("local-player game server aborted, force-closing game client");
+            tracing::warn!("local-player game server aborted, force-closing game client; abort reason={reason:?}");
             w.resource_mut::<LocalGameManager>().try_set_last_game(
                 game_id,
                 LocalGameReport::Aborted{ game_id }

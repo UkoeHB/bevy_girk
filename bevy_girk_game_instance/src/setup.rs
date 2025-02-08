@@ -64,7 +64,7 @@ pub fn game_instance_setup(
     launch_pack: GameLaunchPack,
     report_sender: IoSender<GameInstanceReport>,
     command_receiver: IoReceiver<GameInstanceCommand>,
-) -> Result<App, ()>
+) -> Result<App, String>
 {
     let game_id = launch_pack.game_id;
 
@@ -74,7 +74,7 @@ pub fn game_instance_setup(
 
     // send game start report
     if let Err(_) = report_sender.send(GameInstanceReport::GameStart(game_id, game_start_report))
-    { tracing::error!(game_id, "failed sending game start message"); return Err(()); }
+    { return Err(format!("failed sending game start message for game {game_id}")); }
 
     // set app runner
     set_game_app_runner(&mut game_app);
