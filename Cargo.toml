@@ -36,11 +36,11 @@ bevy_simplenet           = { version = "0.15", default-features = false }
 #iyes_progress            = { version = "0.13", features = [ "assets" ] }
 iyes_progress            = { git = "https://github.com/UkoeHB/iyes_progress", rev = "343879e", features = [ "assets" ] }
 
-bevy_renet2 = { version = "0.3.0", default-features = false }
-bevy_replicon_renet2 = { version = "0.3.0", default-features = false }
-renet2 = { version = "0.3.0", default-features = false }
-renet2_netcode = { version = "0.3.0", default-features = false }
-renet2_setup = { version = "0.3.0", default-features = false }
+bevy_renet2 = { version = "0.3", default-features = false }
+bevy_replicon_renet2 = { version = "0.3", default-features = false }
+renet2 = { version = "0.3", default-features = false }
+renet2_netcode = { version = "0.3", default-features = false }
+renet2_setup = { version = "0.3", default-features = false }
 
 bincode            = { version = "1.3" }
 bytes              = { version = "1.1" }
