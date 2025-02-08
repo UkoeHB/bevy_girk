@@ -77,8 +77,10 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
                         None => (),
                         Some(AppExit::Success) => break,
                         Some(AppExit::Error(code)) => {
-                            tracing::warn!("local game instance {game_id} closed with error code {code:?}");
-                            let _ = report_sender.send(GameInstanceReport::GameAborted(game_id));
+                            let _ = report_sender.send(GameInstanceReport::GameAborted(
+                                game_id,
+                                format!("local game instance {game_id} closed with error code {code:?}"))
+                            );
                             return;
                         },
                     }
