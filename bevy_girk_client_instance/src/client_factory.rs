@@ -1,10 +1,10 @@
 //local shortcuts
 use bevy_girk_game_instance::GameStartInfo;
 use bevy_girk_utils::deser_msg;
-use bevy_girk_wiring_common::ServerConnectToken;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use renet2_setup::ServerConnectToken;
 use serde::Deserialize;
 
 //standard shortcuts

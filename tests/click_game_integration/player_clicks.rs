@@ -101,7 +101,6 @@ fn player_clicks()
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset
         })
-        .add_event::<bevy_replicon::prelude::ServerEvent>()
         //setup game framework
         .insert_resource(GameFwConfig::new( ticks_per_sec, 1, 0 ))
         .insert_resource(prepare_player_client_contexts(num_players))

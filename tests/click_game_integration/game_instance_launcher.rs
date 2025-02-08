@@ -4,7 +4,6 @@ use bevy_girk_client_instance::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_common::*;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
@@ -12,6 +11,7 @@ use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_renet2::prelude::RenetClient;
+use renet2_setup::*;
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -87,6 +87,9 @@ fn game_instance_launcher_demo()
             expire_secs  : 10u64,
             timeout_secs : 5i32,
             server_ip    : Ipv6Addr::LOCALHOST.into(),
+            native_port  : 0,
+            wasm_wt_port : 0,
+            wasm_ws_port : 0,
             proxy_ip     : None,
             wss_certs    : None,
             ws_domain    : None,

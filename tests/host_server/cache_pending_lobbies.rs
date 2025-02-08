@@ -2,9 +2,9 @@
 use crate::test_helpers::*;
 use bevy_girk_backend_public::*;
 use bevy_girk_host_server::*;
-use bevy_girk_wiring_common::*;
 
 //third-party shortcuts
+use renet2_setup::*;
 
 //standard shortcuts
 use std::time::Duration;

@@ -1,7 +1,7 @@
 //local shortcuts
 
-use bevy_girk_wiring_common::ConnectionType;
 //third-party shortcuts
+use renet2_setup::ConnectionType;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 

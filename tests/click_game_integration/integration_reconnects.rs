@@ -8,7 +8,6 @@ use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_common::*;
 use crate::click_game_integration::*;
 use crate::host_server::*;
 
@@ -16,6 +15,7 @@ use crate::host_server::*;
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_renet2::prelude::RenetClient;
+use renet2_setup::*;
 
 //standard shortcuts
 use std::net::Ipv6Addr;
@@ -101,6 +101,9 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
             expire_secs  : 10u64,
             timeout_secs : 1i32,  //very short for this test
             server_ip    : Ipv6Addr::LOCALHOST.into(),
+            native_port  : 0,
+            wasm_wt_port : 0,
+            wasm_ws_port : 0,
             proxy_ip     : None,
             wss_certs    : None,
             ws_domain    : None,

@@ -13,6 +13,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 bevy = { workspace = true }
+renet2_setup = { workspace = true, features = ["netcode", "memory_transport"] }
 serde = { workspace = true }
 tracing = { workspace = true }
 wasm-timer = { workspace = true }
@@ -21,4 +22,3 @@ bevy_girk_client_fw = { path = "../bevy_girk_client_fw" }
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
-bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }

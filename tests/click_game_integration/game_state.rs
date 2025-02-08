@@ -67,7 +67,6 @@ fn test_game_setup(num_players: usize)
             server_id: Some(ClientId::SERVER),
             reconnect_policy: ReconnectPolicy::Reset
         })
-        .add_event::<bevy_replicon::prelude::ServerEvent>()
         //setup app
         .set_runner(make_test_runner(2))
         .add_plugins(AddMockMessageChannelsPlugin)

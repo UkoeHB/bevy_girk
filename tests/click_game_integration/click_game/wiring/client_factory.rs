@@ -4,8 +4,8 @@ use bevy_girk_client_fw::ClientAppState;
 //local shortcuts
 use bevy_girk_client_instance::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_client::{prepare_girk_client_app, setup_girk_client_game, ClientConnectPack, GirkClientConfig, GirkClientStartupConfig};
-use bevy_girk_wiring_common::ServerConnectToken;
+use bevy_girk_wiring_client::{prepare_girk_client_app, setup_girk_client_game, GirkClientConfig, GirkClientStartupConfig};
+use renet2_setup::{ClientConnectPack, ServerConnectToken};
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts

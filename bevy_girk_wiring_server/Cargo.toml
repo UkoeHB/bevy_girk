@@ -24,31 +24,30 @@ transport = []
 memory_transport = [
     "transport",
     "bevy_replicon_renet2/memory_transport",
-    "renet2_netcode/memory_transport"
+    "renet2_netcode/memory_transport",
+    "renet2_setup/memory_transport"
 ]
 native_transport = [
     "transport",
     "bevy_replicon_renet2/native_transport",
-    "renet2_netcode/native_transport"
+    "renet2_netcode/native_transport",
+    "renet2_setup/native_transport"
 ]
 # WebTransport
 wasm_transport_wt = [
     "transport",
     "bevy_replicon_renet2/wt_server_transport",
     "renet2_netcode/wt_server_transport",
-    "dep:enfync",
-    "enfync/builtin"  #todo: this brings in tokio dependency
+    "renet2_setup/wt_server_transport"
 ]
 # WebSockets
 wasm_transport_ws = [
     "transport",
     "bevy_replicon_renet2/ws_server_transport",
     "renet2_netcode/ws_server_transport",
-    "renet2_netcode/ws-rustls",
-    "bevy_girk_wiring_common/wasm_transport_ws",
-    "dep:enfync",
-    "enfync/builtin",  #todo: this brings in tokio dependency
-    "dep:url",
+    "renet2_setup/ws_server_transport",
+    "renet2_setup/ws-rustls",
+    "dep:url"
 ]
 
 [dependencies]
@@ -60,6 +59,7 @@ bincode = { workspace = true }
 bytes = { workspace = true }
 renet2 = { workspace = true, features = ["bevy"] }
 renet2_netcode = { workspace = true, features = ["bevy"] }
+renet2_setup = { workspace = true, features = ["bevy", "server"] }
 tracing  = { workspace = true }
 wasm-timer = { workspace = true }
 
@@ -67,8 +67,4 @@ bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
 bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 
-enfync = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-rand = { version = "0.8" }

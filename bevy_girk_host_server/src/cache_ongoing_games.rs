@@ -1,11 +1,9 @@
 //local shortcuts
 use bevy_girk_game_instance::*;
-use bevy_girk_wiring_common::{
-    ConnectMetas, ConnectionType, ConnectMetaNative, ConnectMetaWasmWt, ConnectMetaWasmWs, ServerConnectToken
-};
 
 //third-party shortcuts
 use bevy::prelude::*;
+use renet2_setup::{ConnectMetas, ServerConnectToken};
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -14,39 +12,6 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use std::vec::Vec;
 
 use crate::UserInfo;
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn prep_connect_token_native(connect_meta: &ConnectMetaNative, client_id: u64) -> Option<ServerConnectToken>
-{
-    let current_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap();
-    connect_meta.new_connect_token(current_time, client_id)
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn prep_connect_token_wasm_wt(connect_meta: &ConnectMetaWasmWt, client_id: u64) -> Option<ServerConnectToken>
-{
-    let current_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap();
-    connect_meta.new_connect_token(current_time, client_id)
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-fn prep_connect_token_wasm_ws(connect_meta: &ConnectMetaWasmWs, client_id: u64) -> Option<ServerConnectToken>
-{
-    let current_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap();
-    connect_meta.new_connect_token(current_time, client_id)
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -182,40 +147,19 @@ impl OngoingGamesCache
         else { tracing::error!(game_id, user_id, "tried to get user start info for missing user"); return None; };
 
         // make connect token for user
-        let connect_token = match user_info.connection()
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap();
+        let connect_token = match ongoing_game.metas.new_connect_token(
+            current_time,
+            start_info.client_id,
+            user_info.connection()
+        )
         {
-            ConnectionType::Memory | ConnectionType::Native =>
-            {
-                let Some(meta) = &ongoing_game.metas.native
-                else { tracing::debug!(user_id, game_id, "no native connect meta for native client"); return None; };
-                let Some(connect_token) = prep_connect_token_native(meta, start_info.client_id)
-                else { tracing::error!(user_id, game_id, "failed preparing native connect token"); return None; };
-                connect_token
-            }
-            ConnectionType::WasmWt =>
-            {
-                // Clients that request webtransport can fall back to websockets.
-                if let Some(meta) = &ongoing_game.metas.wasm_wt
-                {
-                    let Some(connect_token) = prep_connect_token_wasm_wt(meta, start_info.client_id)
-                    else { tracing::error!(user_id, game_id, "failed preparing wasm wt connect token"); return None; };
-                    connect_token
-                }
-                else if let Some(meta) = &ongoing_game.metas.wasm_ws
-                {
-                    let Some(connect_token) = prep_connect_token_wasm_ws(meta, start_info.client_id)
-                    else { tracing::error!(user_id, game_id, "failed preparing wasm ws connect token"); return None; };
-                    connect_token
-                }
-                else { tracing::debug!(user_id, game_id, "no wasm webtransport connect meta for wasm client"); return None; }
-            }
-            ConnectionType::WasmWs =>
-            {
-                let Some(meta) = &ongoing_game.metas.wasm_ws
-                else { tracing::debug!(user_id, game_id, "no wasm websocket connect meta for wasm client"); return None; };
-                let Some(connect_token) = prep_connect_token_wasm_ws(meta, start_info.client_id)
-                else { tracing::error!(user_id, game_id, "failed preparing wasm ws connect token"); return None; };
-                connect_token
+            Ok(token) => token,
+            Err(err) => {
+                tracing::debug!("failed getting user start info: {err:?}");
+                return None;
             }
         };
 

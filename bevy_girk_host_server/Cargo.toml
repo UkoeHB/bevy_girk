@@ -15,6 +15,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 bevy = { workspace = true }
 bevy_cobweb = { workspace = true }
 bevy_simplenet = { workspace = true, features = ["client", "server", "bevy"] }
+renet2_setup = { workspace = true, features = ["netcode"] }
 serde = { workspace = true }
 tracing = { workspace = true }
 
@@ -22,4 +23,3 @@ bevy_girk_backend_public = { path = "../bevy_girk_backend_public" }
 bevy_girk_game_fw = { path = "../bevy_girk_game_fw" }
 bevy_girk_game_instance = { path = "../bevy_girk_game_instance" }
 bevy_girk_utils = { path = "../bevy_girk_utils" }
-bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }

@@ -25,21 +25,21 @@ pub fn connect_token_from_bytes(connect_token_bytes: &Vec<u8>) -> Option<Connect
 
 //-------------------------------------------------------------------------------------------------------------------
 
-/// A token that a client can use to connect to a renet server.
+/// A token that a client can use to connect to a renet2 server.
 //todo: how to serialize the connect token more directly to reduce allocations?
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServerConnectToken
 {
     Native{
-        /// A renet `ConnectToken`.
+        /// A renet2 `ConnectToken`.
         #[serde_as(as = "Bytes")]
         token: Vec<u8>
     },
     /// WebTransport
     //todo: consider making this more flexible in case you don't want the cert hash workflow
     WasmWt{
-        /// A renet [`ConnectToken`].
+        /// A renet2 [`ConnectToken`].
         #[serde_as(as = "Bytes")]
         token: Vec<u8>,
         /// Cert hashes for connecting to self-signed servers.
@@ -47,7 +47,7 @@ pub enum ServerConnectToken
     },
     /// WebSocket
     WasmWs{
-        /// A renet [`ConnectToken`].
+        /// A renet2 [`ConnectToken`].
         #[serde_as(as = "Bytes")]
         token: Vec<u8>,
         /// Url for connecting to websocket server.
@@ -56,9 +56,9 @@ pub enum ServerConnectToken
     #[cfg(feature = "memory_transport")]
     #[serde(skip)]
     Memory{
-        /// A renet [`ConnectToken`].
+        /// A renet2 [`ConnectToken`].
         token: Vec<u8>,
-        /// In-memory channel the client will use to talk to the renet server.
+        /// In-memory channel the client will use to talk to the renet2 server.
         client: renet2_netcode::MemorySocketClient,
     }
 }

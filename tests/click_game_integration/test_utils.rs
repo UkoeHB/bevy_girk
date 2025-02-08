@@ -3,7 +3,7 @@ use crate::click_game_integration::*;
 
 //third-party shortcuts
 use bevy::utils::AHasher;
-use bevy_girk_wiring_common::ConnectionType;
+use renet2_setup::ConnectionType;
 use bevy_replicon::prelude::*;
 
 //standard shortcuts

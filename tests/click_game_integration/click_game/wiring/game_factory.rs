@@ -3,13 +3,13 @@ use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_common::*;
 use bevy_girk_wiring_server::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::ClientId;
+use renet2_setup::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -24,7 +24,7 @@ struct GameStartupHelper
     client_set     : GameFwClients,
     click_init     : ClickGameInitializer,
     start_infos    : Vec<GameStartInfo>,
-    client_counts  : ServerClientCounts,
+    client_counts  : ClientCounts,
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ fn prepare_game_startup(
     let mut players        = HashMap::<ClientId, PlayerState>::with_capacity(init_data.len());
     let mut watchers       = HashSet::<ClientId>::with_capacity(init_data.len());
     let mut start_infos    = Vec::with_capacity(init_data.len());
-    let mut client_counts  = ServerClientCounts::default();
+    let mut client_counts  = ClientCounts::default();
 
     for client_init in init_data
     {
@@ -210,7 +210,7 @@ impl GameFactoryImpl for ClickGameFactory
         };
 
         // prepare game app
-        let metas = prepare_girk_game_app(app, server_config);
+        let metas = prepare_girk_game_app(app, server_config).unwrap();
         prepare_game_app_core(app, startup.click_init);
 
         Ok(GameStartReport{ metas, start_infos: startup.start_infos })

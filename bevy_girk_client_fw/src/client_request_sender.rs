@@ -34,7 +34,7 @@ impl ClientRequestType
 ///
 /// Requests are sent via `bevy_replicon`, which means the sender will synchronize with client connection events.
 /// Client requests are guaranteed to be dropped between a client disconnect and the client re-entering
-/// [`ClientFwState::Syncing`].
+/// [`crate::ClientFwState::Syncing`].
 ///
 /// Can be read by `ClientRequestHandler` on the server.
 #[derive(SystemParam)]
@@ -47,7 +47,7 @@ pub struct ClientSender<'w>
 impl<'w> ClientSender<'w>
 {
     /// Sends a client framework request.
-    pub fn fw_request(&mut self, request: ClientFwRequest)
+    pub fn fw_send(&mut self, request: ClientFwRequest)
     {
         tracing::trace!("sending fw request: {request:?}");
 
@@ -59,7 +59,7 @@ impl<'w> ClientSender<'w>
     /// Sends a user-defined client request.
     ///
     /// Panics when `debug_assertions` are enabled if `T` does not match the [`ClientRequestType`].
-    pub fn request<T: Serialize + Debug + IntoChannelKind + 'static>(&mut self, request: T)
+    pub fn send<T: Serialize + Debug + IntoChannelKind + 'static>(&mut self, request: T)
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.req_type);
 

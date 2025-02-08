@@ -37,7 +37,9 @@ bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common" }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 bevy_renet2 = { workspace = true, features = ["native_transport"] }
 bevy_replicon_renet2 = { workspace = true, features = ["client", "native_transport"] }
+renet2_setup = { workspace = true, features = ["bevy", "client", "native_transport"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 bevy_renet2 = { workspace = true, features = ["wt_client_transport", "ws_client_transport"] }
 bevy_replicon_renet2 = { workspace = true, features = ["client", "wt_client_transport", "ws_client_transport"] }
+renet2_setup = { workspace = true, features = ["bevy", "client", "wt_client_transport", "ws_client_transport"] }

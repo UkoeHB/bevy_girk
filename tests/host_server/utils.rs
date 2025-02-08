@@ -3,10 +3,10 @@ use bevy_girk_backend_public::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_common::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use renet2_setup::*;
 
 //standard shortcuts
 use std::time::Duration;

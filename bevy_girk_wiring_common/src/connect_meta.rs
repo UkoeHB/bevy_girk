@@ -2,7 +2,7 @@
 use crate::*;
 
 //third-party shortcuts
-use renet2_netcode::{in_memory_server_addr, ConnectToken, MemorySocketClient, ServerCertHash};
+use renet2_netcode::{ConnectToken, ServerCertHash};
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts
@@ -24,6 +24,12 @@ pub struct GameServerSetupConfig
     ///
     /// The server port will be auto-selected.
     pub server_ip: IpAddr,
+    /// Port for native sockets.
+    pub native_port: u16,
+    /// Port for webtransport sockets.
+    pub wasm_wt_port: u16,
+    /// Port for websockets.
+    pub wasm_ws_port: u16,
     /// Proxy IP address to send to clients in connect tokens instead of the `server_ip`.
     ///
     /// Proxy IP addresses will be associated with the local ports assigned to each socket.
@@ -49,6 +55,9 @@ impl GameServerSetupConfig
             expire_secs: 10u64,
             timeout_secs: 5i32,
             server_ip: Ipv4Addr::LOCALHOST.into(),
+            native_port: 0,
+            wasm_wt_port: 0,
+            wasm_ws_port: 0,
             proxy_ip: None,
             wss_certs: None,
             ws_domain: None,
@@ -64,7 +73,11 @@ impl GameServerSetupConfig
         renet2_netcode::WebSocketAcceptor::Rustls(config.into())
     }
 
-    /// Assumes files are PEM encoded.
+    /// Format: (cert chain, private key).
+    /// Files must be PEM encoded.
+    ///
+    /// If there is no `rustls::crypto::CryptoProvider` installed, then the `ring` default provider will be
+    /// auto-installed.
     #[cfg(feature = "wasm_transport_ws")]
     pub fn get_rustls_server_config(wss_certs: &Option<(PathBuf, PathBuf)>) -> Option<std::sync::Arc<rustls::ServerConfig>>
     {
@@ -119,7 +132,7 @@ impl GameServerSetupConfig
 pub struct ConnectMetaMemory
 {
     pub server_config: GameServerSetupConfig,
-    pub clients: Vec<MemorySocketClient>,
+    pub clients: Vec<renet2_netcode::MemorySocketClient>,
     pub socket_id: u8,
     pub auth_key: [u8; 32],
 }
@@ -144,7 +157,7 @@ impl ConnectMetaMemory
             client_id,
             self.server_config.timeout_secs,
             self.socket_id,
-            vec![in_memory_server_addr()],
+            vec![renet2_netcode::in_memory_server_addr()],
             None,
             &self.auth_key,
         ).ok()?;

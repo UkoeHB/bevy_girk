@@ -1,13 +1,13 @@
 //local shortcuts
-use crate::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use renet2::{ChannelConfig, ConnectionConfig, RenetClient, RenetServer};
+use renet2::{ChannelConfig, ConnectionConfig, RenetClient};
 use renet2_netcode::{
-    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
+    ClientAuthentication, NativeSocket, NetcodeClientTransport, ServerAuthentication,
     ServerSetupConfig, ServerSocket
 };
+use renet2_setup::setup_native_renet_server_in_bevy;
 use bevy_replicon::core::channels::RepliconChannels;
 use bevy_replicon_renet2::RenetChannelsExt;
 
@@ -58,24 +58,25 @@ fn create_test_client_native(
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn create_localhost_test_server(
-    server_channels_config : Vec<ChannelConfig>,
-    client_channels_config : Vec<ChannelConfig>,
-    num_clients            : u16
-) -> (RenetServer, NetcodeServerTransport)
+fn setup_localhost_test_server(
+    world: &mut World,
+    server_channels_config: Vec<ChannelConfig>,
+    client_channels_config: Vec<ChannelConfig>,
+    num_clients: u16
+) -> SocketAddr
 {
-    // server config
-    let server_config =
-        ServerSetupConfig{
-                current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
-                max_clients      : num_clients as usize,
-                protocol_id      : LOCALHOST_TEST_NETWORK_PROTOCOL_ID,
-                socket_addresses : vec![vec![SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 0)]],
-                authentication   : ServerAuthentication::Unsecure,
-            };
+    let server_config = ServerSetupConfig{
+        current_time     : SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
+        max_clients      : num_clients as usize,
+        protocol_id      : LOCALHOST_TEST_NETWORK_PROTOCOL_ID,
+        socket_addresses : vec![vec![SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 0)]],
+        authentication   : ServerAuthentication::Unsecure,
+    };
+
+    let connection_config = ConnectionConfig::from_channels(server_channels_config, client_channels_config);
 
     // finish making server
-    create_native_server(server_channels_config, client_channels_config, server_config)
+    setup_native_renet_server_in_bevy(world, server_config, connection_config).unwrap()
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -120,15 +121,12 @@ pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Ve
     let client_channels   = replicon_channels.get_client_configs();
 
     // make server
-    let (server, server_transport) = create_localhost_test_server(
-            server_channels.clone(),
-            client_channels.clone(),
-            client_apps.len() as u16
-        );
-    let server_addr = server_transport.addresses()[0];
-    server_app
-        .insert_resource(server)
-        .insert_resource(server_transport);
+    let server_addr = setup_localhost_test_server(
+        server_app.world_mut(),
+        server_channels.clone(),
+        client_channels.clone(),
+        client_apps.len() as u16
+    );
 
     // make clients
     for (index, client_app) in client_apps.iter_mut().enumerate()

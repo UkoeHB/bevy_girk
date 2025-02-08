@@ -36,7 +36,7 @@ pub(crate) fn try_send_initialization_progress_report(
     if !cache.progress_changed_last_update() { return; }
 
     // sent progress report
-    sender.fw_request(ClientFwRequest::SetInitProgress(cache.progress().into()));
+    sender.fw_send(ClientFwRequest::SetInitProgress(cache.progress().into()));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ pub(crate) fn try_send_initialization_progress_report(
 /// Requests the current game framework state.
 pub(crate) fn request_game_fw_state(mut sender: ClientSender)
 {
-    sender.fw_request(ClientFwRequest::GetGameFwState);
+    sender.fw_send(ClientFwRequest::GetGameFwState);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

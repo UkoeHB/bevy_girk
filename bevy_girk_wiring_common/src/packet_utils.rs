@@ -46,10 +46,10 @@ pub fn prepare_network_channels(app: &mut App, resend_time: Duration)
         max_bytes: None,
     };
 
-    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable.into());
+    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable);
     let unordered_game_packet    = channels.create_server_channel(unordered.clone());
     let ordered_game_packet      = channels.create_server_channel(ordered.clone());
-    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable.into());
+    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable);
     let unordered_client_packet  = channels.create_client_channel(unordered);
     let ordered_client_packet    = channels.create_client_channel(ordered);
 

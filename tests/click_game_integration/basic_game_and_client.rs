@@ -36,7 +36,7 @@ fn setup_test(mut next: ResMut<NextState<ClientAppState>>)
 
 fn request_ping(mut sender: ClientSender)
 {
-    sender.fw_request(ClientFwRequest::GetPing(PingRequest{
+    sender.fw_send(ClientFwRequest::GetPing(PingRequest{
         timestamp_ns: 0u64
     }));
 }

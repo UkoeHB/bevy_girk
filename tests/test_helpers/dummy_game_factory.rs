@@ -4,12 +4,12 @@ use bevy_girk_client_fw::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_utils::*;
-use bevy_girk_wiring_common::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use bevy_replicon_attributes::*;
+use renet2_setup::*;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts

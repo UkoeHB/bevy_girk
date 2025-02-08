@@ -8,12 +8,11 @@ pub enum ConnectionType
 {
     /// Use this when the client and server are in the same binary (e.g. local-player).
     Memory,
-    /// Use this when the client has [`bevy_simplenet::EnvType::Native`].
+    /// Use this when the client is non-WASM.
     Native,
-    /// Use this when the client has [`bevy_simplenet::EnvType::Wasm`] and webtransport with cert hashes is
-    /// supported.
+    /// Use this when the client is WASM and webtransport with cert hashes is supported.
     WasmWt,
-    /// Use this when the client has [`bevy_simplenet::EnvType::Wasm`] and webtransport is not supported.
+    /// Use this when the client is WASM and webtransport is not supported.
     WasmWs,
 }
 
@@ -27,12 +26,17 @@ impl ConnectionType
             ConnectionType::Native
         }
 
-        #[cfg(target_family = "wasm")]
+        #[cfg(all(target_family = "wasm", feature = "wasm_transport_wt"))]
         {
             match renet2_netcode::webtransport_is_available_with_cert_hashes() {
                 true => ConnectionType::WasmWt,
                 false => ConnectionType::WasmWs,
             }
+        }
+
+        #[cfg(all(target_family = "wasm", not(feature = "wasm_transport_wt")))]
+        {
+            ConnectionType::WasmWs
         }
     }
 }

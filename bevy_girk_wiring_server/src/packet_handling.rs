@@ -148,7 +148,7 @@ fn receive_client_packets(
             *messages_count += 1;
             if *messages_count > MAX_CLIENT_MESSAGES_PER_TICK
             {
-                tracing::trace!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
+                tracing::debug!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
                 continue;
             }
 

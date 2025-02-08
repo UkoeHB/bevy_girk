@@ -14,6 +14,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 memory_transport = ["renet2_netcode/memory_transport"]
 wasm_transport_ws = ["dep:rustls", "dep:rustls-pki-types", "renet2_netcode/ws_server_transport"]
+wasm_transport_wt = ["renet2_netcode/wt_server_transport"]
 
 [dependencies]
 bevy = { workspace = true }

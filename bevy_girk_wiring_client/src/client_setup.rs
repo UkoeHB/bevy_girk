@@ -1,5 +1,5 @@
 //local shortcuts
-use crate::{setup_renet_client, ClientConnectPack, ClientEventHandlingPlugin, ReceiveServerEventsSet};
+use crate::{ClientEventHandlingPlugin, ReceiveServerEventsSet};
 use bevy_girk_client_fw::{
     ClientFwConfig, ClientFwLoadingSet, ClientFwPlugin, ClientFwSet, ClientFwState,
     ClientInitState, ClientAppState
@@ -12,15 +12,16 @@ use bevy::prelude::*;
 use bevy_girk_utils::{just_entered_state, set_and_apply_state};
 use bevy_girk_wiring_common::prepare_network_channels;
 use bevy_renet2::prelude::{
-    client_connected, client_disconnected, client_just_connected, client_just_disconnected, RenetClient
+    client_connected, client_disconnected, client_just_connected, client_just_disconnected, ConnectionConfig, RenetClient
 };
 use bevy_renet2::netcode::{NetcodeClientTransport, NetcodeTransportError};
 use bevy_replicon::client::ServerUpdateTick;
 use bevy_replicon::prelude::{
-    AppRuleExt, ClientSet, RepliconPlugins, ServerEventsPlugin, ServerPlugin
+    AppRuleExt, ClientSet, RepliconChannels, RepliconPlugins, ServerEventPlugin, ServerPlugin
 };
-use bevy_replicon_renet2::RepliconRenetClientPlugin;
+use bevy_replicon_renet2::{RenetChannelsExt, RepliconRenetClientPlugin};
 use iyes_progress::{Progress, ProgressReturningSystem};
+use renet2_setup::{setup_renet2_client_in_bevy, ClientConnectPack};
 
 //standard shortcuts
 use std::time::Duration;
@@ -165,6 +166,21 @@ fn log_transport_errors(mut errors: EventReader<NetcodeTransportError>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
+fn setup_renet2_client(world: &mut World)
+{
+    let connect_pack = world.remove_resource::<ClientConnectPack>()
+        .expect("ClientConnectPack should exist");
+    let replicon_channels = world.resource::<RepliconChannels>();
+    let server_channels = replicon_channels.get_server_configs();
+    let client_channels = replicon_channels.get_client_configs();
+    let connection_config = ConnectionConfig::from_channels(server_channels, client_channels);
+
+    setup_renet2_client_in_bevy(world, connection_config, connect_pack).expect("setting up renet2 client should succeed")
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------
+
 /// Configuration details for setting up a `bevy_girk` client app.
 #[derive(Debug)]
 pub struct GirkClientStartupConfig
@@ -233,7 +249,7 @@ pub fn prepare_client_app_replication(
         .add_plugins(RepliconPlugins
             .build()
             .disable::<ServerPlugin>()
-            .disable::<ServerEventsPlugin>())
+            .disable::<ServerEventPlugin>())
         .add_plugins(RepliconRenetClientPlugin)
         //prepare event handling
         .add_plugins(ClientEventHandlingPlugin)
@@ -287,7 +303,7 @@ pub fn prepare_client_app_replication(
                     .run_if(not(in_state(ClientFwState::End))),
                 // set syncing when just connected
                 // - note: this will not run in the first tick of `ClientFwState::Setup` because we disable
-                //   `setup_renet_client` for that tick (it actually takes at least 3 ticks to connect once disconnected)
+                //   `setup_renet2_client` for that tick (it actually takes at least 3 ticks to connect once disconnected)
                 set_client_connecting
                     .run_if(not(client_disconnected))
                     .run_if(not(just_entered_state(ClientFwState::Setup)))
@@ -374,7 +390,7 @@ pub fn prepare_client_app_network(client_app: &mut App)
             // Ordering explanation:
             // - We want `ClientFwState::Setup` to run for at least one tick.
             // - We want `client_disconnected` to return true for the first tick of `ClientFwState::Setup`.
-            setup_renet_client.map(Result::unwrap)
+            setup_renet2_client
                 // add ordering constraint
                 .before(bevy_renet2::prelude::RenetReceive)
                 // ignore for first full tick after entering the game

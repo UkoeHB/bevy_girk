@@ -1,9 +1,9 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
 use bevy_girk_utils::ser_msg;
-use bevy_girk_wiring_common::ConnectMetas;
 
 //third-party shortcuts
+use renet2_setup::ConnectMetas;
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 

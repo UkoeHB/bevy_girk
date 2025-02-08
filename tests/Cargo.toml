@@ -16,6 +16,7 @@ bytes              = { workspace = true }
 enfync             = { workspace = true }
 ezsockets          = { workspace = true }
 renet2             = { workspace = true }
+renet2_setup       = { workspace = true, features = ["client_full", "server_full"] }
 serde              = { workspace = true }
 serde_json         = { workspace = true }
 tracing            = { workspace = true }
@@ -31,7 +32,6 @@ bevy_girk_game_instance = { path = "../bevy_girk_game_instance", features = ["pr
 bevy_girk_host_server = { path = "../bevy_girk_host_server" }
 bevy_girk_utils = { path = "../bevy_girk_utils", features = ["process"] }
 bevy_girk_wiring_client = { path = "../bevy_girk_wiring_client", features = ["memory_transport"] }
-bevy_girk_wiring_common = { path = "../bevy_girk_wiring_common", features = ["memory_transport"] }
 bevy_girk_wiring_server = { path = "../bevy_girk_wiring_server", features = ["memory_transport", "test"] }
 
 [dependencies.bevy_girk_wiring_server]

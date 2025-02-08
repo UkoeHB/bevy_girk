@@ -2,9 +2,9 @@
 use crate::{LobbyData, LobbyMemberColor, LobbySearchRequest, LobbySearchResult};
 use bevy_girk_game_fw::GameOverReport;
 use bevy_girk_game_instance::GameStartInfo;
-use bevy_girk_wiring_common::{ConnectionType, ServerConnectToken};
 
 //third-party shortcuts
+use renet2_setup::{ConnectionType, ServerConnectToken};
 use serde::{Deserialize, Serialize};
 use serde_with::{Bytes, serde_as};
 

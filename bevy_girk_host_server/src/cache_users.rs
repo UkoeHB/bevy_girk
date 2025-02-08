@@ -1,8 +1,8 @@
 //local shortcuts
-use bevy_girk_wiring_common::ConnectionType;
 
 //third-party shortcuts
 use bevy::prelude::*;
+use renet2_setup::ConnectionType;
 
 //standard shortcuts
 use std::collections::{HashMap, HashSet};

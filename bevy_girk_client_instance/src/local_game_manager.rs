@@ -51,10 +51,13 @@ fn handle_game_instance_report(w: &mut World, report: GameInstanceReport) -> Opt
                     setting up renet client");
                 return Some(game_id);
             };
-            let Some(token) = meta.new_connect_token(get_systime(), start_info.client_id) else {
-                tracing::error!("ignoring game start report for local game {}; failed producing in-memory \
-                    connect token", game_id);
-                return Some(game_id);
+            let token = match meta.new_connect_token(get_systime(), start_info.client_id) {
+                Ok(token) => token,
+                Err(err) => {
+                    tracing::error!("ignoring game start report for local game {game_id}; failed producing in-memory \
+                        connect token; err={err:?}");
+                    return Some(game_id);
+                }
             };
 
             tracing::info!("setting up local-player game {game_id}");

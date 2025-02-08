@@ -3,11 +3,11 @@ use crate::{ClientFactory, ClientInstanceReport, LocalGameManager};
 use bevy_girk_client_fw::{ClientFwConfig, ClientAppState};
 use bevy_girk_game_instance::{GameLaunchPack, GameStartInfo};
 use bevy_girk_utils::set_and_apply_state;
-use bevy_girk_wiring_common::ServerConnectToken;
 
 //third-party shortcuts
 use bevy::ecs::world::Command;
 use bevy::prelude::*;
+use renet2_setup::ServerConnectToken;
 
 //standard shortcuts
 
