@@ -3,8 +3,8 @@
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_girk_utils::{SendOrdered, SendUnordered, SendUnreliable};
-use bevy_replicon::prelude::{ChannelKind, RepliconChannel, RepliconChannels};
 use bevy_girk_game_fw::{ClientPacket, GamePacket};
+use renet2::{ChannelConfig, SendType};
 
 //standard shortcuts
 use std::{marker::PhantomData, time::Duration};
@@ -30,36 +30,58 @@ impl<T> EventChannel<T>
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Prepares network channels for setting up `bevy_girk` clients and servers to send and receive packets.
-pub fn prepare_network_channels(app: &mut App, resend_time: Duration)
+// TODO: resend_time and max bytes are currently hard-coded in renet2
+pub fn prepare_network_channels(
+    world: &mut World,
+    server_channels: &mut Vec<ChannelConfig>,
+    client_channels: &mut Vec<ChannelConfig>,
+    resend_time: Duration
+)
 {
-    app.init_resource::<RepliconChannels>();
-    let mut channels = app.world_mut().resource_mut::<RepliconChannels>();
+    let unreliable_game_packet = server_channels.len() as u8;
+    server_channels.push(ChannelConfig{
+        channel_id: unreliable_game_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::Unreliable
+    });
+    let unordered_game_packet = server_channels.len() as u8;
+    server_channels.push(ChannelConfig{
+        channel_id: unordered_game_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::ReliableUnordered { resend_time }
+    });
+    let ordered_game_packet = server_channels.len() as u8;
+    server_channels.push(ChannelConfig{
+        channel_id: ordered_game_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::ReliableOrdered { resend_time }
+    });
 
-    let unordered = RepliconChannel{
-        kind: ChannelKind::Unordered,
-        resend_time,
-        max_bytes: None,
-    };
-    let ordered = RepliconChannel{
-        kind: ChannelKind::Ordered,
-        resend_time,
-        max_bytes: None,
-    };
+    let unreliable_client_packet = client_channels.len() as u8;
+    client_channels.push(ChannelConfig{
+        channel_id: unreliable_client_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::Unreliable
+    });
+    let unordered_client_packet = client_channels.len() as u8;
+    client_channels.push(ChannelConfig{
+        channel_id: unordered_client_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::ReliableUnordered { resend_time }
+    });
+    let ordered_client_packet = client_channels.len() as u8;
+    client_channels.push(ChannelConfig{
+        channel_id: ordered_client_packet,
+        max_memory_usage_bytes: 5 * 1024 * 1024,
+        send_type: SendType::ReliableOrdered { resend_time }
+    });
 
-    let unreliable_game_packet   = channels.create_server_channel(ChannelKind::Unreliable);
-    let unordered_game_packet    = channels.create_server_channel(unordered.clone());
-    let ordered_game_packet      = channels.create_server_channel(ordered.clone());
-    let unreliable_client_packet = channels.create_client_channel(ChannelKind::Unreliable);
-    let unordered_client_packet  = channels.create_client_channel(unordered);
-    let ordered_client_packet    = channels.create_client_channel(ordered);
-
-    app
-        .insert_resource(EventChannel::<(GamePacket, SendUnreliable)>::new(unreliable_game_packet))
-        .insert_resource(EventChannel::<(GamePacket, SendUnordered)>::new(unordered_game_packet))
-        .insert_resource(EventChannel::<(GamePacket, SendOrdered)>::new(ordered_game_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendUnreliable)>::new(unreliable_client_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unordered_client_packet))
-        .insert_resource(EventChannel::<(ClientPacket, SendOrdered)>::new(ordered_client_packet));
+    world.insert_resource(EventChannel::<(GamePacket, SendUnreliable)>::new(unreliable_game_packet));
+    world.insert_resource(EventChannel::<(GamePacket, SendUnordered)>::new(unordered_game_packet));
+    world.insert_resource(EventChannel::<(GamePacket, SendOrdered)>::new(ordered_game_packet));
+    world.insert_resource(EventChannel::<(ClientPacket, SendUnreliable)>::new(unreliable_client_packet));
+    world.insert_resource(EventChannel::<(ClientPacket, SendUnordered)>::new(unordered_client_packet));
+    world.insert_resource(EventChannel::<(ClientPacket, SendOrdered)>::new(ordered_client_packet));
 }
 
 //-------------------------------------------------------------------------------------------------------------------

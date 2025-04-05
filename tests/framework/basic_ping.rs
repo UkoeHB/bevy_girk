@@ -37,28 +37,28 @@ fn basic_ping()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::SERVER,
-            event: ClientPacket{
-                    send_policy : SendOrdered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                        }))
-                }
-        });
+        client_entity: SERVER,
+        event: ClientPacket{
+            send_policy : SendOrdered.into(),
+            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
+                    req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
+            }))
+        }
+    });
 
     // send ping request
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::SERVER,
-            event: ClientPacket{
-                    send_policy : SendUnordered.into(),
-                    request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
-                        req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
-                            PingRequest{
-                                    timestamp_ns: 0u64
-                                })
-                    )}))
-                }
-        });
+        client_entity: SERVER,
+        event: ClientPacket{
+            send_policy : SendUnordered.into(),
+            request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
+                req: AimedMsg::<_, ()>::Fw(ClientFwRequest::GetPing(
+                    PingRequest{
+                        timestamp_ns: 0u64
+                    })
+            )}))
+        }
+    });
 
     app
         //bevy plugins
@@ -75,7 +75,7 @@ fn basic_ping()
                 })
         )
         .add_plugins(VisibilityAttributesPlugin{
-            server_id: Some(ClientId::SERVER),
+            server_id: Some(0),
             reconnect_policy: ReconnectPolicy::Reset
         })
         //setup game framework

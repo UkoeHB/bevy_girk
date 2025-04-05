@@ -2,7 +2,7 @@
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_replicon::prelude::ChannelKind;
+use bevy_replicon::prelude::Channel;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -31,15 +31,15 @@ pub enum ClientFwRequest
     GetGameFwState,
 }
 
-impl IntoChannelKind for ClientFwRequest
+impl IntoChannel for ClientFwRequest
 {
-    fn into_event_type(&self) -> ChannelKind
+    fn into_event_type(&self) -> Channel
     {
         match self
         {
             Self::SetInitProgress(_) => SendOrdered.into(),
             Self::GetPing(_)         => SendUnordered.into(),
-            Self::GetGameFwState      => SendUnordered.into(),
+            Self::GetGameFwState     => SendUnordered.into(),
         }
     }
 }

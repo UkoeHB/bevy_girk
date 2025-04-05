@@ -17,6 +17,7 @@ bevy_cobweb = { workspace = true }
 bevy_replicon = { workspace = true }
 bytes = { workspace = true }
 iyes_progress  = { workspace = true }
+renet2 = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
 

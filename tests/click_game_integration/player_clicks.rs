@@ -67,7 +67,7 @@ fn player_clicks()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-        client_id: ClientId::new(0u64),
+        client_entity: SERVER,
         event: ClientPacket{
             send_policy: SendOrdered.into(),
             request: bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -84,7 +84,7 @@ fn player_clicks()
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-            ClientId::SERVER,
+            0,
             *game_initializer.game_context.duration_config()
         );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -94,11 +94,10 @@ fn player_clicks()
         .add_plugins(bevy::time::TimePlugin)
         .add_plugins(bevy::state::app::StatesPlugin)
         .add_plugins(bevy::asset::AssetPlugin::default())
-        .add_plugins(bevy_replicon::prelude::RepliconCorePlugin)
-        .insert_resource(bevy_replicon::prelude::ReplicatedClients::new(VisibilityPolicy::All, true))
-        .add_event::<bevy_replicon::prelude::StartReplication>()
+        .add_plugins(bevy_replicon::prelude::RepliconSharedPlugin)
+        .add_plugins(bevy_replicon::prelude::ServerPlugin::default())
         .add_plugins(VisibilityAttributesPlugin{
-            server_id: Some(ClientId::SERVER),
+            server_id: Some(0),
             reconnect_policy: ReconnectPolicy::Reset
         })
         //setup game framework
@@ -126,7 +125,7 @@ fn player_clicks()
         .add_systems(PostUpdate, forward_game_packets.after(GameFwSet::End))
         //game framework
         //client framework
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, ClientId::new(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, 0 ))
         //game
         .insert_resource(game_initializer)
         //client core

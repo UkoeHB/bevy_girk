@@ -3,7 +3,7 @@ use crate::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_replicon::prelude::ChannelKind;
+use bevy_replicon::prelude::Channel;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -32,9 +32,9 @@ pub enum GameFwMsg
     PingResponse(PingResponse),
 }
 
-impl IntoChannelKind for GameFwMsg
+impl IntoChannel for GameFwMsg
 {
-    fn into_event_type(&self) -> ChannelKind
+    fn into_event_type(&self) -> Channel
     {
         match self
         {

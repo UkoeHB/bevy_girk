@@ -2,18 +2,19 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
+use bevy_girk_wiring_common::prepare_network_channels;
+use bevy_replicon::prelude::RepliconChannels;
+use bevy_replicon_renet2::RenetChannelsExt;
 use renet2::{ChannelConfig, ConnectionConfig, RenetClient};
 use renet2_netcode::{
     ClientAuthentication, NativeSocket, NetcodeClientTransport, ServerAuthentication,
     ServerSetupConfig, ServerSocket
 };
 use renet2_setup::setup_native_renet_server_in_bevy;
-use bevy_replicon::core::channels::RepliconChannels;
-use bevy_replicon_renet2::RenetChannelsExt;
 
 //standard shortcuts
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
@@ -117,8 +118,9 @@ pub fn setup_local_test_renet_network(server_app: &mut App, client_apps: &mut Ve
 {
     // get server/client channels
     let replicon_channels = server_app.world().resource::<RepliconChannels>();
-    let server_channels   = replicon_channels.get_server_configs();
-    let client_channels   = replicon_channels.get_client_configs();
+    let mut server_channels = replicon_channels.server_configs();
+    let mut client_channels = replicon_channels.client_configs();
+    prepare_network_channels(server_app.world_mut(), &mut server_channels, &mut client_channels, Duration::from_millis(100));
 
     // make server
     let server_addr = setup_localhost_test_server(

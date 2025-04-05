@@ -166,16 +166,19 @@ fn log_transport_errors(mut errors: EventReader<NetcodeTransportError>)
 //-------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------
 
-fn setup_renet2_client(world: &mut World)
+fn setup_renet2_client(resend_time: Duration) -> impl FnMut(&mut World)
 {
-    let connect_pack = world.remove_resource::<ClientConnectPack>()
-        .expect("ClientConnectPack should exist");
-    let replicon_channels = world.resource::<RepliconChannels>();
-    let server_channels = replicon_channels.get_server_configs();
-    let client_channels = replicon_channels.get_client_configs();
-    let connection_config = ConnectionConfig::from_channels(server_channels, client_channels);
+    move |world: &mut World| {
+        let connect_pack = world.remove_resource::<ClientConnectPack>()
+            .expect("ClientConnectPack should exist");
+        let replicon_channels = world.resource::<RepliconChannels>();
+        let mut server_channels = replicon_channels.server_configs();
+        let mut client_channels = replicon_channels.client_configs();
+        prepare_network_channels(world, &mut server_channels, &mut client_channels, resend_time);
+        let connection_config = ConnectionConfig::from_channels(server_channels, client_channels);
 
-    setup_renet2_client_in_bevy(world, connection_config, connect_pack).expect("setting up renet2 client should succeed")
+        setup_renet2_client_in_bevy(world, connection_config, connect_pack).expect("setting up renet2 client should succeed")
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -228,10 +231,8 @@ pub fn prepare_client_app_framework(client_app: &mut App)
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a client app.
-pub fn prepare_client_app_replication(
-    client_app  : &mut App,
-    resend_time : Duration,
-){
+pub fn prepare_client_app_replication(client_app: &mut App)
+{
     // depends on client framework
     if !client_app.is_plugin_added::<bevy::time::TimePlugin>() {
         client_app.add_plugins(bevy::time::TimePlugin);
@@ -239,9 +240,6 @@ pub fn prepare_client_app_replication(
     if !client_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
         client_app.add_plugins(bevy::state::app::StatesPlugin);
     }
-
-    // prepare channels
-    prepare_network_channels(client_app, resend_time);
 
     // setup client with bevy_replicon
     client_app
@@ -384,13 +382,13 @@ pub fn prepare_client_app_replication(
 /// For automatically requesting a new connect pack when disconnected, see the `bevy_girk_client_instance` crate.
 ///
 /// Note: The `ClientConnectPack` needs to be inserted separately (e.g. by the `ClientFactory`).
-pub fn prepare_client_app_network(client_app: &mut App)
+pub fn prepare_client_app_network(client_app: &mut App, resend_time: Duration)
 {
     client_app.add_systems(PreUpdate,
             // Ordering explanation:
             // - We want `ClientFwState::Setup` to run for at least one tick.
             // - We want `client_disconnected` to return true for the first tick of `ClientFwState::Setup`.
-            setup_renet2_client
+            setup_renet2_client(resend_time)
                 // add ordering constraint
                 .before(bevy_renet2::prelude::RenetReceive)
                 // ignore for first full tick after entering the game
@@ -413,8 +411,8 @@ pub fn prepare_client_app_network(client_app: &mut App)
 pub fn prepare_girk_client_app(client_app: &mut App, config: GirkClientStartupConfig)
 {
     prepare_client_app_framework(client_app);
-    prepare_client_app_replication(client_app, config.resend_time);
-    prepare_client_app_network(client_app);
+    prepare_client_app_replication(client_app);
+    prepare_client_app_network(client_app, config.resend_time);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

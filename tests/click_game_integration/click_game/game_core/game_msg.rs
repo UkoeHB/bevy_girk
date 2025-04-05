@@ -3,7 +3,7 @@ use crate::click_game_integration::click_game::*;
 use bevy_girk_utils::*;
 
 //third-party shortcuts
-use bevy_replicon::prelude::ChannelKind;
+use bevy_replicon::prelude::Channel;
 use serde::{Serialize, Deserialize};
 
 //standard shortcuts
@@ -30,9 +30,9 @@ pub enum GameMsg
     CurrentGameState(GameState),
 }
 
-impl IntoChannelKind for GameMsg
+impl IntoChannel for GameMsg
 {
-    fn into_event_type(&self) -> ChannelKind
+    fn into_event_type(&self) -> Channel
     {
         match self
         {

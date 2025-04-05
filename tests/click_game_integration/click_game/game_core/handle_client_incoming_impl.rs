@@ -5,7 +5,7 @@ use crate::click_game_integration::click_game::*;
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 
 //standard shortcuts
 
@@ -16,7 +16,7 @@ pub(crate) fn notify_request_rejected(
     In((client_id, request, reason)) : In<(ClientId, GameRequest, RejectionReason)>,
     mut sender                       : GameSender,
 ){
-    sender.send_to_client(GameMsg::RequestRejected{reason, request}, client_id.get());
+    sender.send_to_client(GameMsg::RequestRejected{reason, request}, client_id);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

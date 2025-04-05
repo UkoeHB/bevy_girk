@@ -3,6 +3,7 @@
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
+use renet2::ClientId;
 use serde::{Deserialize, Serialize};
 
 //standard shortcuts

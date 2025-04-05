@@ -7,13 +7,13 @@ use bevy_girk_game_hub_server::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_host_server::*;
 use bevy_girk_utils::*;
+use renet2::ClientId;
 use crate::click_game_integration::*;
 use crate::host_server::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
-use bevy_replicon::prelude::*;
 use bevy_renet2::prelude::RenetClient;
 use renet2_setup::*;
 
@@ -108,6 +108,10 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
             proxy_ip     : None,
             wss_certs    : None,
             ws_domain    : None,
+            native_port_proxy: 0,
+            wasm_ws_port_proxy: 0,
+            wasm_wt_port_proxy: 0,
+            has_wss_proxy: false,
         };
 
     // game framework config

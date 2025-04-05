@@ -31,9 +31,9 @@ fn basic_fw_initialization()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-            client_id: ClientId::SERVER,
+            client_entity: SERVER,
             event: ClientPacket{
-                    send_policy : ChannelKind::Ordered,
+                    send_policy : Channel::Ordered,
                     request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
                             req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
                         }))
@@ -55,7 +55,7 @@ fn basic_fw_initialization()
                 })
         )
         .add_plugins(VisibilityAttributesPlugin{
-            server_id: Some(ClientId::SERVER),
+            server_id: Some(0),
             reconnect_policy: ReconnectPolicy::Reset
         })
         //setup app
@@ -65,7 +65,7 @@ fn basic_fw_initialization()
         .insert_resource(prepare_player_client_contexts(num_players))
         .insert_resource(GameMessageType::new::<()>())
         //setup client framework
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, ClientId::new(0u64) ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, 0 ))
         .insert_resource(ClientRequestType::new::<()>())
         //setup game core
         .insert_resource(DummyGameDurationConfig{ max_ticks: 1 })

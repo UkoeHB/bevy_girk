@@ -36,10 +36,10 @@ fn renet_minimal()
 
     let mut server_app = App::new();
     let mut client_app = vec![App::new()];
-    server_app.add_plugins(RepliconCorePlugin)
+    server_app.add_plugins(RepliconSharedPlugin)
         .add_plugins((RenetServerPlugin, NetcodeServerPlugin))
         .add_plugins(bevy::time::TimePlugin);
-    client_app[0].add_plugins(RepliconCorePlugin)
+    client_app[0].add_plugins(RepliconSharedPlugin)
         .add_plugins((RenetClientPlugin, NetcodeClientPlugin))
         .add_plugins(bevy::time::TimePlugin);
 

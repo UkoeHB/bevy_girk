@@ -107,6 +107,10 @@ fn make_click_game_test_configs(game_ticks_per_sec: u32, game_num_ticks: u32) ->
             proxy_ip     : None,
             wss_certs    : None,
             ws_domain    : None,
+            native_port_proxy: 0,
+            wasm_ws_port_proxy: 0,
+            wasm_wt_port_proxy: 0,
+            has_wss_proxy: false,
         };
 
     // game framework config

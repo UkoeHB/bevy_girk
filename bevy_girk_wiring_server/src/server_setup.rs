@@ -8,9 +8,9 @@ use bevy_girk_wiring_common::prepare_network_channels;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::{
+use bevy_replicon::{prelude::{
     AppRuleExt, ClientEventPlugin, ClientPlugin, RepliconChannels, RepliconPlugins, ServerPlugin, TickPolicy, VisibilityPolicy
-};
+}, shared::backend::connected_client::NetworkId};
 use bevy_replicon_attributes::{ReconnectPolicy, VisibilityAttributesPlugin};
 use bevy_replicon_renet2::{RenetChannelsExt, RepliconRenetServerPlugin};
 use renet2::ConnectionConfig;
@@ -46,11 +46,13 @@ fn log_transport_errors(mut transport_errors: EventReader<renet2_netcode::Netcod
 //-------------------------------------------------------------------------------------------------------------------
 
 fn reset_client_on_disconnect(
-    event: Trigger<bevy_replicon::prelude::ClientDisconnected>,
+    event: Trigger<OnRemove, NetworkId>,
+    ids: Query<&NetworkId>,
     mut readiness: ResMut<ClientReadiness>,
 ){
-    let bevy_replicon::prelude::ClientDisconnected{ client_id, .. } = event.event();
-    readiness.set(*client_id, Readiness::default());
+    let client_entity = event.entity();
+    let Ok(id) = ids.get(client_entity) else { return };
+    readiness.set(id.get(), Readiness::default());
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -94,7 +96,7 @@ pub fn prepare_game_app_framework(game_app: &mut App, clients: GameFwClients, co
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Sets up `bevy_replicon` in a game app.
-pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, mutations_timeout: Duration)
+pub fn prepare_game_app_replication(game_app: &mut App, mutations_timeout: Duration)
 {
     // depends on game framework
     if !game_app.is_plugin_added::<bevy::time::TimePlugin>() {
@@ -103,9 +105,6 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, m
     if !game_app.is_plugin_added::<bevy::state::app::StatesPlugin>() {
         game_app.add_plugins(bevy::state::app::StatesPlugin);
     }
-
-    // prepare channels
-    prepare_network_channels(game_app, resend_time);
 
     // setup server with bevy_replicon (includes bevy_renet)
     game_app
@@ -165,15 +164,17 @@ pub fn prepare_game_app_replication(game_app: &mut App, resend_time: Duration, m
 /// Returns metadata for generating connect tokens for clients to connect to the renet server.
 pub fn prepare_game_app_network(
     game_app: &mut App,
+    resend_time: Duration,
     game_server_config: GameServerSetupConfig,
     client_counts: ClientCounts,
 ) -> Result<ConnectMetas, String>
 {
     let replicon_channels = game_app.world().resource::<RepliconChannels>();
-    let server_channels_config = replicon_channels.get_server_configs();
-    let client_channels_config = replicon_channels.get_client_configs();
+    let mut server_channels = replicon_channels.server_configs();
+    let mut client_channels = replicon_channels.client_configs();
+    prepare_network_channels(game_app.world_mut(), &mut server_channels, &mut client_channels, resend_time);
 
-    let connection_config = ConnectionConfig::from_channels(server_channels_config, client_channels_config);
+    let connection_config = ConnectionConfig::from_channels(server_channels, client_channels);
     setup_combo_renet2_server_in_bevy(game_app.world_mut(), game_server_config, client_counts, connection_config)
 }
 
@@ -190,10 +191,9 @@ pub fn prepare_girk_game_app(game_app: &mut App, config: GirkServerConfig) -> Re
     prepare_game_app_framework(game_app, config.clients, config.config);
     prepare_game_app_replication(
         game_app,
-        config.resend_time,
         Duration::from_secs((config.game_server_config.timeout_secs * 2).min(1i32) as u64),
     );
-    prepare_game_app_network(game_app, config.game_server_config, config.client_counts)
+    prepare_game_app_network(game_app, config.resend_time, config.game_server_config, config.client_counts)
 }
 
 //-------------------------------------------------------------------------------------------------------------------

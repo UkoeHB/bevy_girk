@@ -4,8 +4,6 @@ mod basic_server_integration;
 mod click_game;
 mod game_instance_factory;
 mod game_instance_launcher;
-mod game_state;
-mod game_ticks;
 mod integration_reconnects;
 mod player_clicks;
 mod renet_minimal;

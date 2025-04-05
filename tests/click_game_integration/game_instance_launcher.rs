@@ -4,12 +4,12 @@ use bevy_girk_client_instance::*;
 use bevy_girk_game_instance::*;
 use bevy_girk_game_fw::*;
 use bevy_girk_utils::*;
+use renet2::ClientId;
 use crate::click_game_integration::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
-use bevy_replicon::prelude::*;
 use bevy_renet2::prelude::RenetClient;
 use renet2_setup::*;
 
@@ -93,6 +93,10 @@ fn game_instance_launcher_demo()
             proxy_ip     : None,
             wss_certs    : None,
             ws_domain    : None,
+            native_port_proxy: 0,
+            wasm_ws_port_proxy: 0,
+            wasm_wt_port_proxy: 0,
+            has_wss_proxy: false,
         };
 
     // game framework config
@@ -120,12 +124,12 @@ fn game_instance_launcher_demo()
 
     for i in 0..num_players
     {
-        client_init_data.push(make_player_init_for_game(gen_rand128(), ClientId::new(i as u64)));
+        client_init_data.push(make_player_init_for_game(gen_rand128(), i as u64));
     }
 
     for i in num_players..(num_players + num_watchers)
     {
-        client_init_data.push(make_watcher_init_for_game(gen_rand128(), ClientId::new(i as u64)));
+        client_init_data.push(make_watcher_init_for_game(gen_rand128(), i as u64));
     }
 
 
@@ -219,7 +223,7 @@ fn game_instance_launcher_demo()
 
     // record expected final scores
     let mut expected_scores: HashMap<ClientId, PlayerScore> = HashMap::default();
-    for i in 0..num_players { expected_scores.insert(ClientId::new(i as u64), PlayerScore{ score: 1 }); }
+    for i in 0..num_players { expected_scores.insert(i as u64, PlayerScore{ score: 1 }); }
 
     // tick until game over report received
     let game_over_report: Option<GameOverReport>;

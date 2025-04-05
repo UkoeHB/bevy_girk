@@ -1,32 +1,10 @@
 //local shortcuts
 
 //third-party shortcuts
-use bevy_replicon::prelude::{ChannelKind, ClientId, SendMode};
+use bevy_replicon::prelude::Channel;
 
 //standard shortcuts
 
-
-//-------------------------------------------------------------------------------------------------------------------
-
-#[derive(Debug, Copy, Clone)]
-pub struct TargetClient(pub u64);
-#[derive(Debug, Copy, Clone)]
-pub struct TargetAll;
-#[derive(Debug, Copy, Clone)]
-pub struct TargetAllExcept(pub u64);
-
-impl From<TargetClient> for SendMode
-{
-    fn from(client: TargetClient) -> SendMode { SendMode::Direct(ClientId::new(client.0)) }
-}
-impl From<TargetAll> for SendMode
-{
-    fn from(_: TargetAll) -> SendMode { SendMode::Broadcast }
-}
-impl From<TargetAllExcept> for SendMode
-{
-    fn from(exception: TargetAllExcept) -> SendMode { SendMode::BroadcastExcept(ClientId::new(exception.0)) }
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -37,17 +15,17 @@ pub struct SendUnordered;
 #[derive(Debug, Copy, Clone)]
 pub struct SendOrdered;
 
-impl From<SendUnreliable> for ChannelKind
+impl From<SendUnreliable> for Channel
 {
-    fn from(_: SendUnreliable) -> ChannelKind { ChannelKind::Unreliable }
+    fn from(_: SendUnreliable) -> Channel { Channel::Unreliable }
 }
-impl From<SendUnordered> for ChannelKind
+impl From<SendUnordered> for Channel
 {
-    fn from(_: SendUnordered) -> ChannelKind { ChannelKind::Unordered }
+    fn from(_: SendUnordered) -> Channel { Channel::Unordered }
 }
-impl From<SendOrdered> for ChannelKind
+impl From<SendOrdered> for Channel
 {
-    fn from(_: SendOrdered) -> ChannelKind { ChannelKind::Ordered }
+    fn from(_: SendOrdered) -> Channel { Channel::Ordered }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -55,17 +33,17 @@ impl From<SendOrdered> for ChannelKind
 /// Helper trait for converting a message type into its send policy.
 ///
 /// Especially useful for enum-type messages where different variants have different send policies.
-pub trait IntoChannelKind
+pub trait IntoChannel
 {
-    fn into_event_type(&self) -> ChannelKind;
+    fn into_event_type(&self) -> Channel;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Default implementation for tests.
-impl IntoChannelKind for ()
+impl IntoChannel for ()
 {
-    fn into_event_type(&self) -> ChannelKind { ChannelKind::Unreliable }
+    fn into_event_type(&self) -> Channel { Channel::Unreliable }
 }
 
 //-------------------------------------------------------------------------------------------------------------------

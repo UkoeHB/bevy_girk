@@ -2,7 +2,7 @@
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 
 //standard shortcuts
 use std::collections::HashSet;

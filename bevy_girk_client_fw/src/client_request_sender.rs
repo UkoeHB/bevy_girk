@@ -1,6 +1,6 @@
 //local shortcuts
 use bevy_girk_game_fw::{AimedMsg, ClientFwRequest, ClientPacket, ClientRequestData};
-use bevy_girk_utils::{ser_msg, IntoChannelKind};
+use bevy_girk_utils::{ser_msg, IntoChannel};
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -22,7 +22,7 @@ pub struct ClientRequestType(TypeId);
 
 impl ClientRequestType
 {
-    pub fn new<T: Serialize + Debug + IntoChannelKind + 'static>() -> Self
+    pub fn new<T: Serialize + Debug + IntoChannel + 'static>() -> Self
     {
         Self(TypeId::of::<T>())
     }
@@ -59,7 +59,7 @@ impl<'w> ClientSender<'w>
     /// Sends a user-defined client request.
     ///
     /// Panics when `debug_assertions` are enabled if `T` does not match the [`ClientRequestType`].
-    pub fn send<T: Serialize + Debug + IntoChannelKind + 'static>(&mut self, request: T)
+    pub fn send<T: Serialize + Debug + IntoChannel + 'static>(&mut self, request: T)
     {
         debug_assert_eq!(TypeId::of::<T>(), **self.req_type);
 

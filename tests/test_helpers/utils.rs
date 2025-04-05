@@ -1,6 +1,5 @@
 //local shortcuts
 use bevy_girk_game_fw::*;
-use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -27,40 +26,10 @@ pub fn prepare_player_client_contexts(num_players: usize) -> GameFwClients
 
     for client_id in 0..num_players
     {
-        clients.insert(ClientId::new(client_id as u64));
+        clients.insert(client_id as u64);
     }
 
     GameFwClients::new(clients)
-}
-
-//-------------------------------------------------------------------------------------------------------------------
-
-pub struct AddMockMessageChannelsPlugin;
-
-impl Plugin for AddMockMessageChannelsPlugin
-{
-    fn build(&self, app: &mut App)
-    {
-        // prepare message channels
-        app.add_event::<ClientPacket>();
-        app.add_event::<bevy_replicon::prelude::FromClient<ClientPacket>>();
-        app.add_event::<bevy_replicon::prelude::ToClients<GamePacket>>();
-        app.add_event::<GamePacket>();
-
-        // kludge: enable first 10 clients
-        for client_id in 0..10
-        {
-            app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-                client_id: ClientId::new(client_id as u64),
-                event: ClientPacket{
-                    send_policy: SendOrdered.into(),
-                    request: bytes::Bytes::from(ser_msg(&ClientRequestData{
-                        req: AimedMsg::<_, ()>::Fw(ClientFwRequest::SetInitProgress(1.0))
-                    }))
-                }
-            });
-        }
-    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -118,7 +87,7 @@ pub fn forward_client_packets(
 ){
     for packet in packets.drain()
     {
-        from_client.send(FromClient{ client_id: ClientId::new(0), event: packet });
+        from_client.send(FromClient{ client_entity: SERVER, event: packet });
     }
 }
 

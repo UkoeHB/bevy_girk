@@ -5,15 +5,16 @@ use bevy_girk_game_fw::{ClientPacket, GameFwClients, GamePacket};
 use bevy::prelude::*;
 use bevy_girk_utils::{SendOrdered, SendUnordered, SendUnreliable};
 use bevy_girk_wiring_common::EventChannel;
-use bevy_replicon::core::common_conditions::server_running;
-use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::prelude::{
-    ClientId, ChannelKind, FromClient, ReplicatedClients,
-    RepliconServer, SendMode, ToClients
+    server_running, Channel, FromClient, RepliconServer, SendMode, ToClients
 };
 use bevy_replicon::server::ServerSet;
+use bevy_replicon::shared::backend::connected_client::NetworkId;
+use bevy_replicon::shared::replication::client_ticks::ClientTicks;
+use bevy_replicon::shared::replicon_tick::RepliconTick;
 use bincode::Options;
 use bytes::Bytes;
+use renet2::{ClientId, RenetServer};
 
 //standard shortcuts
 use std::collections::HashMap;
@@ -67,7 +68,7 @@ const MAX_CLIENT_MESSAGES_PER_TICK: u16 = 64;
 /// Server -> Client
 fn send_server_packets(
     mut game_packets   : ResMut<Events<ToClients<GamePacket>>>,
-    client_cache       : Res<ReplicatedClients>,
+    replicated_clients : Query<&ClientTicks>,
     mut server         : ResMut<RepliconServer>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
@@ -78,7 +79,7 @@ fn send_server_packets(
 
     for packet in game_packets.drain()
     {
-        let SendMode::Direct(client_id) = packet.mode else { panic!("invalid game packet send mode {:?}", packet.mode); };
+        let SendMode::Direct(client_entity) = packet.mode else { panic!("invalid game packet send mode {:?}", packet.mode); };
 
         // if sending a different message than the previous packet, clear the buffer
         let this_packet = packet.event.message.as_ptr();
@@ -95,18 +96,18 @@ fn send_server_packets(
         let cached = buffer.take();
 
         // access this client's replicon state
-        let Some(client) = client_cache.get_client(client_id)
-        else { tracing::debug!(?client_id, "ignoring game packet sent to disconnected client"); continue; };
+        let Ok(client_ticks) = replicated_clients.get(client_entity)
+        else { tracing::debug!(?client_entity, "ignoring game packet sent to disconnected client"); continue; };
 
         // construct the final message, using the cached bytes if possible
-        let Ok(message) = serialize_bytes_with_update_tick(cached, client.update_tick(), &packet.event.message)
-        else { tracing::error!(?client_id, "failed serializing game packet for client"); continue; };
+        let Ok(message) = serialize_bytes_with_update_tick(cached, client_ticks.update_tick(), &packet.event.message)
+        else { tracing::error!(?client_entity, "failed serializing game packet for client"); continue; };
 
         match packet.event.send_policy
         {
-            ChannelKind::Unreliable => server.send(client_id, unreliable_channel.id, message.bytes.clone()),
-            ChannelKind::Unordered  => server.send(client_id, unordered_channel.id, message.bytes.clone()),
-            ChannelKind::Ordered    => server.send(client_id, ordered_channel.id, message.bytes.clone())
+            Channel::Unreliable => server.send(client_entity, unreliable_channel.id, message.bytes.clone()),
+            Channel::Unordered  => server.send(client_entity, unordered_channel.id, message.bytes.clone()),
+            Channel::Ordered    => server.send(client_entity, ordered_channel.id, message.bytes.clone())
         }
 
         // cache this message for possible re-use with the next client
@@ -120,40 +121,43 @@ fn send_server_packets(
 /// Server <- Client
 fn receive_client_packets(
     mut messages_count : Local<HashMap<ClientId, u16>>,
-    mut server         : ResMut<RepliconServer>,
+    mut server         : ResMut<RenetServer>,
     mut client_packets : EventWriter<FromClient<ClientPacket>>,
     unreliable_channel : Res<EventChannel<(ClientPacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(ClientPacket, SendUnordered)>>,
     ordered_channel    : Res<EventChannel<(ClientPacket, SendOrdered)>>,
-    clients            : Res<GameFwClients>
+    clients            : Res<GameFwClients>,
+    client_query       : Query<(Entity, &NetworkId)>,
 ){
     messages_count.clear();
 
     // receive ordered messages first since they are probably oldest
     for &(channel_id, send_policy) in
         [
-            (Into::<u8>::into(ordered_channel.id), ChannelKind::Ordered),
-            (Into::<u8>::into(unordered_channel.id), ChannelKind::Unordered),
-            (Into::<u8>::into(unreliable_channel.id), ChannelKind::Unreliable),
+            (Into::<u8>::into(ordered_channel.id), Channel::Ordered),
+            (Into::<u8>::into(unordered_channel.id), Channel::Unordered),
+            (Into::<u8>::into(unreliable_channel.id), Channel::Unreliable),
         ].iter()
     {
-        for (client_id, request) in server.receive(channel_id)
-        {
-            // ignore unregistered client ids
-            // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
-            if !clients.contains(&client_id) { tracing::error!(?client_id, "ignoring client with unknown id"); continue; };
-
-            // if too many messages were received this tick, ignore the remaining messages
-            let messages_count = messages_count.entry(client_id).or_default();
-            *messages_count += 1;
-            if *messages_count > MAX_CLIENT_MESSAGES_PER_TICK
+        for (client_entity, client_id) in client_query.iter() {
+            while let Some(request) = server.receive_message(client_id.get(), channel_id)
             {
-                tracing::debug!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
-                continue;
-            }
+                // ignore unregistered client ids
+                // - if this error is encountered, then you are issuing connect tokens to clients that weren't registered
+                if !clients.contains(&client_id.get()) { tracing::error!(?client_id, "ignoring client with unknown id"); continue; };
 
-            // send packet into server
-            client_packets.send(FromClient{ client_id, event: ClientPacket{ send_policy, request } });
+                // if too many messages were received this tick, ignore the remaining messages
+                let messages_count = messages_count.entry(client_id.get()).or_default();
+                *messages_count += 1;
+                if *messages_count > MAX_CLIENT_MESSAGES_PER_TICK
+                {
+                    tracing::debug!(?client_id, channel_id, messages_count, "client exceeded max messages per tick");
+                    continue;
+                }
+
+                // send packet into server
+                client_packets.send(FromClient{ client_entity, event: ClientPacket{ send_policy, request } });
+            }
         }
     }
 }

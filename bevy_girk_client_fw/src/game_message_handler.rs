@@ -1,6 +1,6 @@
 //local shortcuts
 use bevy_girk_game_fw::{AimedMsg, GameFwMsg, GameMessageData, GamePacket, Tick};
-use bevy_girk_utils::{deser_msg, IntoChannelKind};
+use bevy_girk_utils::{deser_msg, IntoChannel};
 
 //third-party shortcuts
 use bevy::prelude::*;
@@ -12,7 +12,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`GamePacket`] into a specified game message type.
-fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
+fn deserialize_game_message<T: Debug + for<'de> Deserialize<'de> + IntoChannel>(
     game_packet: &GamePacket,
 ) -> Result<(Tick, T), Option<(Tick, GameFwMsg)>>
 {
@@ -53,7 +53,7 @@ impl GameMessageHandler
 {
     pub fn new<T>(handler: impl Fn(&mut World, Tick, T) + Sync + Send + 'static) -> Self
     where
-        T: Debug + for<'de> Deserialize<'de> + IntoChannelKind
+        T: Debug + for<'de> Deserialize<'de> + IntoChannel
     {
         Self{
             handler: Box::new(move |world, packet| {

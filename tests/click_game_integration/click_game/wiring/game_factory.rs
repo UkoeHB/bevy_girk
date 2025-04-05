@@ -8,7 +8,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 use renet2_setup::*;
 use serde::{Deserialize, Serialize};
 
@@ -81,12 +81,12 @@ fn prepare_game_startup(
         client_set.insert(client_id);
 
         // count client type
-        client_counts.add(client_init.connection, client_id.get());
+        client_counts.add(client_init.connection, client_id);
 
         // Prep start info for the client.
         let client_fw_config = ClientFwConfig::new(config.ticks_per_sec(), game_id, client_id);
         let start_pack = ClickClientStartPack{ client_fw_config, initializer };
-        let start_info = GameStartInfo::new(game_id, client_init.user_id, client_id.get(), start_pack);
+        let start_info = GameStartInfo::new(game_id, client_init.user_id, client_id, start_pack);
         start_infos.push(start_info)
     }
     debug_assert_eq!(client_set.len(), start_infos.len());

@@ -4,7 +4,7 @@ use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 
 //standard shortcuts
 
@@ -68,7 +68,7 @@ pub(crate) fn notify_game_state_single(
     mut sender        : GameSender,
     current_game_state : Res<State<GameState>>,
 ){
-    sender.send_to_client(GameMsg::CurrentGameState(**current_game_state), client_id.get());
+    sender.send_to_client(GameMsg::CurrentGameState(**current_game_state), client_id);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

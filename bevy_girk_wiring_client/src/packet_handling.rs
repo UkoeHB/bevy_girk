@@ -5,12 +5,12 @@ use bevy_girk_utils::{deser_bytes_partial, SendUnreliable, SendUnordered, SendOr
 //third-party shortcuts
 use bevy::prelude::*;
 use bevy_girk_wiring_common::EventChannel;
+use bevy_renet2::prelude::RenetClient;
 use bevy_replicon::client::{ClientSet, ServerUpdateTick};
-use bevy_replicon::core::common_conditions::client_connected;
-use bevy_replicon::core::replicon_tick::RepliconTick;
 use bevy_replicon::prelude::{
-    ChannelKind, RepliconClient
+    client_connected, Channel, RepliconClient
 };
+use bevy_replicon::shared::replicon_tick::RepliconTick;
 use ordered_multimap::ListOrderedMultimap;
 
 //standard shortcuts
@@ -103,7 +103,7 @@ impl Default for GamePacketQueue
 
 /// Client <- Server
 fn receive_server_packets(
-    mut client         : ResMut<RepliconClient>,
+    mut client         : ResMut<RenetClient>,
     mut game_packets   : EventWriter<GamePacket>,
     unreliable_channel : Res<EventChannel<(GamePacket, SendUnreliable)>>,
     unordered_channel  : Res<EventChannel<(GamePacket, SendUnordered)>>,
@@ -114,12 +114,12 @@ fn receive_server_packets(
     // receive ordered messages first since they are probably oldest
     for &(channel_id, send_policy) in
         [
-            (Into::<u8>::into(ordered_channel.id), ChannelKind::Ordered),
-            (Into::<u8>::into(unordered_channel.id), ChannelKind::Unordered),
-            (Into::<u8>::into(unreliable_channel.id), ChannelKind::Unreliable),
+            (Into::<u8>::into(ordered_channel.id), Channel::Ordered),
+            (Into::<u8>::into(unordered_channel.id), Channel::Unordered),
+            (Into::<u8>::into(unreliable_channel.id), Channel::Unreliable),
         ].iter()
     {
-        for mut message in client.receive(channel_id)
+        while let Some(mut message) = client.receive_message(channel_id)
         {
             // extract the layered-in replicon init tick
             let Some(init_tick) = deser_bytes_partial::<RepliconTick>(&mut message)
@@ -150,9 +150,9 @@ fn send_client_packets(
     {
         match client_packet.send_policy
         {
-            ChannelKind::Unreliable => client.send(unreliable_channel.id, client_packet.request),
-            ChannelKind::Unordered  => client.send(unordered_channel.id, client_packet.request),
-            ChannelKind::Ordered    => client.send(ordered_channel.id, client_packet.request)
+            Channel::Unreliable => client.send(unreliable_channel.id, client_packet.request),
+            Channel::Unordered  => client.send(unordered_channel.id, client_packet.request),
+            Channel::Ordered    => client.send(ordered_channel.id, client_packet.request)
         }
     }
 }

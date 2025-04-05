@@ -4,7 +4,7 @@ use bevy_girk_utils::*;
 
 //third-party shortcuts
 use bevy::prelude::*;
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 use serde::Deserialize;
 
 //standard shortcuts
@@ -13,7 +13,7 @@ use std::fmt::Debug;
 //-------------------------------------------------------------------------------------------------------------------
 
 /// Deserializes bytes from a [`ClientPacket`] into a client request.
-fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannelKind>(
+fn deserialize_client_request<T: Debug + for<'de> Deserialize<'de> + IntoChannel>(
     client_id     : u64,
     client_packet : &ClientPacket,
 ) -> Result<T, Option<ClientFwRequest>>
@@ -55,11 +55,11 @@ impl ClientRequestHandler
 {
     pub fn new<T>(handler: impl Fn(&mut World, ClientId, T) + Sync + Send + 'static) -> Self
     where
-        T: Debug + for<'de> Deserialize<'de> + IntoChannelKind
+        T: Debug + for<'de> Deserialize<'de> + IntoChannel
     {
         Self{
             handler: Box::new(move |world, id, packet| {
-                let client_req = deserialize_client_request(id.get(), packet)?;
+                let client_req = deserialize_client_request(id, packet)?;
                 (handler)(world, id, client_req);
                 Ok(())
             })

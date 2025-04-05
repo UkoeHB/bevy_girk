@@ -4,7 +4,7 @@ use bevy_girk_game_instance::*;
 use crate::click_game_integration::click_game::*;
 
 //third-party shortcuts
-use bevy_replicon::prelude::ClientId;
+use renet2::ClientId;
 use renet2_setup::*;
 
 //standard shortcuts
@@ -81,13 +81,13 @@ fn get_launch_pack(game_factory_config: &ClickGameFactoryConfig, start_request: 
 
     for (idx, (connection, player_user_id)) in players.iter().enumerate()
     {
-        client_init_data.push(make_player_init_data(*connection, *player_user_id, ClientId::new(1 + idx as u64)));
+        client_init_data.push(make_player_init_data(*connection, *player_user_id, 1 + idx as u64));
     }
 
     for (idx, (connection, watcher_user_id)) in watchers.iter().enumerate()
     {
         let client_id = idx + num_players;
-        client_init_data.push(make_watcher_init_data(*connection, *watcher_user_id, ClientId::new(1 + client_id as u64)));
+        client_init_data.push(make_watcher_init_data(*connection, *watcher_user_id, 1 + client_id as u64));
     }
 
     // click launch pack

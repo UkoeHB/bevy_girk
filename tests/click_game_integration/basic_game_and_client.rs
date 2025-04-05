@@ -69,7 +69,7 @@ fn basic_game_and_client()
 
     // make the client ready
     app.world_mut().resource_mut::<Events<FromClient<ClientPacket>>>().send(FromClient{
-        client_id: ClientId::SERVER,
+        client_entity: SERVER,
         event: ClientPacket{
             send_policy : SendOrdered.into(),
             request     : bytes::Bytes::from(ser_msg(&ClientRequestData{
@@ -86,7 +86,7 @@ fn basic_game_and_client()
 
     // prepare client initializer
     let player_context = ClickPlayerContext::new(
-        ClientId::SERVER,
+        0,
         *game_initializer.game_context.duration_config()
     );
     let player_initializer = ClickPlayerInitializer{ player_context };
@@ -106,7 +106,7 @@ fn basic_game_and_client()
                 })
         )
         .add_plugins(VisibilityAttributesPlugin{
-            server_id: Some(ClientId::SERVER),
+            server_id: Some(0),
             reconnect_policy: ReconnectPolicy::Reset
         })
         //setup game framework
@@ -138,7 +138,7 @@ fn basic_game_and_client()
         .add_systems(PostUpdate, forward_game_packets.after(GameFwSet::End))
         //game framework
         //client framework
-        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, ClientId::SERVER ))
+        .insert_resource(ClientFwConfig::new( ticks_per_sec, 0, 0 ))
         //game
         .insert_resource(game_initializer)
         //client core

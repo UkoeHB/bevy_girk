@@ -28,19 +28,19 @@ members  = [
 [workspace.dependencies]
 bevy                     = { version = "0.15", default-features = false }
 bevy_cobweb              = { version = "0.16" }
-bevy_replicon            = { version = "0.30", default-features = false }
-bevy_replicon_attributes = { version = "0.9" }
+bevy_replicon            = { version = "0.32", default-features = false }
+bevy_replicon_attributes = { version = "0.10" }
 #bevy_replicon_attributes = { git = "https://github.com/UkoeHB/bevy_replicon_attributes", rev = "0f19340" }
 bevy_simplenet           = { version = "0.15", default-features = false }
 #bevy_simplenet           = { git = "https://github.com/UkoeHB/bevy_simplenet", rev = "4abc765", default-features = false }
 #iyes_progress            = { version = "0.13", features = [ "assets" ] }
 iyes_progress            = { git = "https://github.com/UkoeHB/iyes_progress", rev = "343879e", features = [ "assets" ] }
 
-bevy_renet2 = { version = "0.3", default-features = false }
-bevy_replicon_renet2 = { version = "0.3", default-features = false }
-renet2 = { version = "0.3", default-features = false }
-renet2_netcode = { version = "0.3", default-features = false }
-renet2_setup = { version = "0.3", default-features = false }
+bevy_renet2 = { version = "0.8", default-features = false }
+bevy_replicon_renet2 = { version = "0.8", default-features = false }
+renet2 = { version = "0.8", default-features = false }
+renet2_netcode = { version = "0.8", default-features = false }
+renet2_setup = { version = "0.8", default-features = false }
 
 bincode            = { version = "1.3" }
 bytes              = { version = "1.1" }
@@ -60,7 +60,7 @@ wasm-timer         = { version = "0.2" }
 
 #[patch.crates-io]
 #bevy_replicon  = { git = "https://github.com/projectharmonia/bevy_replicon", rev = "e1fe579" }
-#bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "6a9df6e" }
+#bevy_replicon  = { git = "https://github.com/UkoeHB/bevy_replicon", rev = "df7f84a13e836857cd076d4ebca3c9caa4e14012" }
 
 [profile.test]
 opt-level = 0  #no optimizations for local tests
