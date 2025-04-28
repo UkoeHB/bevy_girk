@@ -87,7 +87,7 @@ pub fn forward_client_packets(
 ){
     for packet in packets.drain()
     {
-        from_client.send(FromClient{ client_entity: SERVER, event: packet });
+        from_client.write(FromClient{ client_entity: SERVER, event: packet });
     }
 }
 
@@ -100,7 +100,7 @@ pub fn forward_game_packets(
     for packet in to_clients.drain()
     {
         let packet = GamePacket{ send_policy: packet.event.send_policy, message: packet.event.message };
-        packets.send(packet);
+        packets.write(packet);
     }
 }
 

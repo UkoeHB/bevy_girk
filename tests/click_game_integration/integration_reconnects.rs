@@ -162,7 +162,7 @@ fn make_test_game_hub_server(
 
 fn game_is_initialized(game_init_progress: Query<(&GameInitProgress, &StateScoped<ClientAppState>)>) -> bool
 {
-    let (progress, scoped) = game_init_progress.single();
+    let (progress, scoped) = game_init_progress.single().unwrap();
     tracing::debug!(?progress, "game init progress");
     assert_eq!(scoped.0, ClientAppState::Game);
     Readiness::new(**progress).is_ready()

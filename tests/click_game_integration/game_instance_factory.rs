@@ -21,7 +21,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 {
-    Readiness::new(**game_init_progress.single()).is_ready()
+    Readiness::new(**game_init_progress.single().unwrap()).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------

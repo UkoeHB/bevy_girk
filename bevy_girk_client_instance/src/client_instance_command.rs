@@ -5,7 +5,6 @@ use bevy_girk_game_instance::{GameLaunchPack, GameStartInfo};
 use bevy_girk_utils::set_and_apply_state;
 
 //third-party shortcuts
-use bevy::ecs::world::Command;
 use bevy::prelude::*;
 use renet2_setup::ServerConnectToken;
 

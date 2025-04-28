@@ -65,7 +65,7 @@ fn command_shut_down(
     }
 
     // close the app at the end of this tick
-    app_exit.send(AppExit::Success);
+    app_exit.write(AppExit::Success);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

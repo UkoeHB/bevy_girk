@@ -82,10 +82,11 @@ pub(crate) fn refresh_game_init_progress(
     mut init_progress : Query<&mut GameInitProgress>
 ){
     // check if any client's readiness changed
-    if !client_readiness.is_changed() { return; }
+    if !client_readiness.is_changed() { return }
 
     // update game init progress entity
-    init_progress.single_mut().0 = client_readiness.total_progress();
+    let Ok(mut init_progress) = init_progress.single_mut() else { return };
+    init_progress.0 = client_readiness.total_progress();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ pub(crate) fn try_exit_app(
 
     // exit the game
     tracing::info!("exiting game app");
-    app_exit.send(AppExit::Success);
+    app_exit.write(AppExit::Success);
 }
 
 //-------------------------------------------------------------------------------------------------------------------

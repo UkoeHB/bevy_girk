@@ -26,7 +26,7 @@ fn send_player_click(player_input_sender: Res<Sender<PlayerInput>>)
 
 fn check_player_score(players: Query<&PlayerScore, With<PlayerId>>, mut flag: ResMut<PanicOnDrop>)
 {
-    assert_eq!(players.get_single().unwrap().score(), 1);
+    assert_eq!(players.single().unwrap().score(), 1);
     flag.take();
 }
 

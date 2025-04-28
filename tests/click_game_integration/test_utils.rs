@@ -2,7 +2,7 @@
 use crate::click_game_integration::*;
 
 //third-party shortcuts
-use bevy::utils::AHasher;
+use ahash::AHasher;
 use renet2::ClientId;
 use renet2_setup::ConnectionType;
 

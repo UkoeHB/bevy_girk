@@ -163,7 +163,7 @@ fn make_test_game_hub_server(
 
 fn game_is_initialized(game_init_progress: Query<&GameInitProgress>) -> bool
 {
-    Readiness::new(**game_init_progress.single()).is_ready()
+    Readiness::new(**game_init_progress.single().unwrap()).is_ready()
 }
 
 //-------------------------------------------------------------------------------------------------------------------

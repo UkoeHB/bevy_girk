@@ -12,6 +12,7 @@ bevy_replicon            = { workspace = true }
 bevy_replicon_attributes = { workspace = true }
 bevy_simplenet           = { workspace = true }
 
+ahash              = { version = "0.8" }
 bytes              = { workspace = true }
 enfync             = { workspace = true }
 ezsockets          = { workspace = true }

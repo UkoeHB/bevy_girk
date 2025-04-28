@@ -26,7 +26,7 @@ fn pop_game_packet_queue(
 ){
     while let Some((_, event)) = event_queue.pop_if_le(**init_tick)
     {
-        server_events.send(event);
+        server_events.write(event);
     }
 }
 
@@ -128,7 +128,7 @@ fn receive_server_packets(
 
             match init_tick <= **replicon_tick
             {
-                true  => { game_packets.send(packet); }
+                true  => { game_packets.write(packet); }
                 false => { packet_queue.insert(init_tick, packet); }
             }
         }

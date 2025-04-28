@@ -21,7 +21,7 @@ memory_transport = [
 [dependencies]
 bevy = { workspace = true, features = ["bevy_state"] }
 bevy_cobweb = { workspace = true }
-bevy_replicon = { workspace = true, features = ["parent_sync", "client"] }
+bevy_replicon = { workspace = true, features = ["client"] }
 iyes_progress = { workspace = true }
 tracing = { workspace = true }
 wasm-timer = { workspace = true }

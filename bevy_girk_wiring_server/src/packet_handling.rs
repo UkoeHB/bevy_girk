@@ -156,7 +156,7 @@ fn receive_client_packets(
                 }
 
                 // send packet into server
-                client_packets.send(FromClient{ client_entity, event: ClientPacket{ send_policy, request } });
+                client_packets.write(FromClient{ client_entity, event: ClientPacket{ send_policy, request } });
             }
         }
     }

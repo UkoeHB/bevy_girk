@@ -53,7 +53,7 @@ impl<'w> ClientSender<'w>
 
         let send_policy = request.into_event_type();
         let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<_, ()>::Fw(request) }));
-        self.writer.send(ClientPacket{ send_policy, request });
+        self.writer.write(ClientPacket{ send_policy, request });
     }
 
     /// Sends a user-defined client request.
@@ -67,7 +67,7 @@ impl<'w> ClientSender<'w>
 
         let send_policy = request.into_event_type();
         let request = Bytes::from(ser_msg(&ClientRequestData{ req: AimedMsg::<ClientFwRequest, _>::Core(request) }));
-        self.writer.send(ClientPacket{ send_policy, request });
+        self.writer.write(ClientPacket{ send_policy, request });
     }
 }
 

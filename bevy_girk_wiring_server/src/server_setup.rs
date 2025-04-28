@@ -50,7 +50,7 @@ fn reset_client_on_disconnect(
     ids: Query<&NetworkId>,
     mut readiness: ResMut<ClientReadiness>,
 ){
-    let client_entity = event.entity();
+    let client_entity = event.target();
     let Ok(id) = ids.get(client_entity) else { return };
     readiness.set(id.get(), Readiness::default());
 }
@@ -145,13 +145,9 @@ pub fn prepare_game_app_replication(game_app: &mut App, mutations_timeout: Durat
 
         //# POSTUPDATE
         //<-- GameFwSet::End {girk}: dispatch server messages to replicon
-        //<-- ServerSet::StoreHierarchy {replicon}: store hierarchy information that needs to be replicated
         //<-- ServerSet::Send {replicon}: dispatch replication messages and server messages to renet
         //<-- RenetSend {renet}: dispatch network packets to clients
-        .configure_sets(PostUpdate,
-            GameFwSet::End
-                .before(bevy_replicon::prelude::ServerSet::StoreHierarchy)
-        )
+        .configure_sets(PostUpdate, GameFwSet::End)
         //log server events and errors
         //- note that these will be logged out of order, since we need to collect both receive and send events and errors
         .add_systems(Last, (log_server_events, log_transport_errors).chain());

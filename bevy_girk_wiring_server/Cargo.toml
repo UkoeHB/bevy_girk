@@ -52,7 +52,7 @@ wasm_transport_ws = [
 
 [dependencies]
 bevy = { workspace = true }
-bevy_replicon = { workspace = true, features = ["parent_sync", "server"] }
+bevy_replicon = { workspace = true, features = ["server"] }
 bevy_replicon_attributes = { workspace = true }
 bevy_replicon_renet2 = { workspace = true, features = ["server"] }
 bincode = { workspace = true }

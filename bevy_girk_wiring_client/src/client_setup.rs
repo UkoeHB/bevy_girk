@@ -261,7 +261,6 @@ pub fn prepare_client_app_replication(client_app: &mut App)
         //<-- ClientSet::ResetEvents (if client just connected) {replicon}: ensures client and server messages
         //    don't leak across a reconnect
         //<-- ClientSet::Receive {replicon}: processes replication messages
-        //<-- ClientSet::SyncHierarchy {replicon}: synchronizes replicated entity hierarchies
         //<-- ReceiveServerEventsSet {girk}: collects GamePacket messages
         //<-- girk connection initialization management
         //<-- ClientFwSet::Start {girk}: handles client fw commands and network messages, prepares the
@@ -279,7 +278,6 @@ pub fn prepare_client_app_replication(client_app: &mut App)
                     .run_if(not(in_state(ClientFwState::Setup)))
                     .run_if(not(in_state(ClientFwState::Connecting)))
                     .run_if(not(client_just_connected)),
-                ClientSet::SyncHierarchy,
                 ReceiveServerEventsSet,
                 ClientFwSet::Start,
             )
@@ -384,22 +382,23 @@ pub fn prepare_client_app_replication(client_app: &mut App)
 /// Note: The `ClientConnectPack` needs to be inserted separately (e.g. by the `ClientFactory`).
 pub fn prepare_client_app_network(client_app: &mut App, resend_time: Duration)
 {
-    client_app.add_systems(PreUpdate,
-            // Ordering explanation:
-            // - We want `ClientFwState::Setup` to run for at least one tick.
-            // - We want `client_disconnected` to return true for the first tick of `ClientFwState::Setup`.
-            setup_renet2_client(resend_time)
-                // add ordering constraint
-                .before(bevy_renet2::prelude::RenetReceive)
-                // ignore for first full tick after entering the game
-                .run_if(not(just_entered_state(ClientAppState::Game)))
-                // only try to set up the client while in game
-                .run_if(in_state(ClientAppState::Game))
-                // poll for connect packs while disconnected
-                .run_if(client_disconnected)
-                // check for connect pack
-                .run_if(resource_exists::<ClientConnectPack>)
-        );
+    client_app.add_systems(
+        PreUpdate,
+        // Ordering explanation:
+        // - We want `ClientFwState::Setup` to run for at least one tick.
+        // - We want `client_disconnected` to return true for the first tick of `ClientFwState::Setup`.
+        setup_renet2_client(resend_time)
+            // add ordering constraint
+            .before(bevy_renet2::prelude::RenetReceive)
+            // ignore for first full tick after entering the game
+            .run_if(not(just_entered_state(ClientAppState::Game)))
+            // only try to set up the client while in game
+            .run_if(in_state(ClientAppState::Game))
+            // poll for connect packs while disconnected
+            .run_if(client_disconnected)
+            // check for connect pack
+            .run_if(resource_exists::<ClientConnectPack>)
+    );
 }
 
 //-------------------------------------------------------------------------------------------------------------------
