@@ -72,8 +72,8 @@ impl GameInstanceLauncherImpl for GameInstanceLauncherLocal
 
                     // Check if the app shut down.
                     let events = app.world().resource::<Events<AppExit>>();
-                    let mut reader = events.get_reader();
-                    match reader.read(events).next().cloned() {
+                    let mut cursor = events.get_cursor();
+                    match cursor.read(events).next().cloned() {
                         None => (),
                         Some(AppExit::Success) => break,
                         Some(AppExit::Error(code)) => {
