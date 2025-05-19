@@ -36,6 +36,12 @@ impl Rand64
         self.state.h2
     }
 
+    /// Gets the next random number normalized to `[0.0, 1.0]`.
+    pub fn next_normalized(&mut self) -> f64
+    {
+        self.next() as f64 / u64::MAX as f64
+    }
+
     /// Injects additional entropy.
     pub fn inject(&mut self, extra_entropy: u128)
     {
